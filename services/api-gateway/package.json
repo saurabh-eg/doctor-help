@@ -1,0 +1,18 @@
+{
+    "name": "api-gateway",
+    "version": "1.0.0",
+    "module": "index.ts",
+    "type": "module",
+    "scripts": {
+        "dev": "bun run --watch index.ts",
+        "start": "bun run index.ts"
+    },
+    "dependencies": {
+        "elysia": "latest",
+        "mongoose": "latest"
+    },
+    "devDependencies": {
+        "bun-types": "latest",
+        "@types/mongoose": "latest"
+    }
+}
