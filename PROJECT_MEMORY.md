@@ -14,9 +14,13 @@
 |-------|--------|
 | Initial Setup | ✅ Complete |
 | Architecture Design | ✅ Complete |
-| Mobile Restructure | ⏳ Pending |
-| Shared Packages | ⏳ Pending |
-| API Development | ⏳ Pending |
+| Mobile Restructure | ✅ Complete |
+| Shared Packages | ✅ Complete |
+| API Development | ✅ Complete |
+| Mobile API Integration | ✅ Complete |
+
+### User Preferences
+- **Expo Tunnel Mode**: Always use `--tunnel` flag (different networks)
 
 ---
 
