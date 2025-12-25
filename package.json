@@ -1,9 +1,20 @@
 {
-  "name": "doctor-help-monorepo",
+  "name": "doctor-help",
   "private": true,
   "workspaces": [
     "apps/*",
     "services/*",
     "packages/*"
-  ]
+  ],
+  "scripts": {
+    "dev:mobile": "cd apps/mobile && npm start",
+    "dev:admin": "cd apps/admin && npm run dev",
+    "dev:web": "cd apps/web && npm run dev",
+    "dev:api": "cd services/api && bun run dev",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
 }

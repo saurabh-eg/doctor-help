@@ -7,12 +7,15 @@ A modern healthcare platform connecting patients with doctors through video cons
 ```
 doctor-help/
 ├── apps/
-│   ├── mobile-patient/     # 📱 Patient mobile app (Expo + React Native)
-│   └── web-admin/          # 🌐 UI prototype (Vite + React)
+│   ├── mobile/              # 📱 Expo app (Patient + Doctor)
+│   ├── admin/               # 🖥️ Next.js admin dashboard
+│   └── web/                 # 🌐 Next.js marketing website
 ├── services/
-│   └── api-gateway/        # ⚡ Backend API (Bun + Elysia)
+│   └── api/                 # ⚡ Elysia backend API
 └── packages/
-    └── ui/                 # 🎨 Shared components (planned)
+    ├── types/               # 🔷 Shared TypeScript types
+    ├── constants/           # 📋 Shared constants
+    └── utils/               # 🛠️ Shared utilities
 ```
 
 ## 🛠️ Tech Stack
@@ -20,7 +23,8 @@ doctor-help/
 | Layer | Technology |
 |-------|------------|
 | **Mobile** | Expo SDK 52, React Native, NativeWind |
-| **Web** | Vite, React 19, TailwindCSS v4 |
+| **Admin** | Next.js 14, TailwindCSS v4 |
+| **Website** | Next.js 14, TailwindCSS |
 | **Backend** | Bun, Elysia, MongoDB |
 | **AI** | Google Gemini SDK |
 
@@ -34,37 +38,42 @@ doctor-help/
 ### Installation
 
 ```bash
-# Install root dependencies
 npm install
-
-# Install app dependencies
-cd apps/mobile-patient && npm install
-cd ../web-admin && npm install
-cd ../../services/api-gateway && bun install
 ```
 
-### Running the Apps
+### Running Apps
 
-**Mobile Patient App:**
 ```bash
-cd apps/mobile-patient
-npm start
-# Press 'a' for Android, 'i' for iOS, or scan QR with Expo Go
+# Mobile app (Patient + Doctor)
+npm run dev:mobile
+
+# Admin dashboard
+npm run dev:admin
+
+# Marketing website
+npm run dev:web
+
+# Backend API
+npm run dev:api
 ```
 
-**Web Admin (UI Prototype):**
-```bash
-cd apps/web-admin
-npm run dev
-# Open http://localhost:5173
+## 📱 Mobile App Structure
+
+```
+apps/mobile/app/
+├── (auth)/          # Login, OTP verification
+├── (patient)/       # Patient tab screens
+├── (doctor)/        # Doctor tab screens
+└── (common)/        # Shared screens (video call, chat)
 ```
 
-**API Gateway:**
-```bash
-cd services/api-gateway
-bun run index.ts
-# Server runs at http://localhost:3001
-```
+## 📦 Shared Packages
+
+| Package | Usage |
+|---------|-------|
+| `@doctor-help/types` | User, Doctor, Appointment types |
+| `@doctor-help/constants` | Roles, colors, API endpoints |
+| `@doctor-help/utils` | Date, currency, validation helpers |
 
 ## 🎨 Design System
 
@@ -72,51 +81,27 @@ bun run index.ts
 |-------|-------|
 | Primary | `#197fe6` |
 | Secondary | `#34d399` |
-| Accent | `#f9f506` |
 | Font Display | Lexend |
 | Font Body | Inter |
 
-## 📁 App Features
-
-### Patient App (`mobile-patient`)
-- 🔐 Phone + OTP Authentication
-- 🏠 Dashboard with upcoming appointments
-- 🔍 Doctor & Lab search
-- 📅 Appointment booking
-- 💰 Wallet & payments
-- 📋 Medical records
-- 🤖 AI Health Assistant
-
-### Doctor Portal (`web-admin`)
-- 📊 Dashboard & analytics
-- 📆 Calendar management
-- ✅ Verification flow
-- 💵 Earnings tracking
-
 ## 🔄 Development Workflows
 
-Use these commands in chat with AI assistant:
-- `/run-mobile` - Start mobile app
-- `/run-web` - Start web admin
-- `/run-api` - Start backend
-- `/convert-screen` - Convert web→mobile screen
-- `/project-context` - View full project context
+| Command | Description |
+|---------|-------------|
+| `/start-session` | Load project context |
+| `/end-session` | Save progress to memory |
+| `/convert-screen` | Convert web→mobile screen |
+| `/run-mobile` | Start mobile app |
 
 ## 📝 Current Status
 
-| Component | Status |
-|-----------|--------|
-| Mobile Auth | ✅ Complete |
-| Mobile Navigation | ✅ Complete |
+| Phase | Status |
+|-------|--------|
+| Architecture Restructure | ✅ Complete |
+| Shared Packages | ✅ Complete |
 | Mobile Screens | 🔄 In Progress |
-| Web UI Prototype | ✅ Complete |
-| API Backend | ⏳ Planned |
-
-## 🤝 Contributing
-
-1. Check `.agent/workflows/` for development procedures
-2. Follow the component mapping in `/convert-screen` workflow
-3. Maintain design system consistency across apps
+| API Development | ⏳ Pending |
+| Admin Dashboard | ⏳ Pending |
 
 ## 📄 License
 
