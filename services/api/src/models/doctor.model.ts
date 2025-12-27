@@ -36,4 +36,9 @@ const DoctorSchema = new Schema<IDoctor>({
     }],
 }, { timestamps: true });
 
+// Indexes for search and filtering performance
+DoctorSchema.index({ specialization: 1 });
+DoctorSchema.index({ isVerified: 1, rating: -1 });
+DoctorSchema.index({ userId: 1 });
+
 export const Doctor = mongoose.model<IDoctor>('Doctor', DoctorSchema);

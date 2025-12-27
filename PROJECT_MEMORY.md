@@ -6,9 +6,9 @@
 
 ## 📊 Current Status
 
-**Phase:** API Migration (Bun → Express)  
-**Last Updated:** 2025-12-26
-**Deadline:** 15 days (Production delivery for real client)
+**Phase:** Mobile App Features  
+**Last Updated:** 2025-12-28
+**Deadline:** ~13 days (Production delivery for real client)
 
 ### Progress Summary
 | Phase | Status |
@@ -19,7 +19,7 @@
 | Shared Packages | ✅ Complete |
 | API Development (Elysia) | ✅ Complete |
 | Mobile API Integration | ✅ Complete |
-| API Migration to Express | 🔄 In Progress |
+| API Migration to Express | ✅ Complete |
 
 ### User Preferences
 - **Expo Tunnel Mode**: Always use `--tunnel` flag (different networks)
@@ -31,7 +31,7 @@
 - **Single mobile app** with role-based access (Patient + Doctor)
 - **Separate admin dashboard** (Vite + React)
 - **Next.js marketing website** for SEO
-- **Shared backend API** (Node.js + Express) ← *Migrating from Bun + Elysia*
+- **Shared backend API** (Node.js + Express)
 - **Monorepo** with Turborepo for build orchestration
 - **Shared packages:** types, constants, utils, api-client
 
@@ -46,7 +46,7 @@ doctor-help/
 │   ├── admin/           # Next.js (Admin Dashboard)
 │   └── web/             # Next.js (Website)
 ├── services/
-│   └── api/             # Elysia Backend
+│   └── api/             # Express Backend
 └── packages/
     ├── types/
     ├── constants/

@@ -1,10 +1,20 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { rateLimit } from 'express-rate-limit';
 import * as authController from './controller';
 import { validate } from '../../middleware/validate';
 import { auth } from '../../middleware/auth';
 
 const router = Router();
+
+// Stricter rate limiting for OTP endpoints (5 requests per 15 minutes)
+const otpRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 5,
+    message: { success: false, error: 'Too many OTP requests. Please try again later.' },
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+});
 
 const sendOTPSchema = z.object({
     body: z.object({
@@ -19,8 +29,8 @@ const verifyOTPSchema = z.object({
     })
 });
 
-router.post('/send-otp', validate(sendOTPSchema), authController.sendOTP);
-router.post('/verify-otp', validate(verifyOTPSchema), authController.verifyOTP);
+router.post('/send-otp', otpRateLimiter, validate(sendOTPSchema), authController.sendOTP);
+router.post('/verify-otp', otpRateLimiter, validate(verifyOTPSchema), authController.verifyOTP);
 router.post('/refresh', auth, authController.refresh);
 router.get('/me', auth, authController.getMe);
 

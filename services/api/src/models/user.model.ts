@@ -20,4 +20,6 @@ const UserSchema = new Schema<IUser>({
     isVerified: { type: Boolean, default: false },
 }, { timestamps: true });
 
+// Note: phone already has index from unique:true constraint
+
 export const User = mongoose.model<IUser>('User', UserSchema);

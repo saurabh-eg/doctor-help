@@ -46,4 +46,9 @@ const AppointmentSchema = new Schema<IAppointment>({
     meetingLink: { type: String },
 }, { timestamps: true });
 
+// Indexes for query performance
+AppointmentSchema.index({ patientId: 1, date: 1 });
+AppointmentSchema.index({ doctorId: 1, date: 1 });
+AppointmentSchema.index({ date: 1, status: 1 });
+
 export const Appointment = mongoose.model<IAppointment>('Appointment', AppointmentSchema);
