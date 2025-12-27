@@ -1,12 +1,24 @@
-import { Elysia } from 'elysia';
-import { cors } from '@elysiajs/cors';
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
 import mongoose from 'mongoose';
+import { rateLimit } from 'express-rate-limit';
+import dotenv from 'dotenv';
 
-// Import modules
-import { authModule } from './modules/auth';
-import { usersModule } from './modules/users';
-import { doctorsModule } from './modules/doctors';
-import { appointmentsModule } from './modules/appointments';
+// Import middleware
+import { errorHandler } from './middleware/error';
+
+// Import routes
+import { authRouter } from './modules/auth/routes';
+import { usersRouter } from './modules/users/routes';
+import { doctorsRouter } from './modules/doctors/routes';
+import { appointmentsRouter } from './modules/appointments/routes';
+
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 3001;
 
 // Database connection
 const connectDB = async () => {
@@ -20,54 +32,55 @@ const connectDB = async () => {
     }
 };
 
-// Create app
-const app = new Elysia()
-    .use(cors())
+// Middleware
+app.use(helmet());
+app.use(cors());
+app.use(morgan('dev'));
+app.use(express.json());
 
-    // Health check
-    .get('/', () => ({
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 100, // Limit each IP to 100 requests per windowMs
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+});
+app.use('/api', limiter);
+
+// Health check
+app.get('/', (req, res) => {
+    res.json({
         status: 'ok',
         message: '🏥 Doctor Help API is running',
         version: '1.0.0',
         timestamp: new Date().toISOString()
-    }))
+    });
+});
 
-    .get('/health', () => ({
+app.get('/health', (req, res) => {
+    res.json({
         status: 'healthy',
         uptime: process.uptime(),
         mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
-    }))
+    });
+});
 
-    // Register modules under /api prefix
-    .group('/api', (app) => app
-        .use(authModule)
-        .use(usersModule)
-        .use(doctorsModule)
-        .use(appointmentsModule)
-    )
+// Routes
+app.use('/api/auth', authRouter);
+app.use('/api/users', usersRouter);
+app.use('/api/doctors', doctorsRouter);
+app.use('/api/appointments', appointmentsRouter);
 
-    // Global error handler
-    .onError(({ code, error, set }) => {
-        console.error(`❌ Error [${code}]:`, error);
-
-        if (code === 'VALIDATION') {
-            set.status = 400;
-            return { success: false, error: 'Validation error', details: error.message };
-        }
-
-        set.status = 500;
-        return { success: false, error: 'Internal server error' };
-    })
-
-    .listen(process.env.PORT || 3001);
+// Error Handling
+app.use(errorHandler);
 
 // Start server
 const startServer = async () => {
     await connectDB();
-    console.log(`🦊 Elysia is running at http://localhost:${app.server?.port}`);
-    console.log(`📚 API available at http://localhost:${app.server?.port}/api`);
+    app.listen(PORT, () => {
+        console.log(`🚀 Server is running on http://localhost:${PORT}`);
+        console.log(`📚 API available at http://localhost:${PORT}/api`);
+    });
 };
 
 startServer();
-
-export type App = typeof app;

@@ -1,21 +1,28 @@
 {
     "name": "api",
     "version": "1.0.0",
-    "module": "src/index.ts",
     "type": "module",
     "scripts": {
-        "dev": "bun run --watch src/index.ts",
-        "start": "bun run src/index.ts",
-        "seed": "bun run src/seed.ts"
+        "dev": "tsx watch src/index.ts",
+        "start": "tsx src/index.ts",
+        "seed": "tsx src/seed.ts"
     },
     "dependencies": {
-        "@elysiajs/cors": "^1.4.0",
-        "@elysiajs/jwt": "^1.4.0",
-        "elysia": "latest",
-        "mongoose": "latest"
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.7",
+        "express": "^4.21.2",
+        "express-rate-limit": "^7.5.0",
+        "helmet": "^8.0.0",
+        "jose": "^5.9.6",
+        "mongoose": "^8.9.2",
+        "morgan": "^1.10.0",
+        "zod": "^3.24.1"
     },
     "devDependencies": {
-        "bun-types": "latest",
-        "@types/mongoose": "latest"
+        "@types/cors": "^2.8.17",
+        "@types/express": "^5.0.0",
+        "@types/morgan": "^1.9.9",
+        "@types/node": "^20.17.10",
+        "tsx": "^4.19.2"
     }
 }

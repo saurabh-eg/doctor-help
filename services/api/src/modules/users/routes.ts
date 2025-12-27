@@ -1,70 +1,30 @@
-import { Elysia, t } from 'elysia';
-import { User } from '../../models';
+import { Router } from 'express';
+import { z } from 'zod';
+import * as usersController from './controller';
+import { validate } from '../../middleware/validate';
+import { auth } from '../../middleware/auth';
 
-export const usersModule = new Elysia({ prefix: '/users' })
+const router = Router();
 
-    // Get user profile
-    .get('/:id', async ({ params }) => {
-        const user = await User.findById(params.id).select('-__v');
-
-        if (!user) {
-            return { success: false, error: 'User not found' };
-        }
-
-        return {
-            success: true,
-            data: user
-        };
+const updateUserSchema = z.object({
+    body: z.object({
+        name: z.string().optional(),
+        email: z.string().email().optional(),
+        avatar: z.string().optional(),
+        role: z.enum(['patient', 'doctor']).optional()
     })
+});
 
-    // Update user profile
-    .patch('/:id', async ({ params, body }) => {
-        const user = await User.findByIdAndUpdate(
-            params.id,
-            { $set: body },
-            { new: true }
-        ).select('-__v');
-
-        if (!user) {
-            return { success: false, error: 'User not found' };
-        }
-
-        return {
-            success: true,
-            message: 'Profile updated successfully',
-            data: user
-        };
-    }, {
-        body: t.Object({
-            name: t.Optional(t.String()),
-            email: t.Optional(t.String({ format: 'email' })),
-            avatar: t.Optional(t.String()),
-            role: t.Optional(t.Union([
-                t.Literal('patient'),
-                t.Literal('doctor')
-            ]))
-        })
+const setRoleSchema = z.object({
+    body: z.object({
+        role: z.enum(['patient', 'doctor'])
     })
+});
 
-    // Set user role (after role selection screen)
-    .post('/:id/role', async ({ params, body }) => {
-        const user = await User.findByIdAndUpdate(
-            params.id,
-            { role: body.role },
-            { new: true }
-        );
+router.use(auth); // Protect all user routes
 
-        if (!user) {
-            return { success: false, error: 'User not found' };
-        }
+router.get('/:id', usersController.getUser);
+router.patch('/:id', validate(updateUserSchema), usersController.updateUser);
+router.post('/:id/role', validate(setRoleSchema), usersController.setRole);
 
-        return {
-            success: true,
-            message: `Role set to ${body.role}`,
-            data: { role: user.role }
-        };
-    }, {
-        body: t.Object({
-            role: t.Union([t.Literal('patient'), t.Literal('doctor')])
-        })
-    });
+export { router as usersRouter };

@@ -7,6 +7,7 @@ description: Start a new work session - reads project memory and context
 ## Steps
 
 1. **Read project memory**
+   - Read `who-am-i.md` to understand you role
    - Read `PROJECT_MEMORY.md` to understand previous work
    - Read `.agent/workflows/project-context.md` for architecture context
 
