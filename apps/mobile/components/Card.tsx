@@ -1,20 +1,17 @@
 import React from 'react';
 import { View } from 'react-native';
-import { styled } from 'nativewind';
 
 interface CardProps {
     children: React.ReactNode;
     className?: string;
 }
 
-const StyledView = styled(View);
-
 export const Card: React.FC<CardProps> = ({ children, className = '' }) => {
     return (
-        <StyledView
+        <View
             className={`bg-white rounded-3xl p-4 shadow-sm border border-gray-100 ${className}`}
         >
             {children}
-        </StyledView>
+        </View>
     );
 };

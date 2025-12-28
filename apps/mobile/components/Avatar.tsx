@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Image, Text } from 'react-native';
-import { styled } from 'nativewind';
 
 interface AvatarProps {
     uri?: string;

@@ -1,11 +1,24 @@
 {
   "name": "doctor-help",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "services/*",
-    "packages/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "services/*",
+      "packages/*"
+    ],
+    "nohoist": [
+      "**/react-native",
+      "**/react-native/**",
+      "**/expo",
+      "**/expo/**",
+      "**/babel-preset-expo",
+      "**/babel-preset-expo/**",
+      "**/@babel/**",
+      "**/metro",
+      "**/metro/**"
+    ]
+  },
   "scripts": {
     "dev:mobile": "cd apps/mobile && npm start -- --tunnel",
     "dev:admin": "cd apps/admin && npm run dev",

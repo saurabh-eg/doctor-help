@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, TextInput, Text } from 'react-native';
-import { styled } from 'nativewind';
 
 interface InputProps {
     label?: string;
@@ -12,8 +11,6 @@ interface InputProps {
     error?: string;
     className?: string;
 }
-
-const StyledInput = styled(TextInput);
 
 export const Input: React.FC<InputProps> = ({
     label,
@@ -32,7 +29,7 @@ export const Input: React.FC<InputProps> = ({
                     {label}
                 </Text>
             )}
-            <StyledInput
+            <TextInput
                 value={value}
                 onChangeText={onChangeText}
                 placeholder={placeholder}
