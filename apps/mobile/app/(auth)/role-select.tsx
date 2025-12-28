@@ -1,0 +1,100 @@
+import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../contexts/AuthContext';
+
+export default function RoleSelectScreen() {
+    const router = useRouter();
+    const { setRole, user } = useAuth();
+    const [isLoading, setIsLoading] = useState(false);
+    const [selectedRole, setSelectedRole] = useState<'patient' | 'doctor' | null>(null);
+
+    const handleRoleSelect = async (role: 'patient' | 'doctor') => {
+        setSelectedRole(role);
+        setIsLoading(true);
+
+        try {
+            const response = await setRole(role);
+
+            if (response.success) {
+                if (role === 'patient') {
+                    router.replace('/(patient)/home');
+                } else {
+                    router.replace('/(doctor)/dashboard');
+                }
+            } else {
+                Alert.alert('Error', 'Failed to set role. Please try again.');
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Something went wrong. Please try again.');
+        } finally {
+            setIsLoading(false);
+            setSelectedRole(null);
+        }
+    };
+
+    return (
+        <SafeAreaView className="flex-1 bg-white">
+            <View className="flex-1 px-6 justify-center">
+                {/* Header */}
+                <View className="items-center mb-12">
+                    <View className="h-20 w-20 bg-blue-50 rounded-full items-center justify-center mb-6">
+                        <Text className="text-4xl">🏥</Text>
+                    </View>
+                    <Text className="text-2xl font-bold text-slate-900 mb-2">How would you like to use</Text>
+                    <Text className="text-2xl font-bold text-blue-600">Doctor Help?</Text>
+                </View>
+
+                {/* Role Options */}
+                <TouchableOpacity
+                    className={`border-2 rounded-2xl p-5 mb-4 flex-row items-center ${selectedRole === 'patient' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white'
+                        }`}
+                    onPress={() => handleRoleSelect('patient')}
+                    disabled={isLoading}
+                    activeOpacity={0.7}
+                >
+                    <View className="h-14 w-14 bg-blue-50 rounded-xl items-center justify-center mr-4">
+                        {isLoading && selectedRole === 'patient' ? (
+                            <ActivityIndicator color="#197fe6" />
+                        ) : (
+                            <Ionicons name="person" size={28} color="#197fe6" />
+                        )}
+                    </View>
+                    <View className="flex-1">
+                        <Text className="text-lg font-bold text-slate-900">I'm a Patient</Text>
+                        <Text className="text-slate-500">Find doctors and book appointments</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={24} color="#cbd5e1" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    className={`border-2 rounded-2xl p-5 flex-row items-center ${selectedRole === 'doctor' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white'
+                        }`}
+                    onPress={() => handleRoleSelect('doctor')}
+                    disabled={isLoading}
+                    activeOpacity={0.7}
+                >
+                    <View className="h-14 w-14 bg-emerald-50 rounded-xl items-center justify-center mr-4">
+                        {isLoading && selectedRole === 'doctor' ? (
+                            <ActivityIndicator color="#10b981" />
+                        ) : (
+                            <Ionicons name="medkit" size={28} color="#10b981" />
+                        )}
+                    </View>
+                    <View className="flex-1">
+                        <Text className="text-lg font-bold text-slate-900">I'm a Doctor</Text>
+                        <Text className="text-slate-500">Manage patients and consultations</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={24} color="#cbd5e1" />
+                </TouchableOpacity>
+
+                {/* Footer Note */}
+                <Text className="text-center text-slate-400 text-sm mt-8">
+                    You can switch roles anytime from settings
+                </Text>
+            </View>
+        </SafeAreaView>
+    );
+}
