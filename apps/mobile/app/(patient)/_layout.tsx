@@ -24,6 +24,7 @@ export default function PatientLayout() {
                 },
             }}
         >
+            {/* Main tabs */}
             <Tabs.Screen
                 name="home"
                 options={{
@@ -36,7 +37,7 @@ export default function PatientLayout() {
             <Tabs.Screen
                 name="search"
                 options={{
-                    title: 'Find Doctor',
+                    title: 'Find',
                     tabBarIcon: ({ color }) => (
                         <Ionicons name="search" size={24} color={color} />
                     ),
@@ -59,6 +60,28 @@ export default function PatientLayout() {
                         <Ionicons name="person" size={24} color={color} />
                     ),
                 }}
+            />
+
+            {/* Hidden screens - part of booking flow, not shown in tab bar */}
+            <Tabs.Screen
+                name="doctor-profile"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="slot-selection"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="review-pay"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="success"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="ai-assistant"
+                options={{ href: null }}
             />
         </Tabs>
     );

@@ -98,7 +98,7 @@ export default function PatientSearchScreen() {
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                className="px-5 py-3 bg-white"
+                className="px-5 py-2 bg-white border-b border-slate-100"
             >
                 {specializations.map((spec, i) => (
                     <Pressable
@@ -125,10 +125,10 @@ export default function PatientSearchScreen() {
             ) : doctors.length === 0 ? (
                 <View className="flex-1 items-center justify-center px-6">
                     <Ionicons name="search-outline" size={64} color="#cbd5e1" />
-                    <Text className="text-slate-500 mt-4 text-center">No doctors found</Text>
+                    <Text className="text-slate-500 mt-4 text-center" style={{ flexWrap: 'wrap' }}>No doctors found</Text>
                 </View>
             ) : (
-                <ScrollView className="flex-1 px-5 pt-4">
+                <ScrollView className="flex-1 px-5 pt-2">
                     {doctors.map((doctor) => (
                         <Pressable
                             key={doctor._id}
@@ -144,10 +144,10 @@ export default function PatientSearchScreen() {
 
                                 {/* Info */}
                                 <View className="flex-1">
-                                    <Text className="text-lg font-bold text-slate-900">
+                                    <Text className="text-lg font-bold text-slate-900" style={{ flexWrap: 'wrap' }}>
                                         {doctor.userId?.name || 'Doctor'}
                                     </Text>
-                                    <Text className="text-slate-500 text-sm">{doctor.specialization}</Text>
+                                    <Text className="text-slate-500 text-sm" style={{ flexWrap: 'wrap' }}>{doctor.specialization}</Text>
 
                                     <View className="flex-row items-center mt-1">
                                         <Ionicons name="star" size={14} color="#f59e0b" />

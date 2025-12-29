@@ -7,10 +7,10 @@ import { auth } from '../../middleware/auth';
 
 const router = Router();
 
-// Stricter rate limiting for OTP endpoints (5 requests per 15 minutes)
+// Stricter rate limiting for OTP endpoints (8 requests per 15 minutes)
 const otpRateLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    limit: 5,
+    limit: 8,
     message: { success: false, error: 'Too many OTP requests. Please try again later.' },
     standardHeaders: 'draft-7',
     legacyHeaders: false,

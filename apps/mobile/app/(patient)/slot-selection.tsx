@@ -151,9 +151,9 @@ export default function SlotSelectionScreen() {
                         <View className="h-12 w-12 bg-blue-100 rounded-full items-center justify-center mr-3">
                             <Ionicons name="person" size={24} color="#197fe6" />
                         </View>
-                        <View>
-                            <Text className="font-bold text-slate-900">{doctor.userId?.name}</Text>
-                            <Text className="text-slate-500 text-sm">{doctor.specialization}</Text>
+                        <View className="flex-1">
+                            <Text className="font-bold text-slate-900" style={{ flexWrap: 'wrap' }}>{doctor.userId?.name}</Text>
+                            <Text className="text-slate-500 text-sm" style={{ flexWrap: 'wrap' }}>{doctor.specialization}</Text>
                         </View>
                     </View>
                 )}

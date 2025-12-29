@@ -119,10 +119,10 @@ export default function DoctorProfileScreen() {
                     <View className="h-24 w-24 rounded-full bg-blue-50 items-center justify-center">
                         <Ionicons name="person" size={48} color="#197fe6" />
                     </View>
-                    <Text className="text-2xl font-bold text-slate-900 mt-4">
+                    <Text className="text-2xl font-bold text-slate-900 mt-4" style={{ flexWrap: 'wrap', textAlign: 'center', paddingHorizontal: 16 }}>
                         {doctor.userId?.name || 'Doctor'}
                     </Text>
-                    <Text className="text-blue-600 font-semibold">{doctor.specialization}</Text>
+                    <Text className="text-blue-600 font-semibold" style={{ flexWrap: 'wrap', textAlign: 'center' }}>{doctor.specialization}</Text>
 
                     {doctor.isVerified && (
                         <View className="flex-row items-center mt-2 bg-emerald-50 px-3 py-1 rounded-full">
@@ -161,7 +161,7 @@ export default function DoctorProfileScreen() {
                 {doctor.bio && (
                     <View className="mt-8">
                         <Text className="text-xl font-bold text-slate-900 mb-3">About</Text>
-                        <Text className="text-slate-600 leading-6">{doctor.bio}</Text>
+                        <Text className="text-slate-600 leading-6" style={{ flexWrap: 'wrap' }}>{doctor.bio}</Text>
                     </View>
                 )}
 
@@ -172,7 +172,7 @@ export default function DoctorProfileScreen() {
                         <View className="bg-blue-100 p-3 rounded-xl mr-4">
                             <Ionicons name="school" size={24} color="#197fe6" />
                         </View>
-                        <Text className="font-bold text-slate-900 flex-1">{doctor.qualification}</Text>
+                        <Text className="font-bold text-slate-900 flex-1" style={{ flexWrap: 'wrap' }}>{doctor.qualification}</Text>
                     </View>
                 </View>
 
@@ -186,7 +186,7 @@ export default function DoctorProfileScreen() {
                         </View>
                         <Text className="text-blue-600 font-bold text-xl">₹{doctor.consultationFee}</Text>
                     </View>
-                    <Text className="text-slate-400 text-sm mt-2 text-center">
+                    <Text className="text-slate-400 text-sm mt-2 text-center" style={{ flexWrap: 'wrap' }}>
                         * Payment at clinic after consultation
                     </Text>
                 </View>

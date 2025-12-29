@@ -60,7 +60,7 @@ export default function LoginScreen() {
                             />
                         </View>
                         <Text className="text-3xl font-bold text-slate-900 mb-2">Welcome Back</Text>
-                        <Text className="text-slate-500 text-center text-base px-2">
+                        <Text className="text-slate-500 text-center text-base leading-6 px-8" style={{ flexWrap: 'wrap' }}>
                             Enter your mobile number to access your medical records
                         </Text>
                     </View>

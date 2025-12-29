@@ -7,7 +7,7 @@
 ## 📊 Current Status
 
 **Phase:** Mobile App Features  
-**Last Updated:** 2025-12-28
+**Last Updated:** 2025-12-30
 **Deadline:** ~13 days (Production delivery for real client)
 
 ### Progress Summary
@@ -20,6 +20,7 @@
 | API Development (Elysia) | ✅ Complete |
 | Mobile API Integration | ✅ Complete |
 | API Migration to Express | ✅ Complete |
+| Mobile App UI/UX Fixes | ✅ In Progress |
 
 ### User Preferences
 - **Expo Tunnel Mode**: Always use `--tunnel` flag (different networks)
@@ -70,47 +71,7 @@ doctor-help/
 - Created PROJECT_MEMORY.md
 
 **Key Decisions:**
-- Single mobile app for patients AND doctors
-- Role-based routing: `(patient)/`, `(doctor)/`, `(common)/`
-- Rename `mobile-patient` → `mobile`
-- Keep `web-admin` as reference only
-
-**Next Steps:**
-- Approve architecture plan
-- Restructure mobile app with role-based routing
-- Create shared packages
-
----
-
-## 🔧 Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Mobile | Expo SDK 54, React Native, NativeWind |
-| Admin | Next.js 14, TailwindCSS v4 |
-| Website | Next.js 14, TailwindCSS |
-| Backend | Node.js, Express, jose, Zod, MongoDB |
-| AI | Google Gemini SDK |
-
----
-
-### Session: 2025-12-25 (Evening)
-
-**What Was Done:**
-- Upgraded Expo SDK from 52 → 54 for Expo Go compatibility
-- Set up testing infrastructure (Jest + ts-jest, 10 tests passing)
-- Created complete API backend with 4 modules:
-  - Auth (OTP, JWT)
-  - Users (profile CRUD, role assignment)
-  - Doctors (search, register, availability)
-  - Appointments (CRUD, status, notes)
-- Created 3 MongoDB models: User, Doctor, Appointment
-- Created `packages/api-client` for type-safe API calls
-- Created `AuthContext` with AsyncStorage for token persistence
-- Connected all mobile auth screens to API
-- Set up ngrok for cross-network API access
-- Updated workflows for tunnel mode
-
+- Single mobile app for patients AND doct
 **Key Files Created/Modified:**
 - `services/api/src/` - Complete modular API
 - `packages/api-client/src/index.ts` - API client
@@ -153,6 +114,26 @@ doctor-help/
 - Execute API migration to Express
 - Downgrade Node.js to v20 LTS
 - Complete mobile app screens
+
+---
+
+### Session: 2025-12-30
+
+**What Was Done:**
+- Debugged and fixed "My Bookings" screen data population issues (nested `doctorId.userId`).
+- Resolved navigation context errors by replacing NativeWind `className` on `Pressable` with standard `StyleSheet` and `TouchableOpacity`.
+- Cleaned up bottom navigation by hiding unnecessary tabs.
+- Corrected appointment display logic to properly categorize "Today" vs "Upcoming".
+- Fixed UI text truncation issues (e.g., "Clinic Visit") and text overlap.
+- Optimized "Search" screen layout causing spacing issues.
+
+**Key Decisions:**
+- Addressed NativeWind compatibility issues with `Pressable` by reverting to standard React Native styling for specific responsive components.
+
+**Next Steps:**
+- Continue verifying Doctor profile flow.
+- Complete remaining mobile app screens.
+- Verify production build requirements.
 
 ---
 

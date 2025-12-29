@@ -103,8 +103,8 @@ export default function BookAppointmentScreen() {
                         <Ionicons name="person" size={28} color="#197fe6" />
                     </View>
                     <View className="flex-1">
-                        <Text className="text-lg font-bold text-slate-900">{doctorName}</Text>
-                        <Text className="text-slate-600">{specialization}</Text>
+                        <Text className="text-lg font-bold text-slate-900" style={{ flexWrap: 'wrap' }}>{doctorName}</Text>
+                        <Text className="text-slate-600" style={{ flexWrap: 'wrap' }}>{specialization}</Text>
                     </View>
                 </View>
 
@@ -116,9 +116,9 @@ export default function BookAppointmentScreen() {
                             <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
                                 <Ionicons name="calendar" size={20} color="#197fe6" />
                             </View>
-                            <View className="ml-3">
+                            <View className="ml-3 flex-1">
                                 <Text className="text-slate-500 text-sm">Date</Text>
-                                <Text className="text-slate-900 font-semibold">{formatDate(date)}</Text>
+                                <Text className="text-slate-900 font-semibold" style={{ flexWrap: 'wrap' }}>{formatDate(date)}</Text>
                             </View>
                         </View>
                         <View className="flex-row items-center mb-4">
@@ -149,8 +149,8 @@ export default function BookAppointmentScreen() {
                         <View className="flex-row items-center">
                             <Ionicons name="cash-outline" size={24} color="#d97706" />
                             <View className="ml-3 flex-1">
-                                <Text className="text-amber-800 font-bold">Pay at Clinic</Text>
-                                <Text className="text-amber-700 text-sm">Payment will be collected after consultation</Text>
+                                <Text className="text-amber-800 font-bold" style={{ flexWrap: 'wrap' }}>Pay at Clinic</Text>
+                                <Text className="text-amber-700 text-sm" style={{ flexWrap: 'wrap' }}>Payment will be collected after consultation</Text>
                             </View>
                         </View>
                         <View className="mt-4 pt-4 border-t border-amber-200 flex-row justify-between">

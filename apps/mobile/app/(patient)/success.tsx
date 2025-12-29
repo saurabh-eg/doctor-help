@@ -30,10 +30,10 @@ export default function SuccessScreen() {
             </View>
 
             {/* Title */}
-            <Text className="text-3xl font-bold text-slate-900 text-center mb-2">
+            <Text className="text-3xl font-bold text-slate-900 text-center mb-2" style={{ flexWrap: 'wrap' }}>
                 Booking Confirmed!
             </Text>
-            <Text className="text-slate-500 text-center text-base mb-8">
+            <Text className="text-slate-500 text-center text-base mb-8" style={{ flexWrap: 'wrap' }}>
                 Your appointment has been successfully booked.
             </Text>
 
@@ -44,7 +44,7 @@ export default function SuccessScreen() {
                         <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
                             <Ionicons name="person" size={20} color="#197fe6" />
                         </View>
-                        <Text className="ml-3 font-bold text-slate-900">{doctorName}</Text>
+                        <Text className="ml-3 font-bold text-slate-900 flex-1" style={{ flexWrap: 'wrap' }}>{doctorName}</Text>
                     </View>
                     <View className="flex-row">
                         <View className="flex-1 flex-row items-center">
@@ -62,7 +62,7 @@ export default function SuccessScreen() {
             {/* Reminder */}
             <View className="w-full bg-amber-50 p-4 rounded-2xl mb-8 flex-row items-start">
                 <Ionicons name="cash-outline" size={24} color="#d97706" />
-                <Text className="ml-3 text-amber-800 flex-1 text-sm">
+                <Text className="ml-3 text-amber-800 flex-1 text-sm" style={{ flexWrap: 'wrap' }}>
                     Remember to pay at the clinic after your consultation.
                 </Text>
             </View>

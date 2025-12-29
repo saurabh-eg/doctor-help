@@ -59,10 +59,10 @@ export default function DoctorDashboardScreen() {
                         <Ionicons name="person" size={24} color="#64748b" />
                     </View>
                     <View>
-                        <Text className="text-lg font-bold text-slate-900">{greeting}, Dr. {displayName}</Text>
+                        <Text className="text-lg font-bold text-slate-900" style={{ flexWrap: 'wrap' }}>{greeting}, Dr. {displayName}</Text>
                         <View className="flex-row items-center">
                             <Ionicons name="checkmark-circle" size={14} color="#197fe6" />
-                            <Text className="text-xs text-blue-600 ml-1 font-medium">Verified Practitioner</Text>
+                            <Text className="text-xs text-blue-600 ml-1 font-medium" style={{ flexWrap: 'wrap' }}>Verified Practitioner</Text>
                         </View>
                     </View>
                 </View>
@@ -132,7 +132,7 @@ export default function DoctorDashboardScreen() {
                                 >
                                     <Ionicons name={tool.icon} size={24} color={tool.color} />
                                 </View>
-                                <Text className="text-sm font-bold text-slate-900">{tool.label}</Text>
+                                <Text className="text-sm font-bold text-slate-900" style={{ flexWrap: 'wrap', textAlign: 'center' }}>{tool.label}</Text>
                             </TouchableOpacity>
                         ))}
                     </View>

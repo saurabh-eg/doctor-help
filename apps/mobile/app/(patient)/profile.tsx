@@ -61,8 +61,8 @@ export default function PatientProfileScreen() {
                 </View>
 
                 {/* User Info */}
-                <Text className="text-2xl font-bold text-slate-900">{displayName}</Text>
-                <Text className="text-slate-500 font-medium">{displayPhone}</Text>
+                <Text className="text-2xl font-bold text-slate-900" style={{ flexWrap: 'wrap', textAlign: 'center' }}>{displayName}</Text>
+                <Text className="text-slate-500 font-medium" style={{ flexWrap: 'wrap' }}>{displayPhone}</Text>
 
                 {/* Quick Stats */}
                 <View className="flex-row mt-6 gap-6">
@@ -95,8 +95,8 @@ export default function PatientProfileScreen() {
                             <Ionicons name={item.icon} size={22} color="#64748b" />
                         </View>
                         <View className="flex-1">
-                            <Text className="text-base font-bold text-slate-900">{item.label}</Text>
-                            <Text className="text-slate-400 text-sm">{item.subtitle}</Text>
+                            <Text className="text-base font-bold text-slate-900" style={{ flexWrap: 'wrap' }}>{item.label}</Text>
+                            <Text className="text-slate-400 text-sm" style={{ flexWrap: 'wrap' }}>{item.subtitle}</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
                     </TouchableOpacity>

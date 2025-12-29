@@ -47,7 +47,9 @@ export default function RoleSelectScreen() {
                             resizeMode="cover"
                         />
                     </View>
-                    <Text className="text-2xl font-bold text-slate-900 mb-2">How would you like to use</Text>
+                    <Text className="text-2xl font-bold text-slate-900 mb-2 text-center px-6" style={{ flexWrap: 'wrap' }}>
+                        How would you like to use
+                    </Text>
                     <Text className="text-2xl font-bold text-blue-600">Doctor Help?</Text>
                 </View>
 
@@ -67,8 +69,8 @@ export default function RoleSelectScreen() {
                         )}
                     </View>
                     <View className="flex-1">
-                        <Text className="text-lg font-bold text-slate-900">I'm a Patient</Text>
-                        <Text className="text-slate-500">Find doctors and book appointments</Text>
+                        <Text className="text-lg font-bold text-slate-900" style={{ flexWrap: 'wrap' }}>I'm a Patient</Text>
+                        <Text className="text-slate-500" style={{ flexWrap: 'wrap' }}>Find doctors and book appointments</Text>
                     </View>
                     <Ionicons name="chevron-forward" size={24} color="#cbd5e1" />
                 </Pressable>
@@ -88,14 +90,14 @@ export default function RoleSelectScreen() {
                         )}
                     </View>
                     <View className="flex-1">
-                        <Text className="text-lg font-bold text-slate-900">I'm a Doctor</Text>
-                        <Text className="text-slate-500">Manage patients and consultations</Text>
+                        <Text className="text-lg font-bold text-slate-900" style={{ flexWrap: 'wrap' }}>I'm a Doctor</Text>
+                        <Text className="text-slate-500" style={{ flexWrap: 'wrap' }}>Manage patients and consultations</Text>
                     </View>
                     <Ionicons name="chevron-forward" size={24} color="#cbd5e1" />
                 </Pressable>
 
                 {/* Footer Note */}
-                <Text className="text-center text-slate-400 text-sm mt-8">
+                <Text className="text-center text-slate-400 text-sm mt-8" style={{ flexWrap: 'wrap' }}>
                     You can switch roles anytime from settings
                 </Text>
             </View>

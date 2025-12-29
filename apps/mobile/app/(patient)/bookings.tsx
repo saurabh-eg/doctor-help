@@ -76,14 +76,19 @@ export default function PatientBookingsScreen() {
         });
     };
 
-    const now = new Date();
+    // Compare dates only (not time) for proper today detection
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const upcomingAppointments = appointments.filter(apt => {
         const aptDate = new Date(apt.date);
-        return aptDate >= now && apt.status !== 'cancelled' && apt.status !== 'completed';
+        aptDate.setHours(0, 0, 0, 0);
+        return aptDate >= today && apt.status !== 'cancelled' && apt.status !== 'completed';
     });
     const pastAppointments = appointments.filter(apt => {
         const aptDate = new Date(apt.date);
-        return aptDate < now || apt.status === 'completed' || apt.status === 'cancelled';
+        aptDate.setHours(0, 0, 0, 0);
+        return aptDate < today || apt.status === 'completed' || apt.status === 'cancelled';
     });
 
     const displayAppointments = activeTab === 'upcoming' ? upcomingAppointments : pastAppointments;
@@ -154,16 +159,16 @@ export default function PatientBookingsScreen() {
                                             <Text style={styles.doctorName}>{doctorName}</Text>
                                             <Text style={styles.specialty}>{specialization}</Text>
                                             <View style={styles.detailsRow}>
-                                                <View style={styles.detailItem}>
-                                                    <Ionicons name="calendar-outline" size={14} color="#64748b" />
-                                                    <Text style={styles.detailText}>
-                                                        {formatDate(apt.date)}, {apt.timeSlot?.start}
-                                                    </Text>
-                                                </View>
-                                                <View style={styles.detailItem}>
-                                                    <Ionicons name="location-outline" size={14} color="#64748b" />
-                                                    <Text style={styles.detailText}>{apt.type}</Text>
-                                                </View>
+                                                <Ionicons name="calendar-outline" size={14} color="#64748b" />
+                                                <Text style={styles.detailText}>
+                                                    {formatDate(apt.date)}, {apt.timeSlot?.start}
+                                                </Text>
+                                            </View>
+                                            <View style={styles.typeRow}>
+                                                <Ionicons name="location-outline" size={14} color="#64748b" />
+                                                <Text style={styles.typeText}>
+                                                    {apt.type === 'clinic' ? 'Clinic Visit' : apt.type === 'video' ? 'Video Call' : 'Home Visit'}
+                                                </Text>
                                             </View>
                                         </View>
                                     </View>
@@ -208,9 +213,10 @@ const styles = StyleSheet.create({
     statusText: { fontSize: 12, fontWeight: 'bold', textTransform: 'capitalize' },
     doctorName: { fontSize: 16, fontWeight: 'bold', color: '#0f172a' },
     specialty: { fontSize: 14, color: '#64748b' },
-    detailsRow: { flexDirection: 'row', marginTop: 8 },
-    detailItem: { flexDirection: 'row', alignItems: 'center', marginRight: 16 },
-    detailText: { fontSize: 12, color: '#64748b', marginLeft: 4, textTransform: 'capitalize' },
+    detailsRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+    detailText: { fontSize: 12, color: '#64748b', marginLeft: 6 },
+    typeRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
+    typeText: { fontSize: 12, color: '#10b981', marginLeft: 6, fontWeight: '500' },
     payNote: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fef3c7', padding: 12, borderRadius: 12, marginTop: 16 },
     payNoteText: { color: '#b45309', fontSize: 14, marginLeft: 8 },
 });

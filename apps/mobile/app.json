@@ -30,7 +30,8 @@
     },
     "scheme": "doctor-help",
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-font"
     ]
   }
 }

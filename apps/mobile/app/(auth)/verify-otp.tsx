@@ -92,7 +92,7 @@ export default function VerifyOtpScreen() {
 
                     <View className="mb-10">
                         <Text className="text-3xl font-bold text-slate-900 mb-2">Verify Phone</Text>
-                        <Text className="text-slate-500 text-base">
+                        <Text className="text-slate-500 text-base" style={{ flexWrap: 'wrap' }}>
                             Code sent to <Text className="font-bold text-slate-900">+91 {phoneNumber || "your number"}</Text>
                         </Text>
                     </View>

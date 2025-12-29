@@ -44,9 +44,9 @@ export default function DoctorProfileScreen() {
                 </View>
 
                 {/* Doctor Info */}
-                <Text className="text-2xl font-bold text-slate-900">Dr. Smith</Text>
-                <Text className="text-blue-600 font-medium">Cardiologist</Text>
-                <Text className="text-slate-500 text-sm mt-1">MBBS, MD - 12 years experience</Text>
+                <Text className="text-2xl font-bold text-slate-900" style={{ flexWrap: 'wrap', textAlign: 'center' }}>Dr. Smith</Text>
+                <Text className="text-blue-600 font-medium" style={{ flexWrap: 'wrap' }}>Cardiologist</Text>
+                <Text className="text-slate-500 text-sm mt-1" style={{ flexWrap: 'wrap', textAlign: 'center' }}>MBBS, MD - 12 years experience</Text>
 
                 {/* Stats */}
                 <View className="flex-row mt-6 gap-6">
@@ -79,8 +79,8 @@ export default function DoctorProfileScreen() {
                             <Ionicons name={item.icon} size={22} color="#64748b" />
                         </View>
                         <View className="flex-1">
-                            <Text className="text-base font-bold text-slate-900">{item.label}</Text>
-                            <Text className="text-slate-400 text-sm">{item.subtitle}</Text>
+                            <Text className="text-base font-bold text-slate-900" style={{ flexWrap: 'wrap' }}>{item.label}</Text>
+                            <Text className="text-slate-400 text-sm" style={{ flexWrap: 'wrap' }}>{item.subtitle}</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
                     </TouchableOpacity>

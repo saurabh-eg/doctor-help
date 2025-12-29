@@ -125,10 +125,10 @@ export default function PatientHomeScreen() {
                                     Upcoming Appointment
                                 </Text>
                             </View>
-                            <Text className="text-xl font-bold text-slate-900 mb-1">
+                            <Text className="text-xl font-bold text-slate-900 mb-1" style={{ flexWrap: 'wrap' }}>
                                 {upcomingAppointment.doctorId?.userId?.name || 'Doctor'}
                             </Text>
-                            <Text className="text-slate-500 mb-4">
+                            <Text className="text-slate-500 mb-4" style={{ flexWrap: 'wrap' }}>
                                 {upcomingAppointment.doctorId?.specialization} • Clinic Visit
                             </Text>
 
@@ -154,8 +154,8 @@ export default function PatientHomeScreen() {
                             className="bg-blue-50 rounded-3xl p-6 items-center border border-blue-100"
                         >
                             <Ionicons name="calendar-outline" size={48} color="#197fe6" />
-                            <Text className="text-slate-700 font-bold mt-3">No Upcoming Appointments</Text>
-                            <Text className="text-slate-500 text-sm mt-1">Book a doctor consultation</Text>
+                            <Text className="text-slate-700 font-bold mt-3" style={{ flexWrap: 'wrap', textAlign: 'center' }}>No Upcoming Appointments</Text>
+                            <Text className="text-slate-500 text-sm mt-1" style={{ flexWrap: 'wrap', textAlign: 'center' }}>Book a doctor consultation</Text>
                         </Pressable>
                     )}
                 </View>
