@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, Pressable, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -80,11 +80,15 @@ export default function VerifyOtpScreen() {
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 className="flex-1"
             >
-                <ScrollView contentContainerClassName="flex-grow p-6">
+                <ScrollView contentContainerClassName="flex-grow p-6 pt-12">
 
-                    <TouchableOpacity onPress={() => router.back()} className="mb-8">
-                        <Text className="text-blue-600 text-lg">← Back</Text>
-                    </TouchableOpacity>
+                    <Pressable
+                        onPress={() => router.back()}
+                        style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
+                        className="mb-8 w-10 h-10 items-center justify-center bg-slate-50 rounded-full border border-slate-100"
+                    >
+                        <Text className="text-slate-600 text-xl font-bold">←</Text>
+                    </Pressable>
 
                     <View className="mb-10">
                         <Text className="text-3xl font-bold text-slate-900 mb-2">Verify Phone</Text>
@@ -113,11 +117,11 @@ export default function VerifyOtpScreen() {
                         ))}
                     </View>
 
-                    <TouchableOpacity
-                        activeOpacity={0.8}
+                    <Pressable
                         onPress={handleVerify}
                         disabled={otp.some(d => !d) || isLoading}
-                        className={`h-14 rounded-xl items-center justify-center transition-all ${otp.some(d => !d) || isLoading ? 'bg-slate-200' : 'bg-blue-600 active:scale-[0.98]'
+                        style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
+                        className={`h-14 rounded-xl items-center justify-center transition-all ${otp.some(d => !d) || isLoading ? 'bg-slate-200' : 'bg-blue-600'
                             }`}
                     >
                         {isLoading ? (
@@ -127,15 +131,19 @@ export default function VerifyOtpScreen() {
                                 Verify & Proceed
                             </Text>
                         )}
-                    </TouchableOpacity>
+                    </Pressable>
 
                     <View className="flex-row justify-center mt-8">
                         <Text className="text-slate-500">Didn't receive code? </Text>
-                        <TouchableOpacity onPress={handleResend} disabled={countdown > 0}>
+                        <Pressable
+                            onPress={handleResend}
+                            disabled={countdown > 0}
+                            style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
+                        >
                             <Text className={countdown > 0 ? 'text-slate-400' : 'text-blue-600 font-bold'}>
                                 {countdown > 0 ? `Resend in ${countdown}s` : 'Resend OTP'}
                             </Text>
-                        </TouchableOpacity>
+                        </Pressable>
                     </View>
 
                 </ScrollView>

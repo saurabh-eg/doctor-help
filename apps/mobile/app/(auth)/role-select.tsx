@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -37,23 +37,27 @@ export default function RoleSelectScreen() {
 
     return (
         <SafeAreaView className="flex-1 bg-white">
-            <View className="flex-1 px-6 justify-center">
+            <View className="flex-1 px-6 justify-center pt-12">
                 {/* Header */}
                 <View className="items-center mb-12">
-                    <View className="h-20 w-20 bg-blue-50 rounded-full items-center justify-center mb-6">
-                        <Text className="text-4xl">🏥</Text>
+                    <View className="h-24 w-24 bg-white rounded-full items-center justify-center mb-6 shadow-sm overflow-hidden">
+                        <Image
+                            source={require('../../assets/logo.jpg')}
+                            className="w-full h-full"
+                            resizeMode="cover"
+                        />
                     </View>
                     <Text className="text-2xl font-bold text-slate-900 mb-2">How would you like to use</Text>
                     <Text className="text-2xl font-bold text-blue-600">Doctor Help?</Text>
                 </View>
 
                 {/* Role Options */}
-                <TouchableOpacity
+                <Pressable
                     className={`border-2 rounded-2xl p-5 mb-4 flex-row items-center ${selectedRole === 'patient' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white'
                         }`}
                     onPress={() => handleRoleSelect('patient')}
                     disabled={isLoading}
-                    activeOpacity={0.7}
+                    style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
                 >
                     <View className="h-14 w-14 bg-blue-50 rounded-xl items-center justify-center mr-4">
                         {isLoading && selectedRole === 'patient' ? (
@@ -67,14 +71,14 @@ export default function RoleSelectScreen() {
                         <Text className="text-slate-500">Find doctors and book appointments</Text>
                     </View>
                     <Ionicons name="chevron-forward" size={24} color="#cbd5e1" />
-                </TouchableOpacity>
+                </Pressable>
 
-                <TouchableOpacity
+                <Pressable
                     className={`border-2 rounded-2xl p-5 flex-row items-center ${selectedRole === 'doctor' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white'
                         }`}
                     onPress={() => handleRoleSelect('doctor')}
                     disabled={isLoading}
-                    activeOpacity={0.7}
+                    style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
                 >
                     <View className="h-14 w-14 bg-emerald-50 rounded-xl items-center justify-center mr-4">
                         {isLoading && selectedRole === 'doctor' ? (
@@ -88,7 +92,7 @@ export default function RoleSelectScreen() {
                         <Text className="text-slate-500">Manage patients and consultations</Text>
                     </View>
                     <Ionicons name="chevron-forward" size={24} color="#cbd5e1" />
-                </TouchableOpacity>
+                </Pressable>
 
                 {/* Footer Note */}
                 <Text className="text-center text-slate-400 text-sm mt-8">
