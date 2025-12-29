@@ -1,59 +1,82 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { useState } from 'react';
+import { View, Text, ScrollView, Pressable, Alert, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Button } from '../../components/Button';
-import { Card } from '../../components/Card';
-import { Avatar } from '../../components/Avatar';
 import { useAuth } from '../../contexts/AuthContext';
-import { api } from '@doctor-help/api-client';
+import Constants from 'expo-constants';
 
-export default function ReviewPayScreen() {
-    const { doctorId, date, time } = useLocalSearchParams();
+const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:3001/api';
+
+export default function BookAppointmentScreen() {
+    const { doctorId, doctorName, specialization, fee, date, time, endTime } = useLocalSearchParams<{
+        doctorId: string;
+        doctorName: string;
+        specialization: string;
+        fee: string;
+        date: string;
+        time: string;
+        endTime: string;
+    }>();
     const router = useRouter();
-    const { user } = useAuth();
+    const { user, token } = useAuth();
     const [loading, setLoading] = useState(false);
+    const [symptoms, setSymptoms] = useState('');
 
-    // Mock doctor data (should be fetched or passed)
-    const doctor = {
-        name: 'Dr. Sarah Johnson',
-        specialization: 'Cardiologist',
-        fee: 500
+    const consultationFee = parseInt(fee || '0');
+
+    const formatDate = (dateStr: string) => {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-IN', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
     };
 
-    const tax = 50;
-    const total = doctor.fee + tax;
-
     const handleConfirm = async () => {
+        if (!user) {
+            Alert.alert('Error', 'Please login to book an appointment');
+            return;
+        }
+
         setLoading(true);
         try {
-            if (!user) {
-                Alert.alert('Error', 'You must be logged in to book an appointment');
-                return;
-            }
-
-            // Real API call
-            const result = await api.appointments.create({
-                patientId: user.id,
-                doctorId: doctorId as string,
-                date: date as string,
-                timeSlot: { start: time as string, end: '' }, // We might need to calculate end time
-                type: 'clinic',
-                symptoms: 'Initial checkup'
+            const response = await fetch(`${API_BASE_URL}/appointments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    patientId: user.id,
+                    doctorId,
+                    date,
+                    timeSlot: { start: time, end: endTime || time },
+                    type: 'clinic',
+                    symptoms: symptoms || 'General consultation'
+                })
             });
 
-            if (result.success) {
+            const data = await response.json();
+
+            if (data.success) {
                 router.replace({
                     pathname: '/(patient)/success',
-                    params: { appointmentId: result.data?._id }
+                    params: {
+                        appointmentId: data.data?._id,
+                        doctorName,
+                        date,
+                        time
+                    }
                 });
             } else {
-                Alert.alert('Error', result.error || 'Failed to book appointment');
+                Alert.alert('Booking Failed', data.error || 'Could not book appointment. Please try again.');
             }
         } catch (error) {
             console.error('Booking error:', error);
-            Alert.alert('Error', 'An unexpected error occurred');
+            Alert.alert('Error', 'Network error. Please check your connection.');
         } finally {
             setLoading(false);
         }
@@ -61,70 +84,107 @@ export default function ReviewPayScreen() {
 
     return (
         <SafeAreaView className="flex-1 bg-white">
+            {/* Header */}
             <View className="flex-row items-center px-5 py-4">
-                <TouchableOpacity onPress={() => router.back()}>
+                <Pressable
+                    onPress={() => router.back()}
+                    style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
+                    className="w-10 h-10 items-center justify-center bg-slate-50 rounded-full"
+                >
                     <Ionicons name="arrow-back" size={24} color="#1e293b" />
-                </TouchableOpacity>
-                <Text className="text-xl font-bold text-slate-900 ml-4">Review & Pay</Text>
+                </Pressable>
+                <Text className="text-xl font-bold text-slate-900 ml-4">Confirm Booking</Text>
             </View>
 
             <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
                 {/* Doctor Info Card */}
-                <Card className="mt-4 flex-row items-center">
-                    <Avatar size="lg" name={doctor.name} className="bg-blue-50" />
-                    <View className="ml-4 flex-1">
-                        <Text className="text-lg font-bold text-slate-900">{doctor.name}</Text>
-                        <Text className="text-slate-500">{doctor.specialization}</Text>
-                        <View className="flex-row items-center mt-1">
-                            <Ionicons name="star" size={14} color="#f59e0b" />
-                            <Text className="text-slate-700 font-bold ml-1">4.9</Text>
-                        </View>
+                <View className="bg-blue-50 p-4 rounded-2xl flex-row items-center mt-4">
+                    <View className="h-14 w-14 bg-blue-100 rounded-full items-center justify-center mr-4">
+                        <Ionicons name="person" size={28} color="#197fe6" />
                     </View>
-                </Card>
+                    <View className="flex-1">
+                        <Text className="text-lg font-bold text-slate-900">{doctorName}</Text>
+                        <Text className="text-slate-600">{specialization}</Text>
+                    </View>
+                </View>
 
                 {/* Appointment Details */}
                 <View className="mt-8">
                     <Text className="text-lg font-bold text-slate-900 mb-4">Appointment Details</Text>
-                    <Card>
+                    <View className="bg-slate-50 p-4 rounded-2xl">
                         <View className="flex-row items-center mb-4">
-                            <Ionicons name="calendar-outline" size={20} color="#64748b" />
-                            <Text className="text-slate-700 ml-3 font-medium">{date}</Text>
+                            <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
+                                <Ionicons name="calendar" size={20} color="#197fe6" />
+                            </View>
+                            <View className="ml-3">
+                                <Text className="text-slate-500 text-sm">Date</Text>
+                                <Text className="text-slate-900 font-semibold">{formatDate(date)}</Text>
+                            </View>
+                        </View>
+                        <View className="flex-row items-center mb-4">
+                            <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
+                                <Ionicons name="time" size={20} color="#197fe6" />
+                            </View>
+                            <View className="ml-3">
+                                <Text className="text-slate-500 text-sm">Time</Text>
+                                <Text className="text-slate-900 font-semibold">{time}</Text>
+                            </View>
                         </View>
                         <View className="flex-row items-center">
-                            <Ionicons name="time-outline" size={20} color="#64748b" />
-                            <Text className="text-slate-700 ml-3 font-medium">{time}</Text>
+                            <View className="w-10 h-10 bg-emerald-100 rounded-full items-center justify-center">
+                                <Ionicons name="location" size={20} color="#10b981" />
+                            </View>
+                            <View className="ml-3">
+                                <Text className="text-slate-500 text-sm">Consultation Type</Text>
+                                <Text className="text-emerald-600 font-semibold">Clinic Visit</Text>
+                            </View>
                         </View>
-                    </Card>
+                    </View>
                 </View>
 
-                {/* Payment Summary */}
+                {/* Payment Info */}
                 <View className="mt-8">
-                    <Text className="text-lg font-bold text-slate-900 mb-4">Payment Summary</Text>
-                    <Card>
-                        <View className="flex-row justify-between mb-2">
-                            <Text className="text-slate-500">Consultation Fee</Text>
-                            <Text className="text-slate-900 font-medium">₹{doctor.fee}</Text>
+                    <Text className="text-lg font-bold text-slate-900 mb-4">Payment</Text>
+                    <View className="bg-amber-50 p-4 rounded-2xl border border-amber-200">
+                        <View className="flex-row items-center">
+                            <Ionicons name="cash-outline" size={24} color="#d97706" />
+                            <View className="ml-3 flex-1">
+                                <Text className="text-amber-800 font-bold">Pay at Clinic</Text>
+                                <Text className="text-amber-700 text-sm">Payment will be collected after consultation</Text>
+                            </View>
                         </View>
-                        <View className="flex-row justify-between mb-4 pb-4 border-b border-slate-100">
-                            <Text className="text-slate-500">Service Fee & Tax</Text>
-                            <Text className="text-slate-900 font-medium">₹{tax}</Text>
+                        <View className="mt-4 pt-4 border-t border-amber-200 flex-row justify-between">
+                            <Text className="text-slate-700 font-medium">Consultation Fee</Text>
+                            <Text className="text-slate-900 font-bold text-lg">₹{consultationFee}</Text>
                         </View>
-                        <View className="flex-row justify-between">
-                            <Text className="text-slate-900 font-bold">Total Amount</Text>
-                            <Text className="text-blue-600 font-bold text-lg">₹{total}</Text>
-                        </View>
-                    </Card>
+                    </View>
                 </View>
 
-                <View className="h-20" />
+                {/* Important Note */}
+                <View className="mt-6 bg-blue-50 p-4 rounded-2xl flex-row items-start">
+                    <Ionicons name="information-circle" size={24} color="#197fe6" />
+                    <Text className="text-blue-800 ml-3 flex-1 text-sm leading-5">
+                        Please arrive 10 minutes before your appointment time. Carry any previous medical reports if available.
+                    </Text>
+                </View>
+
+                <View className="h-24" />
             </ScrollView>
 
+            {/* Bottom Action */}
             <View className="p-5 border-t border-slate-100">
-                <Button
-                    title={`Pay & Confirm Appointment`}
-                    loading={loading}
+                <Pressable
                     onPress={handleConfirm}
-                />
+                    disabled={loading}
+                    style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
+                    className={`h-14 rounded-xl items-center justify-center ${loading ? 'bg-slate-300' : 'bg-blue-600'}`}
+                >
+                    {loading ? (
+                        <ActivityIndicator color="white" />
+                    ) : (
+                        <Text className="text-white font-bold text-lg">Confirm Appointment</Text>
+                    )}
+                </Pressable>
             </View>
         </SafeAreaView>
     );

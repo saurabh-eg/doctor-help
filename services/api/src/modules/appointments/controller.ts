@@ -51,8 +51,14 @@ export const getPatientAppointments = async (req: Request, res: Response) => {
     }
 
     const appointments = await Appointment.find(filter)
-        .populate('doctorId')
-        .sort({ date: 1, 'timeSlot.start': 1 });
+        .populate({
+            path: 'doctorId',
+            populate: {
+                path: 'userId',
+                select: 'name phone'
+            }
+        })
+        .sort({ date: -1, 'timeSlot.start': 1 });
 
     res.json({
         success: true,

@@ -1,165 +1,216 @@
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from 'expo-router';
+import { useAuth } from '../../contexts/AuthContext';
+import Constants from 'expo-constants';
+
+const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:3001/api';
 
 type TabType = 'upcoming' | 'past';
 
 interface Appointment {
-    id: string;
-    doctorName: string;
-    specialty: string;
+    _id: string;
+    doctorId: {
+        userId: { name: string };
+        specialization: string;
+    };
     date: string;
-    time: string;
-    type: 'video' | 'clinic';
-    status: 'confirmed' | 'pending' | 'completed';
+    timeSlot: { start: string; end: string };
+    type: 'video' | 'clinic' | 'home';
+    status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
 }
 
 export default function PatientBookingsScreen() {
+    const { user, token } = useAuth();
     const [activeTab, setActiveTab] = useState<TabType>('upcoming');
+    const [appointments, setAppointments] = useState<Appointment[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const appointments: Appointment[] = [
-        {
-            id: '1',
-            doctorName: 'Dr. Sarah Johnson',
-            specialty: 'Cardiologist',
-            date: 'Dec 26, 2025',
-            time: '10:30 AM',
-            type: 'video',
-            status: 'confirmed',
-        },
-        {
-            id: '2',
-            doctorName: 'Dr. Michael Chen',
-            specialty: 'Dermatologist',
-            date: 'Dec 28, 2025',
-            time: '02:00 PM',
-            type: 'clinic',
-            status: 'pending',
-        },
-    ];
+    const fetchAppointments = useCallback(async () => {
+        if (!user?.id || !token) {
+            setLoading(false);
+            return;
+        }
 
-    const pastAppointments: Appointment[] = [
-        {
-            id: '3',
-            doctorName: 'Dr. Priya Sharma',
-            specialty: 'Pediatrician',
-            date: 'Dec 20, 2025',
-            time: '11:00 AM',
-            type: 'video',
-            status: 'completed',
-        },
-    ];
+        setLoading(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}/appointments/patient/${user.id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                setAppointments(data.data || []);
+            }
+        } catch (error) {
+            console.error('Failed to fetch appointments:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [user?.id, token]);
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchAppointments();
+        }, [fetchAppointments])
+    );
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'confirmed': return { bg: 'bg-blue-50', text: 'text-blue-600' };
-            case 'pending': return { bg: 'bg-amber-50', text: 'text-amber-600' };
-            case 'completed': return { bg: 'bg-emerald-50', text: 'text-emerald-600' };
-            default: return { bg: 'bg-slate-50', text: 'text-slate-600' };
+            case 'confirmed': return { bg: '#dbeafe', text: '#2563eb' };
+            case 'pending': return { bg: '#fef3c7', text: '#d97706' };
+            case 'completed': return { bg: '#d1fae5', text: '#059669' };
+            case 'cancelled': return { bg: '#fee2e2', text: '#dc2626' };
+            default: return { bg: '#f1f5f9', text: '#475569' };
         }
     };
 
-    const displayAppointments = activeTab === 'upcoming' ? appointments : pastAppointments;
+    const formatDate = (dateStr: string) => {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+        });
+    };
+
+    const now = new Date();
+    const upcomingAppointments = appointments.filter(apt => {
+        const aptDate = new Date(apt.date);
+        return aptDate >= now && apt.status !== 'cancelled' && apt.status !== 'completed';
+    });
+    const pastAppointments = appointments.filter(apt => {
+        const aptDate = new Date(apt.date);
+        return aptDate < now || apt.status === 'completed' || apt.status === 'cancelled';
+    });
+
+    const displayAppointments = activeTab === 'upcoming' ? upcomingAppointments : pastAppointments;
 
     return (
-        <SafeAreaView className="flex-1 bg-slate-50">
+        <SafeAreaView style={styles.container}>
             {/* Header */}
-            <View className="bg-white px-5 pt-4 pb-4 border-b border-slate-100">
-                <Text className="text-2xl font-bold text-slate-900 text-center mb-4">My Bookings</Text>
+            <View style={styles.header}>
+                <Text style={styles.title}>My Bookings</Text>
 
-                {/* Tabs */}
-                <View className="flex-row bg-slate-100 p-1 rounded-xl">
+                {/* Tabs - Using TouchableOpacity with inline styles to avoid NativeWind bug */}
+                <View style={styles.tabContainer}>
                     <TouchableOpacity
-                        className={`flex-1 h-10 items-center justify-center rounded-lg ${activeTab === 'upcoming' ? 'bg-white shadow-sm' : ''
-                            }`}
                         onPress={() => setActiveTab('upcoming')}
+                        style={[styles.tab, activeTab === 'upcoming' && styles.activeTab]}
                     >
-                        <Text className={`font-bold ${activeTab === 'upcoming' ? 'text-blue-600' : 'text-slate-400'
-                            }`}>
-                            Upcoming
+                        <Text style={[styles.tabText, activeTab === 'upcoming' && styles.activeTabText]}>
+                            Upcoming ({upcomingAppointments.length})
                         </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        className={`flex-1 h-10 items-center justify-center rounded-lg ${activeTab === 'past' ? 'bg-white shadow-sm' : ''
-                            }`}
                         onPress={() => setActiveTab('past')}
+                        style={[styles.tab, activeTab === 'past' && styles.activeTab]}
                     >
-                        <Text className={`font-bold ${activeTab === 'past' ? 'text-blue-600' : 'text-slate-400'
-                            }`}>
-                            Past
+                        <Text style={[styles.tabText, activeTab === 'past' && styles.activeTabText]}>
+                            Past ({pastAppointments.length})
                         </Text>
                     </TouchableOpacity>
                 </View>
             </View>
 
-            {/* Appointments List */}
-            <ScrollView className="flex-1 px-5 pt-4">
-                {displayAppointments.length === 0 ? (
-                    <View className="flex-1 items-center justify-center py-20">
-                        <Ionicons name="calendar-outline" size={64} color="#cbd5e1" />
-                        <Text className="text-slate-400 font-medium mt-4">No {activeTab} appointments</Text>
-                    </View>
-                ) : (
-                    displayAppointments.map((apt) => {
-                        const statusStyle = getStatusColor(apt.status);
-                        return (
-                            <View
-                                key={apt.id}
-                                className="bg-white rounded-2xl p-4 mb-4 border border-slate-100 relative overflow-hidden"
-                            >
-                                {/* Status indicator bar */}
-                                <View className="absolute left-0 top-4 bottom-4 w-1 bg-blue-500 rounded-r-full" />
+            {/* Content */}
+            {loading ? (
+                <View style={styles.centered}>
+                    <ActivityIndicator size="large" color="#197fe6" />
+                    <Text style={styles.loadingText}>Loading appointments...</Text>
+                </View>
+            ) : (
+                <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+                    {displayAppointments.length === 0 ? (
+                        <View style={styles.emptyState}>
+                            <Ionicons name="calendar-outline" size={64} color="#cbd5e1" />
+                            <Text style={styles.emptyText}>No {activeTab} appointments</Text>
+                            {activeTab === 'upcoming' && (
+                                <Text style={styles.emptySubtext}>
+                                    Book a doctor consultation to see it here
+                                </Text>
+                            )}
+                        </View>
+                    ) : (
+                        displayAppointments.map((apt) => {
+                            const statusStyle = getStatusColor(apt.status);
+                            const doctorName = apt.doctorId?.userId?.name || 'Doctor';
+                            const specialization = apt.doctorId?.specialization || '';
 
-                                <View className="flex-row items-start ml-2">
-                                    {/* Doctor Avatar */}
-                                    <View className="h-14 w-14 rounded-full bg-slate-100 items-center justify-center mr-4">
-                                        <Ionicons name="person" size={28} color="#64748b" />
+                            return (
+                                <View key={apt._id} style={styles.card}>
+                                    <View style={styles.cardRow}>
+                                        <View style={styles.avatar}>
+                                            <Ionicons name="person" size={28} color="#197fe6" />
+                                        </View>
+                                        <View style={styles.cardContent}>
+                                            <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
+                                                <Text style={[styles.statusText, { color: statusStyle.text }]}>
+                                                    {apt.status}
+                                                </Text>
+                                            </View>
+                                            <Text style={styles.doctorName}>{doctorName}</Text>
+                                            <Text style={styles.specialty}>{specialization}</Text>
+                                            <View style={styles.detailsRow}>
+                                                <View style={styles.detailItem}>
+                                                    <Ionicons name="calendar-outline" size={14} color="#64748b" />
+                                                    <Text style={styles.detailText}>
+                                                        {formatDate(apt.date)}, {apt.timeSlot?.start}
+                                                    </Text>
+                                                </View>
+                                                <View style={styles.detailItem}>
+                                                    <Ionicons name="location-outline" size={14} color="#64748b" />
+                                                    <Text style={styles.detailText}>{apt.type}</Text>
+                                                </View>
+                                            </View>
+                                        </View>
                                     </View>
 
-                                    {/* Info */}
-                                    <View className="flex-1">
-                                        {/* Status Badge */}
-                                        <View className={`self-start px-2 py-0.5 rounded-full mb-1 ${statusStyle.bg}`}>
-                                            <Text className={`text-xs font-bold capitalize ${statusStyle.text}`}>
-                                                {apt.status}
-                                            </Text>
+                                    {activeTab === 'upcoming' && apt.type === 'clinic' && (
+                                        <View style={styles.payNote}>
+                                            <Ionicons name="cash-outline" size={18} color="#d97706" />
+                                            <Text style={styles.payNoteText}>Pay at clinic</Text>
                                         </View>
-
-                                        <Text className="text-base font-bold text-slate-900">{apt.doctorName}</Text>
-                                        <Text className="text-slate-500 text-sm">{apt.specialty}</Text>
-
-                                        {/* Date & Type */}
-                                        <View className="flex-row items-center mt-2 gap-4">
-                                            <View className="flex-row items-center">
-                                                <Ionicons name="calendar-outline" size={14} color="#64748b" />
-                                                <Text className="text-slate-600 text-xs ml-1">{apt.date}, {apt.time}</Text>
-                                            </View>
-                                            <View className="flex-row items-center">
-                                                <Ionicons
-                                                    name={apt.type === 'video' ? 'videocam' : 'location'}
-                                                    size={14}
-                                                    color="#64748b"
-                                                />
-                                                <Text className="text-slate-600 text-xs ml-1 capitalize">{apt.type}</Text>
-                                            </View>
-                                        </View>
-                                    </View>
+                                    )}
                                 </View>
-
-                                {/* Action Button */}
-                                {activeTab === 'upcoming' && (
-                                    <TouchableOpacity className="bg-blue-50 h-11 rounded-xl items-center justify-center mt-4">
-                                        <Text className="text-blue-600 font-bold">Manage Booking</Text>
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-                        );
-                    })
-                )}
-
-                <View className="h-6" />
-            </ScrollView>
+                            );
+                        })
+                    )}
+                </ScrollView>
+            )}
         </SafeAreaView>
     );
 }
+
+const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: '#f8fafc' },
+    header: { backgroundColor: '#fff', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+    title: { fontSize: 24, fontWeight: 'bold', color: '#0f172a', textAlign: 'center', marginBottom: 16 },
+    tabContainer: { flexDirection: 'row', backgroundColor: '#f1f5f9', padding: 4, borderRadius: 12 },
+    tab: { flex: 1, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
+    activeTab: { backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
+    tabText: { fontWeight: 'bold', color: '#94a3b8' },
+    activeTabText: { color: '#2563eb' },
+    centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    loadingText: { color: '#64748b', marginTop: 16 },
+    scrollView: { flex: 1, paddingHorizontal: 20 },
+    scrollContent: { paddingTop: 16, paddingBottom: 24 },
+    emptyState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 80 },
+    emptyText: { color: '#94a3b8', fontWeight: '500', marginTop: 16 },
+    emptySubtext: { color: '#94a3b8', fontSize: 12, marginTop: 8, textAlign: 'center', paddingHorizontal: 32 },
+    card: { backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: '#f1f5f9' },
+    cardRow: { flexDirection: 'row', alignItems: 'flex-start' },
+    avatar: { height: 56, width: 56, borderRadius: 28, backgroundColor: '#eff6ff', alignItems: 'center', justifyContent: 'center', marginRight: 16 },
+    cardContent: { flex: 1 },
+    statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 9999, marginBottom: 4 },
+    statusText: { fontSize: 12, fontWeight: 'bold', textTransform: 'capitalize' },
+    doctorName: { fontSize: 16, fontWeight: 'bold', color: '#0f172a' },
+    specialty: { fontSize: 14, color: '#64748b' },
+    detailsRow: { flexDirection: 'row', marginTop: 8 },
+    detailItem: { flexDirection: 'row', alignItems: 'center', marginRight: 16 },
+    detailText: { fontSize: 12, color: '#64748b', marginLeft: 4, textTransform: 'capitalize' },
+    payNote: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fef3c7', padding: 12, borderRadius: 12, marginTop: 16 },
+    payNoteText: { color: '#b45309', fontSize: 14, marginLeft: 8 },
+});
