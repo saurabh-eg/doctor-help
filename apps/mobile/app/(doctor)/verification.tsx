@@ -19,7 +19,8 @@ export default function DoctorVerificationScreen() {
         qualification: '',
         experience: '',
         consultationFee: '',
-        bio: ''
+        bio: '',
+        photoUrl: ''
     });
 
     const handleSubmit = async () => {
@@ -38,7 +39,8 @@ export default function DoctorVerificationScreen() {
                 qualification: form.qualification,
                 experience: parseInt(form.experience),
                 consultationFee: parseInt(form.consultationFee),
-                bio: form.bio
+                bio: form.bio,
+                photoUrl: form.photoUrl
             });
 
             if (result.success) {
@@ -77,6 +79,12 @@ export default function DoctorVerificationScreen() {
                     placeholder="e.g. Cardiologist, Dermatologist"
                     value={form.specialization}
                     onChangeText={(text) => setForm(prev => ({ ...prev, specialization: text }))}
+                />
+                <Input
+                    label="Profile Photo URL"
+                    placeholder="Paste a direct image URL (e.g. from Imgur, Cloudinary)"
+                    value={form.photoUrl}
+                    onChangeText={(text) => setForm(prev => ({ ...prev, photoUrl: text }))}
                 />
 
                 <Input

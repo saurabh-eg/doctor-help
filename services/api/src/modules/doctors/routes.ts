@@ -13,7 +13,8 @@ const registerDoctorSchema = z.object({
         qualification: z.string(),
         experience: z.number().min(0),
         consultationFee: z.number().min(0),
-        bio: z.string().optional()
+        bio: z.string().optional(),
+        photoUrl: z.string().url().optional()
     })
 });
 

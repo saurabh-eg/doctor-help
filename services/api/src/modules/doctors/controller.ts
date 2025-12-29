@@ -85,7 +85,8 @@ export const registerDoctor = async (req: Request, res: Response) => {
         qualification,
         experience,
         consultationFee,
-        bio
+        bio,
+        photoUrl
     } = req.body;
 
     // Check if doctor profile already exists
@@ -101,6 +102,7 @@ export const registerDoctor = async (req: Request, res: Response) => {
         experience,
         consultationFee,
         bio,
+        photoUrl,
         isVerified: false // Admin needs to verify
     });
 

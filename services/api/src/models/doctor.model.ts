@@ -10,6 +10,7 @@ export interface IDoctor extends Document {
     reviewCount: number;
     isVerified: boolean;
     bio?: string;
+    photoUrl?: string;
     availableSlots: {
         day: number; // 0-6 (Sunday-Saturday)
         startTime: string; // HH:mm
@@ -29,6 +30,7 @@ const DoctorSchema = new Schema<IDoctor>({
     reviewCount: { type: Number, default: 0 },
     isVerified: { type: Boolean, default: false },
     bio: { type: String },
+    photoUrl: { type: String },
     availableSlots: [{
         day: { type: Number, required: true },
         startTime: { type: String, required: true },
