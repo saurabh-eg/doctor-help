@@ -70,13 +70,13 @@ export default function DoctorPatientsScreen() {
 
                         {/* Info */}
                         <View className="flex-1">
-                            <Text className="text-base font-bold text-slate-900">{patient.name}</Text>
-                            <Text className="text-slate-500 text-sm">
+                            <Text className="text-base font-bold text-slate-900" style={{ flexWrap: 'wrap' }}>{patient.name}</Text>
+                            <Text className="text-slate-500 text-sm" style={{ flexWrap: 'wrap' }}>
                                 {patient.age} yrs • {patient.gender}
                             </Text>
                             <View className="flex-row items-center mt-1">
                                 <View className="bg-blue-50 px-2 py-0.5 rounded">
-                                    <Text className="text-blue-600 text-xs font-bold">{patient.condition}</Text>
+                                    <Text className="text-blue-600 text-xs font-bold" style={{ flexWrap: 'wrap' }}>{patient.condition}</Text>
                                 </View>
                             </View>
                         </View>

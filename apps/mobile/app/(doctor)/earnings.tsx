@@ -61,9 +61,9 @@ export default function DoctorEarningsScreen() {
                             <View className="bg-slate-100 p-2 rounded-full mr-3">
                                 <Ionicons name="person" size={20} color="#64748b" />
                             </View>
-                            <View>
-                                <Text className="font-bold text-slate-900">{tx.patient}</Text>
-                                <Text className="text-slate-400 text-xs">{tx.date}</Text>
+                            <View className="flex-1">
+                                <Text className="font-bold text-slate-900" style={{ flexWrap: 'wrap' }}>{tx.patient}</Text>
+                                <Text className="text-slate-400 text-xs" style={{ flexWrap: 'wrap' }}>{tx.date}</Text>
                             </View>
                         </View>
                         <View className="items-end">

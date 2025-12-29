@@ -128,7 +128,7 @@ export default function PatientSearchScreen() {
                     <Text className="text-slate-500 mt-4 text-center" style={{ flexWrap: 'wrap' }}>No doctors found</Text>
                 </View>
             ) : (
-                <ScrollView className="flex-1 px-5 pt-2">
+                <ScrollView className="px-5 pt-2" contentContainerClassName="pt-0">
                     {doctors.map((doctor) => (
                         <Pressable
                             key={doctor._id}

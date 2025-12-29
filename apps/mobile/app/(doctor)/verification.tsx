@@ -68,7 +68,7 @@ export default function DoctorVerificationScreen() {
             </View>
 
             <ScrollView className="flex-1 px-5 pt-4" showsVerticalScrollIndicator={false}>
-                <Text className="text-slate-500 mb-6">
+                <Text className="text-slate-500 mb-6" style={{ flexWrap: 'wrap' }}>
                     Please provide your professional details to get verified and start consulting patients.
                 </Text>
 

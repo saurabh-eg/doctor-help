@@ -79,10 +79,6 @@ export default function PatientLayout() {
                 name="success"
                 options={{ href: null }}
             />
-            <Tabs.Screen
-                name="ai-assistant"
-                options={{ href: null }}
-            />
         </Tabs>
     );
 }
