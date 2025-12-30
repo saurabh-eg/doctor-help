@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,7 +12,7 @@ interface MenuItem {
 
 export default function PatientProfileScreen() {
     const router = useRouter();
-    const { user, logout } = useAuth();
+    const { user, logout, isGuest, setGuestMode } = useAuth();
 
     const menuItems: MenuItem[] = [
         { icon: 'person-outline', label: 'Edit Profile', subtitle: 'Change name, phone...' },
@@ -34,12 +34,95 @@ export default function PatientProfileScreen() {
                     style: 'destructive',
                     onPress: async () => {
                         await logout();
-                        router.replace('/(auth)/login');
+                        router.replace('/');
                     }
                 }
             ]
         );
     };
+
+    const handleLogin = async () => {
+        await setGuestMode(false);
+        router.push('/(auth)/login');
+    };
+
+    // Guest Profile View
+    if (isGuest) {
+        return (
+            <SafeAreaView className="flex-1 bg-slate-50">
+                <View className="bg-white px-5 pt-4 pb-8 rounded-b-3xl items-center border-b border-slate-100">
+                    <View className="h-24 w-24 rounded-full bg-slate-100 items-center justify-center border-4 border-white shadow-lg mb-4">
+                        <Ionicons name="person-outline" size={48} color="#94a3b8" />
+                    </View>
+                    <Text className="text-2xl font-bold text-slate-900 mb-1">Guest User</Text>
+                    <Text className="text-slate-500 text-center mb-6">Register to unlock all features</Text>
+                    
+                    <Pressable
+                        onPress={handleLogin}
+                        style={({ pressed }) => [
+                            {
+                                backgroundColor: '#2563eb',
+                                paddingVertical: 14,
+                                paddingHorizontal: 40,
+                                borderRadius: 12,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                opacity: pressed ? 0.8 : 1,
+                            }
+                        ]}
+                    >
+                        <Ionicons name="person-add" size={20} color="#fff" style={{ marginRight: 8 }} />
+                        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>Register / Login</Text>
+                    </Pressable>
+                </View>
+
+                {/* Benefits of Registering */}
+                <View style={{ padding: 20 }}>
+                    <Text style={{ fontSize: 18, fontWeight: '700', color: '#0f172a', marginBottom: 16 }}>
+                        Why Register?
+                    </Text>
+                    
+                    {[
+                        { icon: 'calendar', title: 'Book Appointments', desc: 'Schedule visits with verified doctors' },
+                        { icon: 'document-text', title: 'Health Records', desc: 'Store prescriptions and lab reports' },
+                        { icon: 'notifications', title: 'Reminders', desc: 'Get appointment notifications' },
+                        { icon: 'heart', title: 'Save Favorites', desc: 'Quick access to preferred doctors' },
+                    ].map((item, i) => (
+                        <View key={i} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', padding: 16, borderRadius: 16, marginBottom: 12 }}>
+                            <View style={{ backgroundColor: '#eff6ff', padding: 12, borderRadius: 12, marginRight: 16 }}>
+                                <Ionicons name={item.icon as any} size={24} color="#2563eb" />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ fontWeight: '700', color: '#0f172a', fontSize: 15 }}>{item.title}</Text>
+                                <Text style={{ color: '#64748b', fontSize: 13 }}>{item.desc}</Text>
+                            </View>
+                        </View>
+                    ))}
+                </View>
+
+                {/* Exit Guest Mode */}
+                <View style={{ paddingHorizontal: 20, marginTop: 'auto', paddingBottom: 20 }}>
+                    <Pressable
+                        onPress={async () => {
+                            await logout();
+                            router.replace('/');
+                        }}
+                        style={({ pressed }) => [
+                            {
+                                backgroundColor: '#fef2f2',
+                                paddingVertical: 14,
+                                borderRadius: 12,
+                                alignItems: 'center',
+                                opacity: pressed ? 0.8 : 1,
+                            }
+                        ]}
+                    >
+                        <Text style={{ color: '#dc2626', fontSize: 15, fontWeight: '600' }}>Exit Guest Mode</Text>
+                    </Pressable>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     const displayName = user?.name || 'Patient';
     const displayPhone = user?.phone

@@ -4,6 +4,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
+import { useAuth } from '../../contexts/AuthContext';
+import GuestPrompt from '../../components/GuestPrompt';
 
 const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:3001/api';
 
@@ -32,8 +34,10 @@ interface Doctor {
 export default function DoctorProfileScreen() {
     const { doctorId } = useLocalSearchParams<{ doctorId: string }>();
     const router = useRouter();
+    const { isGuest } = useAuth();
     const [doctor, setDoctor] = useState<Doctor | null>(null);
     const [loading, setLoading] = useState(true);
+    const [showGuestPrompt, setShowGuestPrompt] = useState(false);
 
     useEffect(() => {
         const fetchDoctor = async () => {
@@ -194,13 +198,26 @@ export default function DoctorProfileScreen() {
                 <View className="h-32" />
             </ScrollView>
 
+            {/* Guest Prompt Modal */}
+            <GuestPrompt 
+                visible={showGuestPrompt} 
+                onClose={() => setShowGuestPrompt(false)}
+                action="book an appointment"
+            />
+
             {/* Bottom Action */}
             <View className="absolute bottom-0 left-0 right-0 bg-white p-5 border-t border-slate-100">
                 <Pressable
-                    onPress={() => router.push({
-                        pathname: '/(patient)/slot-selection',
-                        params: { doctorId: doctor._id }
-                    })}
+                    onPress={() => {
+                        if (isGuest) {
+                            setShowGuestPrompt(true);
+                        } else {
+                            router.push({
+                                pathname: '/(patient)/slot-selection',
+                                params: { doctorId: doctor._id }
+                            });
+                        }
+                    }}
                     style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
                     className="bg-blue-600 h-14 rounded-xl items-center justify-center"
                 >

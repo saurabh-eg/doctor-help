@@ -176,20 +176,20 @@ export default function PatientSearchScreen() {
                             </View>
 
                             <View className="flex-row items-center mt-4 pt-4 border-t border-slate-100">
-                                <View className="flex-row items-center" style={{ flex: 1 }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <Ionicons name="briefcase-outline" size={16} color="#64748b" />
-                                    <Text className="text-slate-600 text-sm ml-1" numberOfLines={1}>{doctor.experience} yrs</Text>
+                                    <Text style={{ color: '#475569', fontSize: 13, marginLeft: 4 }}>{doctor.experience} yrs exp</Text>
                                 </View>
                                 <View style={{ flex: 1, alignItems: 'center' }}>
                                     {doctor.isVerified && (
                                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                             <Ionicons name="checkmark-circle" size={18} color="#10b981" />
-                                            <Text style={{ color: '#10b981', fontSize: 14, fontWeight: '700', marginLeft: 4 }}>Verified</Text>
+                                            <Text style={{ color: '#10b981', fontSize: 13, fontWeight: '700', marginLeft: 4 }}>Verified</Text>
                                         </View>
                                     )}
                                 </View>
-                                <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                                    <Text className="text-blue-600 font-bold" numberOfLines={1}>₹{doctor.consultationFee}</Text>
+                                <View style={{ alignItems: 'flex-end' }}>
+                                    <Text style={{ color: '#2563eb', fontWeight: '700', fontSize: 15 }}>₹{doctor.consultationFee}</Text>
                                 </View>
                             </View>
 

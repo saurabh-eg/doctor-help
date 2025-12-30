@@ -23,14 +23,17 @@ interface AuthState {
     token: string | null;
     isLoading: boolean;
     isAuthenticated: boolean;
+    isGuest: boolean;
 }
 
 interface AuthContextType extends AuthState {
     sendOtp: (phone: string) => Promise<{ success: boolean; error?: string; debug_otp?: string }>;
     verifyOtp: (phone: string, otp: string) => Promise<{ success: boolean; error?: string; isNewUser?: boolean }>;
     setRole: (role: 'patient' | 'doctor') => Promise<{ success: boolean }>;
+    setGuestMode: (enabled: boolean) => Promise<void>;
     logout: () => Promise<void>;
     updateUser: (data: Partial<User>) => void;
+    requireAuth: (action: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -53,6 +56,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         token: null,
         isLoading: true,
         isAuthenticated: false,
+        isGuest: false,
     });
 
     // Load saved auth state on mount
@@ -62,9 +66,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const loadStoredAuth = async () => {
         try {
-            const [storedToken, storedUser] = await Promise.all([
+            const [storedToken, storedUser, storedGuest] = await Promise.all([
                 AsyncStorage.getItem('auth_token'),
                 AsyncStorage.getItem('auth_user'),
+                AsyncStorage.getItem('is_guest'),
             ]);
 
             if (storedToken && storedUser) {
@@ -73,6 +78,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     user: JSON.parse(storedUser),
                     isLoading: false,
                     isAuthenticated: true,
+                    isGuest: false,
+                });
+            } else if (storedGuest === 'true') {
+                setState({
+                    token: null,
+                    user: null,
+                    isLoading: false,
+                    isAuthenticated: false,
+                    isGuest: true,
                 });
             } else {
                 setState(prev => ({ ...prev, isLoading: false }));
@@ -156,13 +170,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return response;
     };
 
+    const setGuestMode = async (enabled: boolean) => {
+        if (enabled) {
+            await AsyncStorage.setItem('is_guest', 'true');
+            setState(prev => ({ ...prev, isGuest: true }));
+        } else {
+            await AsyncStorage.removeItem('is_guest');
+            setState(prev => ({ ...prev, isGuest: false }));
+        }
+    };
+
+    const requireAuth = (action: string): boolean => {
+        // Returns true if user is authenticated, false if guest
+        // Components can use this to show login prompt for guests
+        return state.isAuthenticated && !state.isGuest;
+    };
+
     const logout = async () => {
-        await AsyncStorage.multiRemove(['auth_token', 'auth_user']);
+        await AsyncStorage.multiRemove(['auth_token', 'auth_user', 'is_guest']);
         setState({
             user: null,
             token: null,
             isLoading: false,
             isAuthenticated: false,
+            isGuest: false,
         });
     };
 
@@ -181,8 +212,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 sendOtp,
                 verifyOtp,
                 setRole,
+                setGuestMode,
                 logout,
                 updateUser,
+                requireAuth,
             }}
         >
             {children}

@@ -1,10 +1,11 @@
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useCallback } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
 import Constants from 'expo-constants';
+import GuestPrompt from '../../components/GuestPrompt';
 
 const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:3001/api';
 
@@ -23,13 +24,16 @@ interface Appointment {
 }
 
 export default function PatientBookingsScreen() {
-    const { user, token } = useAuth();
+    const router = useRouter();
+    const { user, token, isGuest } = useAuth();
     const [activeTab, setActiveTab] = useState<TabType>('upcoming');
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
+    const [showGuestPrompt, setShowGuestPrompt] = useState(false);
 
     const fetchAppointments = useCallback(async () => {
-        if (!user?.id || !token) {
+        // Skip fetching for guests
+        if (isGuest || !user?.id || !token) {
             setLoading(false);
             return;
         }
@@ -49,13 +53,67 @@ export default function PatientBookingsScreen() {
         } finally {
             setLoading(false);
         }
-    }, [user?.id, token]);
+    }, [user?.id, token, isGuest]);
 
     useFocusEffect(
         useCallback(() => {
             fetchAppointments();
         }, [fetchAppointments])
     );
+
+    // Show guest state instead of loading bookings
+    if (isGuest) {
+        return (
+            <SafeAreaView className="flex-1 bg-slate-50">
+                <GuestPrompt 
+                    visible={showGuestPrompt} 
+                    onClose={() => setShowGuestPrompt(false)}
+                    action="view your bookings"
+                />
+                
+                <View className="px-5 pt-4 pb-4 bg-white border-b border-slate-100">
+                    <Text className="text-2xl font-bold text-slate-900">My Bookings</Text>
+                </View>
+
+                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 }}>
+                    <View style={{ backgroundColor: '#eff6ff', borderRadius: 50, padding: 20, marginBottom: 20 }}>
+                        <Ionicons name="calendar-outline" size={48} color="#2563eb" />
+                    </View>
+                    <Text style={{ fontSize: 18, fontWeight: '700', color: '#0f172a', textAlign: 'center', marginBottom: 8 }}>
+                        No Bookings Yet
+                    </Text>
+                    <Text style={{ fontSize: 15, color: '#64748b', textAlign: 'center', marginBottom: 24, lineHeight: 22 }}>
+                        Register or login to book appointments with verified doctors
+                    </Text>
+                    <Pressable
+                        onPress={() => setShowGuestPrompt(true)}
+                        style={({ pressed }) => [
+                            {
+                                backgroundColor: '#2563eb',
+                                paddingVertical: 14,
+                                paddingHorizontal: 32,
+                                borderRadius: 12,
+                                opacity: pressed ? 0.8 : 1,
+                            }
+                        ]}
+                    >
+                        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>Register Now</Text>
+                    </Pressable>
+                    <Pressable
+                        onPress={() => router.push('/(patient)/search')}
+                        style={({ pressed }) => [
+                            {
+                                marginTop: 12,
+                                opacity: pressed ? 0.7 : 1,
+                            }
+                        ]}
+                    >
+                        <Text style={{ color: '#2563eb', fontSize: 15, fontWeight: '600' }}>Browse Doctors</Text>
+                    </Pressable>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     const getStatusColor = (status: string) => {
         switch (status) {

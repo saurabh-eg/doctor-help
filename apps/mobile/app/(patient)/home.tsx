@@ -5,6 +5,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { useState, useCallback } from 'react';
 import Constants from 'expo-constants';
+import GuestPrompt from '../../components/GuestPrompt';
 
 const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:3001/api';
 
@@ -29,15 +30,17 @@ interface Appointment {
 
 export default function PatientHomeScreen() {
     const router = useRouter();
-    const { user, token } = useAuth();
+    const { user, token, isGuest } = useAuth();
     const [upcomingAppointment, setUpcomingAppointment] = useState<Appointment | null>(null);
     const [loading, setLoading] = useState(true);
+    const [showGuestPrompt, setShowGuestPrompt] = useState(false);
 
     const greeting = getGreeting();
-    const displayName = user?.name || 'Patient';
+    const displayName = isGuest ? 'Guest' : (user?.name || 'Patient');
 
     const fetchUpcomingAppointment = useCallback(async () => {
-        if (!user?.id || !token) {
+        // Skip fetching for guests
+        if (isGuest || !user?.id || !token) {
             setLoading(false);
             return;
         }
@@ -62,7 +65,7 @@ export default function PatientHomeScreen() {
         } finally {
             setLoading(false);
         }
-    }, [user?.id, token]);
+    }, [user?.id, token, isGuest]);
 
     useFocusEffect(
         useCallback(() => {
@@ -81,9 +84,37 @@ export default function PatientHomeScreen() {
         return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
     };
 
+    const handleProfilePress = () => {
+        if (isGuest) {
+            setShowGuestPrompt(true);
+        } else {
+            router.push('/(patient)/profile');
+        }
+    };
+
     return (
         <SafeAreaView className="flex-1 bg-slate-50">
+            <GuestPrompt 
+                visible={showGuestPrompt} 
+                onClose={() => setShowGuestPrompt(false)}
+                action="view your profile"
+            />
+
             <ScrollView className="flex-1">
+                {/* Guest Banner */}
+                {isGuest && (
+                    <Pressable 
+                        onPress={() => setShowGuestPrompt(true)}
+                        style={{ backgroundColor: '#eff6ff', paddingHorizontal: 20, paddingVertical: 12, flexDirection: 'row', alignItems: 'center' }}
+                    >
+                        <Ionicons name="information-circle" size={20} color="#2563eb" />
+                        <Text style={{ color: '#1e40af', marginLeft: 8, flex: 1, fontSize: 14 }}>
+                            You're browsing as guest. Register to book appointments.
+                        </Text>
+                        <Ionicons name="chevron-forward" size={18} color="#2563eb" />
+                    </Pressable>
+                )}
+
                 {/* Header */}
                 <View className="px-5 pt-4 pb-6 flex-row items-center justify-between">
                     <View>
@@ -91,11 +122,11 @@ export default function PatientHomeScreen() {
                         <Text className="text-2xl font-bold text-slate-900">{displayName} 👋</Text>
                     </View>
                     <Pressable
-                        onPress={() => router.push('/(patient)/profile')}
+                        onPress={handleProfilePress}
                         style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
                         className="h-11 w-11 bg-white rounded-full items-center justify-center shadow-sm border border-slate-100"
                     >
-                        <Ionicons name="person-outline" size={24} color="#334155" />
+                        <Ionicons name={isGuest ? "person-add-outline" : "person-outline"} size={24} color="#334155" />
                     </Pressable>
                 </View>
 
