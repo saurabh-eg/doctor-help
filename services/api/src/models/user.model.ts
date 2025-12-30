@@ -9,6 +9,9 @@ export interface IUser extends Document {
     role: 'patient' | 'doctor' | 'admin';
     isVerified: boolean;
     userId?: number; // Numeric user ID
+    isSuspended?: boolean;
+    suspendedReason?: string;
+    suspendedAt?: Date;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -22,6 +25,9 @@ const UserSchema = new Schema<IUser>({
     role: { type: String, enum: ['patient', 'doctor', 'admin'], default: 'patient' },
     isVerified: { type: Boolean, default: false },
     userId: { type: Number, unique: true, sparse: true },
+    isSuspended: { type: Boolean, default: false },
+    suspendedReason: { type: String },
+    suspendedAt: { type: Date },
 }, { timestamps: true });
 
 // Note: phone already has index from unique:true constraint

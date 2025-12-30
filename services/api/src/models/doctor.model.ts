@@ -10,6 +10,8 @@ export interface IDoctor extends Document {
     rating: number;
     reviewCount: number;
     isVerified: boolean;
+    verifiedAt?: Date;
+    rejectionReason?: string;
     bio?: string;
     photoUrl?: string;
     documents?: string[];
@@ -32,6 +34,8 @@ const DoctorSchema = new Schema<IDoctor>({
     rating: { type: Number, default: 0 },
     reviewCount: { type: Number, default: 0 },
     isVerified: { type: Boolean, default: false },
+    verifiedAt: { type: Date },
+    rejectionReason: { type: String },
     bio: { type: String },
     photoUrl: { type: String },
     documents: [{ type: String }],
