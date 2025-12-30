@@ -1,7 +1,10 @@
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Image, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../contexts/AuthContext';
+import { useDoctor } from '../../contexts/DoctorContext';
+import { useState, useCallback } from 'react';
 
 interface MenuItem {
     icon: keyof typeof Ionicons.glyphMap;
@@ -10,14 +13,28 @@ interface MenuItem {
     route?: string;
 }
 
+// Format currency
+const formatCurrency = (amount: number) => {
+    if (amount >= 100000) {
+        return `₹${(amount / 100000).toFixed(1)}L`;
+    } else if (amount >= 1000) {
+        return `₹${(amount / 1000).toFixed(1)}K`;
+    }
+    return `₹${amount}`;
+};
+
 export default function DoctorProfileScreen() {
     const router = useRouter();
+    const { logout } = useAuth();
+    const { profile, stats, refreshAll } = useDoctor();
+    const [refreshing, setRefreshing] = useState(false);
 
     const menuItems: MenuItem[] = [
         { icon: 'person-outline', label: 'Edit Profile', subtitle: 'Update your information', route: '/(doctor)/edit-profile' },
         { icon: 'calendar-outline', label: 'Availability', subtitle: 'Set your working hours', route: '/(doctor)/availability' },
         { icon: 'card-outline', label: 'Bank Details', subtitle: 'Manage payout methods' },
         { icon: 'document-text-outline', label: 'Documents', subtitle: 'Certificates & licenses' },
+        { icon: 'notifications-outline', label: 'Notifications', subtitle: 'Manage alerts', route: '/(common)/notifications' },
         { icon: 'settings-outline', label: 'Settings', subtitle: 'App preferences' },
         { icon: 'help-circle-outline', label: 'Help & Support', subtitle: 'FAQs and contact' },
     ];
@@ -28,84 +45,235 @@ export default function DoctorProfileScreen() {
         }
     };
 
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await refreshAll();
+        setRefreshing(false);
+    }, [refreshAll]);
+
     const handleLogout = () => {
-        router.replace('/(auth)/login');
+        Alert.alert(
+            'Logout',
+            'Are you sure you want to logout?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Logout',
+                    style: 'destructive',
+                    onPress: async () => {
+                        await logout();
+                        router.replace('/');
+                    }
+                }
+            ]
+        );
     };
 
+    // Get display values from profile
+    const displayName = profile?.userId?.name || 'Doctor';
+    const specialization = profile?.specialization || 'Specialist';
+    const qualification = profile?.qualification || '';
+    const experience = profile?.experience || 0;
+    const isVerified = profile?.isVerified ?? false;
+    const photoUrl = profile?.photoUrl;
+    const rating = profile?.rating || 0;
+
     return (
-        <SafeAreaView className="flex-1 bg-slate-50">
-            {/* Header */}
-            <View className="bg-white px-5 pt-4 pb-8 rounded-b-3xl items-center border-b border-slate-100">
-                {/* Avatar */}
-                <View className="relative mb-4">
-                    <View className="h-24 w-24 rounded-full bg-slate-100 items-center justify-center border-4 border-white shadow-lg">
-                        <Ionicons name="person" size={48} color="#64748b" />
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+            <ScrollView 
+                style={{ flex: 1 }}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2563eb']} />
+                }
+            >
+                {/* Header */}
+                <View style={{
+                    backgroundColor: '#fff',
+                    paddingHorizontal: 20,
+                    paddingTop: 16,
+                    paddingBottom: 32,
+                    borderBottomLeftRadius: 24,
+                    borderBottomRightRadius: 24,
+                    alignItems: 'center',
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#f1f5f9',
+                }}>
+                    {/* Avatar */}
+                    <View style={{ position: 'relative', marginBottom: 16 }}>
+                        <View style={{
+                            height: 96,
+                            width: 96,
+                            borderRadius: 48,
+                            backgroundColor: '#f1f5f9',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderWidth: 4,
+                            borderColor: '#fff',
+                            overflow: 'hidden',
+                        }}>
+                            {photoUrl ? (
+                                <Image 
+                                    source={{ uri: photoUrl }} 
+                                    style={{ height: 96, width: 96, borderRadius: 48 }}
+                                />
+                            ) : (
+                                <Ionicons name="person" size={48} color="#64748b" />
+                            )}
+                        </View>
+                        <TouchableOpacity 
+                            onPress={() => router.push('/(doctor)/edit-profile')}
+                            style={{
+                                position: 'absolute',
+                                bottom: 0,
+                                right: 0,
+                                height: 32,
+                                width: 32,
+                                backgroundColor: '#2563eb',
+                                borderRadius: 16,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderWidth: 2,
+                                borderColor: '#fff',
+                            }}
+                        >
+                            <Ionicons name="pencil" size={14} color="#fff" />
+                        </TouchableOpacity>
+                        
+                        {/* Verified Badge */}
+                        {isVerified && (
+                            <View style={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                backgroundColor: '#2563eb',
+                                borderRadius: 12,
+                                padding: 4,
+                            }}>
+                                <Ionicons name="checkmark" size={12} color="#fff" />
+                            </View>
+                        )}
                     </View>
-                    <TouchableOpacity className="absolute bottom-0 right-0 h-8 w-8 bg-blue-600 rounded-full items-center justify-center border-2 border-white">
-                        <Ionicons name="pencil" size={14} color="white" />
-                    </TouchableOpacity>
-                    {/* Verified Badge */}
-                    <View className="absolute top-0 right-0 bg-blue-600 rounded-full p-1">
-                        <Ionicons name="checkmark" size={12} color="white" />
+
+                    {/* Doctor Info */}
+                    <Text style={{ fontSize: 24, fontWeight: '700', color: '#0f172a', textAlign: 'center' }}>
+                        Dr. {displayName}
+                    </Text>
+                    <Text style={{ fontSize: 15, color: '#2563eb', fontWeight: '600', marginTop: 2 }}>
+                        {specialization}
+                    </Text>
+                    {(qualification || experience > 0) && (
+                        <Text style={{ fontSize: 13, color: '#64748b', marginTop: 4, textAlign: 'center' }}>
+                            {qualification}{qualification && experience > 0 ? ' • ' : ''}{experience > 0 ? `${experience} years experience` : ''}
+                        </Text>
+                    )}
+                    
+                    {/* Verification Status */}
+                    {!isVerified && (
+                        <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: '#fef3c7',
+                            paddingHorizontal: 12,
+                            paddingVertical: 6,
+                            borderRadius: 20,
+                            marginTop: 12,
+                        }}>
+                            <Ionicons name="time-outline" size={14} color="#d97706" />
+                            <Text style={{ fontSize: 12, color: '#d97706', fontWeight: '600', marginLeft: 4 }}>
+                                Verification Pending
+                            </Text>
+                        </View>
+                    )}
+
+                    {/* Stats */}
+                    <View style={{ flexDirection: 'row', marginTop: 24, alignItems: 'center' }}>
+                        <View style={{ alignItems: 'center', paddingHorizontal: 16 }}>
+                            <Text style={{ fontSize: 24, fontWeight: '700', color: '#2563eb' }}>
+                                {stats.totalPatients}
+                            </Text>
+                            <Text style={{ color: '#64748b', fontSize: 13, fontWeight: '500', marginTop: 2 }}>
+                                Patients
+                            </Text>
+                        </View>
+                        <View style={{ height: 40, width: 1, backgroundColor: '#e2e8f0' }} />
+                        <View style={{ alignItems: 'center', paddingHorizontal: 16 }}>
+                            <Text style={{ fontSize: 24, fontWeight: '700', color: '#10b981' }}>
+                                {rating.toFixed(1)}
+                            </Text>
+                            <Text style={{ color: '#64748b', fontSize: 13, fontWeight: '500', marginTop: 2 }}>
+                                Rating
+                            </Text>
+                        </View>
+                        <View style={{ height: 40, width: 1, backgroundColor: '#e2e8f0' }} />
+                        <View style={{ alignItems: 'center', paddingHorizontal: 16 }}>
+                            <Text style={{ fontSize: 24, fontWeight: '700', color: '#f59e0b' }}>
+                                {formatCurrency(stats.totalEarnings)}
+                            </Text>
+                            <Text style={{ color: '#64748b', fontSize: 13, fontWeight: '500', marginTop: 2 }}>
+                                Earnings
+                            </Text>
+                        </View>
                     </View>
                 </View>
 
-                {/* Doctor Info */}
-                <Text className="text-2xl font-bold text-slate-900" style={{ flexWrap: 'wrap', textAlign: 'center' }}>Dr. Smith</Text>
-                <Text className="text-blue-600 font-medium" style={{ flexWrap: 'wrap' }}>Cardiologist</Text>
-                <Text className="text-slate-500 text-sm mt-1" style={{ flexWrap: 'wrap', textAlign: 'center' }}>MBBS, MD - 12 years experience</Text>
+                {/* Menu Items */}
+                <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>
+                    {menuItems.map((item, index) => (
+                        <TouchableOpacity
+                            key={index}
+                            style={{
+                                backgroundColor: '#fff',
+                                borderRadius: 16,
+                                padding: 16,
+                                marginBottom: 12,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                borderWidth: 1,
+                                borderColor: '#f1f5f9',
+                            }}
+                            activeOpacity={0.7}
+                            onPress={() => handleMenuPress(item)}
+                        >
+                            <View style={{
+                                height: 44,
+                                width: 44,
+                                borderRadius: 12,
+                                backgroundColor: '#f8fafc',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginRight: 16,
+                            }}>
+                                <Ionicons name={item.icon} size={22} color="#64748b" />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ fontSize: 15, fontWeight: '700', color: '#0f172a' }}>{item.label}</Text>
+                                <Text style={{ fontSize: 13, color: '#94a3b8', marginTop: 2 }}>{item.subtitle}</Text>
+                            </View>
+                            <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+                        </TouchableOpacity>
+                    ))}
 
-                {/* Stats */}
-                <View style={{ flexDirection: 'row', marginTop: 24, alignItems: 'center' }}>
-                    <View style={{ alignItems: 'center', paddingHorizontal: 16 }}>
-                        <Text style={{ fontSize: 24, fontWeight: '700', color: '#2563eb' }}>1.2K</Text>
-                        <Text style={{ color: '#64748b', fontSize: 13, fontWeight: '500', marginTop: 2 }}>Patients</Text>
-                    </View>
-                    <View style={{ height: 40, width: 1, backgroundColor: '#e2e8f0' }} />
-                    <View style={{ alignItems: 'center', paddingHorizontal: 16 }}>
-                        <Text style={{ fontSize: 24, fontWeight: '700', color: '#10b981' }}>4.9</Text>
-                        <Text style={{ color: '#64748b', fontSize: 13, fontWeight: '500', marginTop: 2 }}>Rating</Text>
-                    </View>
-                    <View style={{ height: 40, width: 1, backgroundColor: '#e2e8f0' }} />
-                    <View style={{ alignItems: 'center', paddingHorizontal: 16 }}>
-                        <Text style={{ fontSize: 24, fontWeight: '700', color: '#f59e0b' }}>₹85K</Text>
-                        <Text style={{ color: '#64748b', fontSize: 13, fontWeight: '500', marginTop: 2 }}>Earnings</Text>
-                    </View>
-                </View>
-            </View>
-
-            {/* Menu Items */}
-            <ScrollView className="flex-1 px-5 pt-6">
-                {menuItems.map((item, index) => (
+                    {/* Logout Button */}
                     <TouchableOpacity
-                        key={index}
-                        className="bg-white rounded-2xl p-4 mb-3 flex-row items-center border border-slate-100"
+                        style={{
+                            backgroundColor: '#fef2f2',
+                            borderRadius: 16,
+                            padding: 16,
+                            marginTop: 8,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                        onPress={handleLogout}
                         activeOpacity={0.7}
-                        onPress={() => handleMenuPress(item)}
                     >
-                        <View className="h-11 w-11 rounded-xl bg-slate-50 items-center justify-center mr-4">
-                            <Ionicons name={item.icon} size={22} color="#64748b" />
-                        </View>
-                        <View className="flex-1">
-                            <Text className="text-base font-bold text-slate-900" style={{ flexWrap: 'wrap' }}>{item.label}</Text>
-                            <Text className="text-slate-400 text-sm" style={{ flexWrap: 'wrap' }}>{item.subtitle}</Text>
-                        </View>
-                        <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+                        <Ionicons name="log-out-outline" size={22} color="#dc2626" />
+                        <Text style={{ color: '#dc2626', fontWeight: '700', marginLeft: 8, fontSize: 15 }}>Logout</Text>
                     </TouchableOpacity>
-                ))}
 
-                {/* Logout Button */}
-                <TouchableOpacity
-                    className="bg-red-50 rounded-2xl p-4 mt-4 flex-row items-center justify-center"
-                    onPress={handleLogout}
-                    activeOpacity={0.7}
-                >
-                    <Ionicons name="log-out-outline" size={22} color="#dc2626" />
-                    <Text className="text-red-600 font-bold ml-2">Logout</Text>
-                </TouchableOpacity>
-
-                {/* Bottom padding for tab bar */}
-                <View style={{ height: 100 }} />
+                    {/* Bottom padding for tab bar */}
+                    <View style={{ height: 100 }} />
+                </View>
             </ScrollView>
         </SafeAreaView>
     );

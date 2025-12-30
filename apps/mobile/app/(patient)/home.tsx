@@ -1,13 +1,11 @@
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
+import { usePatient } from '../../contexts/PatientContext';
 import { useState, useCallback } from 'react';
-import Constants from 'expo-constants';
 import GuestPrompt from '../../components/GuestPrompt';
-
-const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:3001/api';
 
 const getGreeting = () => {
     const hour = new Date().getHours();
@@ -16,62 +14,32 @@ const getGreeting = () => {
     return 'Good Evening';
 };
 
-interface Appointment {
-    _id: string;
-    doctorId: {
-        userId: { name: string };
-        specialization: string;
-    };
-    date: string;
-    timeSlot: { start: string };
-    type: 'clinic' | 'video' | 'home';
-    status: string;
-}
+// Format time from HH:mm to 12hr format
+const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number);
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const hour12 = hours % 12 || 12;
+    return `${hour12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+};
 
 export default function PatientHomeScreen() {
     const router = useRouter();
-    const { user, token, isGuest } = useAuth();
-    const [upcomingAppointment, setUpcomingAppointment] = useState<Appointment | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { user, isGuest } = useAuth();
+    const { upcomingAppointments, stats, isLoading, refreshAll } = usePatient();
     const [showGuestPrompt, setShowGuestPrompt] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
 
     const greeting = getGreeting();
     const displayName = isGuest ? 'Guest' : (user?.name || 'Patient');
 
-    const fetchUpcomingAppointment = useCallback(async () => {
-        // Skip fetching for guests
-        if (isGuest || !user?.id || !token) {
-            setLoading(false);
-            return;
-        }
+    // Get the next upcoming appointment
+    const upcomingAppointment = upcomingAppointments[0] || null;
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/appointments/patient/${user.id}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
-
-            if (data.success && data.data?.length > 0) {
-                // Find next upcoming appointment
-                const now = new Date();
-                const upcoming = data.data.find((apt: Appointment) => {
-                    const aptDate = new Date(apt.date);
-                    return aptDate >= now && apt.status !== 'cancelled' && apt.status !== 'completed';
-                });
-                setUpcomingAppointment(upcoming || null);
-            }
-        } catch (error) {
-            console.error('Failed to fetch appointment:', error);
-        } finally {
-            setLoading(false);
-        }
-    }, [user?.id, token, isGuest]);
-
-    useFocusEffect(
-        useCallback(() => {
-            fetchUpcomingAppointment();
-        }, [fetchUpcomingAppointment])
-    );
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await refreshAll();
+        setRefreshing(false);
+    }, [refreshAll]);
 
     const formatDate = (dateStr: string) => {
         const date = new Date(dateStr);
@@ -93,14 +61,19 @@ export default function PatientHomeScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-slate-50">
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
             <GuestPrompt 
                 visible={showGuestPrompt} 
                 onClose={() => setShowGuestPrompt(false)}
                 action="view your profile"
             />
 
-            <ScrollView className="flex-1">
+            <ScrollView 
+                style={{ flex: 1 }}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2563eb']} />
+                }
+            >
                 {/* Guest Banner */}
                 {isGuest && (
                     <Pressable 
@@ -116,144 +89,277 @@ export default function PatientHomeScreen() {
                 )}
 
                 {/* Header */}
-                <View className="px-5 pt-4 pb-6 flex-row items-center justify-between">
+                <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <View>
-                        <Text className="text-slate-500 text-sm">{greeting},</Text>
-                        <Text className="text-2xl font-bold text-slate-900">{displayName} 👋</Text>
+                        <Text style={{ color: '#64748b', fontSize: 14 }}>{greeting},</Text>
+                        <Text style={{ fontSize: 24, fontWeight: '700', color: '#0f172a' }}>{displayName} 👋</Text>
                     </View>
                     <Pressable
                         onPress={handleProfilePress}
-                        style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
-                        className="h-11 w-11 bg-white rounded-full items-center justify-center shadow-sm border border-slate-100"
+                        style={({ pressed }) => [{
+                            opacity: pressed ? 0.6 : 1,
+                            height: 44,
+                            width: 44,
+                            backgroundColor: '#fff',
+                            borderRadius: 22,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderWidth: 1,
+                            borderColor: '#f1f5f9',
+                        }]}
                     >
                         <Ionicons name={isGuest ? "person-add-outline" : "person-outline"} size={24} color="#334155" />
                     </Pressable>
                 </View>
 
                 {/* Search Bar */}
-                <View className="px-5 mb-6">
+                <View style={{ paddingHorizontal: 20, marginBottom: 24 }}>
                     <Pressable
                         onPress={() => router.push('/(patient)/search')}
-                        style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
-                        className="flex-row items-center bg-white h-14 rounded-2xl px-4 shadow-sm border border-slate-100"
+                        style={({ pressed }) => [{
+                            opacity: pressed ? 0.8 : 1,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: '#fff',
+                            height: 56,
+                            borderRadius: 16,
+                            paddingHorizontal: 16,
+                            borderWidth: 1,
+                            borderColor: '#f1f5f9',
+                        }]}
                     >
-                        <Ionicons name="search" size={20} color="#197fe6" />
-                        <Text className="ml-3 text-slate-400">Search for doctors...</Text>
+                        <Ionicons name="search" size={20} color="#2563eb" />
+                        <Text style={{ marginLeft: 12, color: '#94a3b8', fontSize: 15 }}>Search for doctors...</Text>
                     </Pressable>
                 </View>
 
+                {/* Stats (for logged in users) */}
+                {!isGuest && (
+                    <View style={{ paddingHorizontal: 20, marginBottom: 24 }}>
+                        <View style={{ flexDirection: 'row', gap: 12 }}>
+                            <View style={{
+                                flex: 1,
+                                backgroundColor: '#eff6ff',
+                                borderRadius: 16,
+                                padding: 16,
+                                alignItems: 'center',
+                            }}>
+                                <Text style={{ fontSize: 24, fontWeight: '700', color: '#2563eb' }}>
+                                    {stats.totalBookings}
+                                </Text>
+                                <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '500', marginTop: 2 }}>
+                                    Bookings
+                                </Text>
+                            </View>
+                            <View style={{
+                                flex: 1,
+                                backgroundColor: '#ecfdf5',
+                                borderRadius: 16,
+                                padding: 16,
+                                alignItems: 'center',
+                            }}>
+                                <Text style={{ fontSize: 24, fontWeight: '700', color: '#10b981' }}>
+                                    {stats.doctorsConsulted}
+                                </Text>
+                                <Text style={{ fontSize: 12, color: '#10b981', fontWeight: '500', marginTop: 2 }}>
+                                    Doctors
+                                </Text>
+                            </View>
+                            <View style={{
+                                flex: 1,
+                                backgroundColor: '#f5f3ff',
+                                borderRadius: 16,
+                                padding: 16,
+                                alignItems: 'center',
+                            }}>
+                                <Text style={{ fontSize: 24, fontWeight: '700', color: '#7c3aed' }}>
+                                    {stats.upcomingBookings}
+                                </Text>
+                                <Text style={{ fontSize: 12, color: '#7c3aed', fontWeight: '500', marginTop: 2 }}>
+                                    Upcoming
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
+                )}
+
                 {/* Upcoming Appointment Card */}
-                <View className="px-5 mb-6">
-                    {loading ? (
-                        <View className="bg-white rounded-3xl p-8 items-center border border-slate-100">
-                            <ActivityIndicator size="small" color="#197fe6" />
+                <View style={{ paddingHorizontal: 20, marginBottom: 24 }}>
+                    {isLoading && !refreshing ? (
+                        <View style={{
+                            backgroundColor: '#fff',
+                            borderRadius: 24,
+                            padding: 32,
+                            alignItems: 'center',
+                            borderWidth: 1,
+                            borderColor: '#f1f5f9',
+                        }}>
+                            <ActivityIndicator size="small" color="#2563eb" />
                         </View>
                     ) : upcomingAppointment ? (
-                        <View className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
-                            <View className="flex-row items-center mb-1">
-                                <View className="h-2 w-2 rounded-full bg-blue-500 mr-2" />
-                                <Text className="text-xs font-bold text-blue-600 uppercase tracking-wider">
+                        <View style={{
+                            backgroundColor: '#fff',
+                            borderRadius: 24,
+                            padding: 20,
+                            borderWidth: 1,
+                            borderColor: '#f1f5f9',
+                        }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                                <View style={{ height: 8, width: 8, borderRadius: 4, backgroundColor: '#2563eb', marginRight: 8 }} />
+                                <Text style={{ fontSize: 12, fontWeight: '700', color: '#2563eb', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                                     Upcoming Appointment
                                 </Text>
                             </View>
-                            <Text className="text-xl font-bold text-slate-900 mb-1" style={{ flexWrap: 'wrap' }}>
-                                {upcomingAppointment.doctorId?.userId?.name || 'Doctor'}
+                            <Text style={{ fontSize: 20, fontWeight: '700', color: '#0f172a', marginBottom: 4 }}>
+                                Dr. {upcomingAppointment.doctorId?.userId?.name || 'Doctor'}
                             </Text>
-                            <Text className="text-slate-500 mb-4" style={{ flexWrap: 'wrap' }}>
-                                {upcomingAppointment.doctorId?.specialization} • Clinic Visit
+                            <Text style={{ fontSize: 14, color: '#64748b', marginBottom: 16 }}>
+                                {upcomingAppointment.doctorId?.specialization} • {upcomingAppointment.type === 'video' ? 'Video Call' : 'Clinic Visit'}
                             </Text>
 
-                            <View className="flex-row items-center bg-slate-50 p-3 rounded-xl mb-4">
-                                <Ionicons name="time-outline" size={18} color="#197fe6" />
-                                <Text className="ml-2 font-bold text-slate-700">
-                                    {formatDate(upcomingAppointment.date)}, {upcomingAppointment.timeSlot?.start}
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: '#f8fafc',
+                                padding: 12,
+                                borderRadius: 12,
+                                marginBottom: 16,
+                            }}>
+                                <Ionicons name="time-outline" size={18} color="#2563eb" />
+                                <Text style={{ marginLeft: 8, fontWeight: '700', color: '#334155', fontSize: 14 }}>
+                                    {formatDate(upcomingAppointment.date)}, {formatTime(upcomingAppointment.timeSlot.start)}
                                 </Text>
                             </View>
 
                             <Pressable
                                 onPress={() => router.push('/(patient)/bookings')}
-                                style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
-                                className="bg-blue-600 h-14 rounded-xl items-center justify-center"
+                                style={({ pressed }) => [{
+                                    opacity: pressed ? 0.8 : 1,
+                                    backgroundColor: '#2563eb',
+                                    height: 52,
+                                    borderRadius: 14,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }]}
                             >
-                                <Text className="text-white font-bold text-base">View Details</Text>
+                                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>View Details</Text>
                             </Pressable>
                         </View>
                     ) : (
                         <Pressable
                             onPress={() => router.push('/(patient)/search')}
-                            style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
-                            className="bg-blue-50 rounded-3xl p-6 items-center border border-blue-100"
+                            style={({ pressed }) => [{
+                                opacity: pressed ? 0.9 : 1,
+                                backgroundColor: '#eff6ff',
+                                borderRadius: 24,
+                                padding: 32,
+                                alignItems: 'center',
+                                borderWidth: 1,
+                                borderColor: '#dbeafe',
+                            }]}
                         >
-                            <Ionicons name="calendar-outline" size={48} color="#197fe6" />
-                            <Text className="text-slate-700 font-bold mt-3" style={{ flexWrap: 'wrap', textAlign: 'center' }}>No Upcoming Appointments</Text>
-                            <Text className="text-slate-500 text-sm mt-1" style={{ flexWrap: 'wrap', textAlign: 'center' }}>Book a doctor consultation</Text>
+                            <Ionicons name="calendar-outline" size={48} color="#2563eb" />
+                            <Text style={{ color: '#334155', fontWeight: '700', marginTop: 12, fontSize: 16 }}>
+                                No Upcoming Appointments
+                            </Text>
+                            <Text style={{ color: '#64748b', fontSize: 14, marginTop: 4 }}>
+                                Book a doctor consultation
+                            </Text>
                         </Pressable>
                     )}
                 </View>
 
                 {/* Medical Services */}
-                <View className="px-5 mb-6">
-                    <Text className="text-lg font-bold text-slate-900 mb-4">Medical Services</Text>
-                    <View className="flex-row justify-between">
+                <View style={{ paddingHorizontal: 20, marginBottom: 24 }}>
+                    <Text style={{ fontSize: 18, fontWeight: '700', color: '#0f172a', marginBottom: 16 }}>
+                        Medical Services
+                    </Text>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                         {[
-                            { icon: 'medical', label: 'Consult', color: '#3b82f6', route: '/(patient)/search' },
-                            { icon: 'calendar', label: 'Bookings', color: '#10b981', route: '/(patient)/bookings' },
-                            { icon: 'person', label: 'Profile', color: '#6366f1', route: '/(patient)/profile' },
-                            { icon: 'help-circle', label: 'Help', color: '#f59e0b', route: null },
+                            { icon: 'medical' as const, label: 'Consult', color: '#3b82f6', route: '/(patient)/search' },
+                            { icon: 'calendar' as const, label: 'Bookings', color: '#10b981', route: '/(patient)/bookings' },
+                            { icon: 'document-text' as const, label: 'Records', color: '#8b5cf6', route: '/(patient)/records' },
+                            { icon: 'person' as const, label: 'Profile', color: '#f59e0b', route: '/(patient)/profile' },
                         ].map((item, i) => (
                             <Pressable
                                 key={i}
-                                onPress={() => item.route && router.push(item.route as any)}
-                                style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
-                                className="items-center"
+                                onPress={() => {
+                                    if (isGuest && (item.route === '/(patient)/profile' || item.route === '/(patient)/records')) {
+                                        setShowGuestPrompt(true);
+                                    } else {
+                                        router.push(item.route as any);
+                                    }
+                                }}
+                                style={({ pressed }) => [{
+                                    opacity: pressed ? 0.7 : 1,
+                                    alignItems: 'center',
+                                }]}
                             >
-                                <View
-                                    className="h-16 w-16 rounded-2xl items-center justify-center mb-2"
-                                    style={{ backgroundColor: `${item.color}15` }}
-                                >
-                                    <Ionicons name={item.icon as any} size={28} color={item.color} />
+                                <View style={{
+                                    height: 64,
+                                    width: 64,
+                                    borderRadius: 16,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    marginBottom: 8,
+                                    backgroundColor: `${item.color}15`,
+                                }}>
+                                    <Ionicons name={item.icon} size={28} color={item.color} />
                                 </View>
-                                <Text className="text-xs font-bold text-slate-600">{item.label}</Text>
+                                <Text style={{ fontSize: 12, fontWeight: '700', color: '#475569' }}>{item.label}</Text>
                             </Pressable>
                         ))}
                     </View>
                 </View>
 
                 {/* Specialties */}
-                <View className="mb-6">
-                    <View className="flex-row justify-between items-center px-5 mb-4">
-                        <Text className="text-lg font-bold text-slate-900">Find by Specialty</Text>
+                <View style={{ marginBottom: 24 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 16 }}>
+                        <Text style={{ fontSize: 18, fontWeight: '700', color: '#0f172a' }}>Find by Specialty</Text>
                         <Pressable
                             onPress={() => router.push('/(patient)/search')}
                             style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
                         >
-                            <Text className="text-blue-600 font-bold text-sm">View All</Text>
+                            <Text style={{ color: '#2563eb', fontWeight: '700', fontSize: 14 }}>View All</Text>
                         </Pressable>
                     </View>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} className="pl-5">
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingLeft: 20 }}>
                         {[
-                            { name: 'General', icon: 'person' },
-                            { name: 'Cardio', icon: 'heart' },
-                            { name: 'Derma', icon: 'body' },
-                            { name: 'Ortho', icon: 'fitness' },
-                            { name: 'Pediatric', icon: 'happy' },
+                            { name: 'General', icon: 'person' as const },
+                            { name: 'Cardio', icon: 'heart' as const },
+                            { name: 'Derma', icon: 'body' as const },
+                            { name: 'Ortho', icon: 'fitness' as const },
+                            { name: 'Pediatric', icon: 'happy' as const },
                         ].map((specialty, i) => (
                             <Pressable
                                 key={i}
                                 onPress={() => router.push('/(patient)/search')}
-                                style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
-                                className="items-center mr-5"
+                                style={({ pressed }) => [{
+                                    opacity: pressed ? 0.7 : 1,
+                                    alignItems: 'center',
+                                    marginRight: 20,
+                                }]}
                             >
-                                <View className="h-16 w-16 rounded-full bg-slate-100 items-center justify-center mb-2 border-2 border-slate-200">
-                                    <Ionicons name={specialty.icon as any} size={28} color="#64748b" />
+                                <View style={{
+                                    height: 64,
+                                    width: 64,
+                                    borderRadius: 32,
+                                    backgroundColor: '#f1f5f9',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    marginBottom: 8,
+                                    borderWidth: 2,
+                                    borderColor: '#e2e8f0',
+                                }}>
+                                    <Ionicons name={specialty.icon} size={28} color="#64748b" />
                                 </View>
-                                <Text className="text-xs font-bold text-slate-600">{specialty.name}</Text>
+                                <Text style={{ fontSize: 12, fontWeight: '700', color: '#475569' }}>{specialty.name}</Text>
                             </Pressable>
                         ))}
                     </ScrollView>
                 </View>
 
-                <View className="h-6" />
+                <View style={{ height: 24 }} />
             </ScrollView>
         </SafeAreaView>
     );

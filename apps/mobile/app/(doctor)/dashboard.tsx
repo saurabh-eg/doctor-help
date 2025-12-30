@@ -1,7 +1,10 @@
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
+import { useDoctor, DoctorAppointment } from '../../contexts/DoctorContext';
+import { useRouter } from 'expo-router';
+import { useState, useCallback } from 'react';
 
 // Helper to get greeting based on time
 const getGreeting = () => {
@@ -11,72 +14,228 @@ const getGreeting = () => {
     return 'Good Evening';
 };
 
-interface Stat {
-    label: string;
-    value: string;
-    icon: keyof typeof Ionicons.glyphMap;
-    color: string;
-    bgColor: string;
-}
-
-interface Appointment {
-    id: string;
-    patientName: string;
-    time: string;
-    type: 'video' | 'clinic';
-    symptoms: string;
-}
+// Format time from HH:mm to 12hr format
+const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number);
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const hour12 = hours % 12 || 12;
+    return `${hour12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+};
 
 export default function DoctorDashboardScreen() {
+    const router = useRouter();
     const { user } = useAuth();
+    const { profile, stats, todayAppointments, isLoading, refreshAll } = useDoctor();
+    const [refreshing, setRefreshing] = useState(false);
 
     const greeting = getGreeting();
-    const displayName = user?.name || 'Doctor';
+    const displayName = profile?.userId?.name || user?.name || 'Doctor';
+    const isVerified = profile?.isVerified ?? false;
 
-    // Use SHORT labels to prevent truncation
-    const stats: Stat[] = [
-        { label: 'Patients', value: '0', icon: 'people', color: '#3b82f6', bgColor: '#eff6ff' },
-        { label: 'Today', value: '0', icon: 'medical', color: '#10b981', bgColor: '#ecfdf5' },
-        { label: 'Pending', value: '0', icon: 'time', color: '#f59e0b', bgColor: '#fffbeb' },
+    // Build stats array from real data
+    const statsData = [
+        { label: 'Patients', value: stats.totalPatients.toString(), icon: 'people' as const, color: '#3b82f6', bgColor: '#eff6ff' },
+        { label: 'Today', value: stats.todayAppointments.toString(), icon: 'medical' as const, color: '#10b981', bgColor: '#ecfdf5' },
+        { label: 'Pending', value: stats.pendingAppointments.toString(), icon: 'time' as const, color: '#f59e0b', bgColor: '#fffbeb' },
     ];
 
-    const nextAppointment: Appointment | null = null; // Will be fetched from API
-
-    const pendingRequests: Appointment[] = []; // Will be fetched from API
+    // Get next upcoming appointment
+    const nextAppointment = todayAppointments.find(a => 
+        a.status === 'pending' || a.status === 'confirmed'
+    );
 
     const tools = [
-        { label: 'Availability', icon: 'calendar' as const, color: '#3b82f6', bgColor: '#eff6ff' },
-        { label: 'Calendar', icon: 'calendar-outline' as const, color: '#8b5cf6', bgColor: '#f5f3ff' },
-        { label: 'Records', icon: 'folder-open' as const, color: '#10b981', bgColor: '#ecfdf5' },
-        { label: 'Notes', icon: 'document-text' as const, color: '#f59e0b', bgColor: '#fffbeb' },
+        { label: 'Availability', icon: 'calendar' as const, color: '#3b82f6', bgColor: '#eff6ff', route: '/(doctor)/availability' },
+        { label: 'Schedule', icon: 'calendar-outline' as const, color: '#8b5cf6', bgColor: '#f5f3ff', route: '/(doctor)/appointments' },
+        { label: 'Patients', icon: 'people' as const, color: '#10b981', bgColor: '#ecfdf5', route: '/(doctor)/patients' },
+        { label: 'Earnings', icon: 'wallet' as const, color: '#f59e0b', bgColor: '#fffbeb', route: '/(doctor)/earnings' },
     ];
 
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await refreshAll();
+        setRefreshing(false);
+    }, [refreshAll]);
+
+    const handleToolPress = (route: string) => {
+        router.push(route as any);
+    };
+
+    const handleNotifications = () => {
+        router.push('/(common)/notifications');
+    };
+
+    const renderAppointmentCard = (apt: DoctorAppointment) => (
+        <View 
+            key={apt._id}
+            style={{
+                backgroundColor: '#fff',
+                borderRadius: 16,
+                padding: 16,
+                borderWidth: 1,
+                borderColor: '#e2e8f0',
+                position: 'relative',
+                overflow: 'hidden',
+            }}
+        >
+            {/* Left accent bar */}
+            <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, backgroundColor: '#3b82f6' }} />
+            
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: '#0f172a', marginBottom: 4 }}>
+                        {apt.patientId?.name || 'Patient'}
+                    </Text>
+                    <Text style={{ fontSize: 14, color: '#64748b', marginBottom: 8 }}>
+                        {apt.symptoms || 'General Consultation'}
+                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Ionicons name="time-outline" size={14} color="#64748b" />
+                        <Text style={{ fontSize: 13, color: '#64748b', marginLeft: 4 }}>
+                            {formatTime(apt.timeSlot.start)} - {formatTime(apt.timeSlot.end)}
+                        </Text>
+                    </View>
+                </View>
+                
+                <View style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 20,
+                    backgroundColor: apt.type === 'video' ? '#eff6ff' : '#ecfdf5',
+                }}>
+                    <Text style={{
+                        fontSize: 12,
+                        fontWeight: '700',
+                        color: apt.type === 'video' ? '#2563eb' : '#10b981',
+                        textTransform: 'uppercase',
+                    }}>
+                        {apt.type}
+                    </Text>
+                </View>
+            </View>
+
+            {/* Action buttons */}
+            <View style={{ flexDirection: 'row', marginTop: 16, gap: 12 }}>
+                {apt.type === 'video' && (
+                    <TouchableOpacity
+                        style={{
+                            flex: 1,
+                            backgroundColor: '#2563eb',
+                            paddingVertical: 12,
+                            borderRadius: 12,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <Ionicons name="videocam" size={18} color="#fff" />
+                        <Text style={{ color: '#fff', fontWeight: '700', marginLeft: 8, fontSize: 14 }}>Start Call</Text>
+                    </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                    style={{
+                        flex: apt.type === 'video' ? undefined : 1,
+                        paddingHorizontal: 20,
+                        paddingVertical: 12,
+                        borderRadius: 12,
+                        borderWidth: 1,
+                        borderColor: '#e2e8f0',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <Text style={{ color: '#64748b', fontWeight: '600', fontSize: 14 }}>View Details</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
+
+    if (isLoading && !refreshing) {
+        return (
+            <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color="#2563eb" />
+                <Text style={{ marginTop: 12, color: '#64748b' }}>Loading dashboard...</Text>
+            </SafeAreaView>
+        );
+    }
+
     return (
-        <SafeAreaView className="flex-1 bg-slate-50">
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
             {/* Header */}
-            <View className="px-5 pt-4 pb-4 flex-row items-center justify-between bg-white border-b border-slate-100">
-                <View className="flex-row items-center">
-                    <View className="h-12 w-12 rounded-full bg-slate-100 items-center justify-center mr-3 border-2 border-white shadow">
-                        <Ionicons name="person" size={24} color="#64748b" />
+            <View style={{
+                paddingHorizontal: 20,
+                paddingTop: 16,
+                paddingBottom: 16,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                backgroundColor: '#fff',
+                borderBottomWidth: 1,
+                borderBottomColor: '#f1f5f9',
+            }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{
+                        height: 48,
+                        width: 48,
+                        borderRadius: 24,
+                        backgroundColor: '#f1f5f9',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: 12,
+                    }}>
+                        {profile?.photoUrl ? (
+                            <View style={{ height: 48, width: 48, borderRadius: 24, backgroundColor: '#e2e8f0' }} />
+                        ) : (
+                            <Ionicons name="person" size={24} color="#64748b" />
+                        )}
                     </View>
                     <View>
-                        <Text className="text-lg font-bold text-slate-900" style={{ flexWrap: 'wrap' }}>{greeting}, Dr. {displayName}</Text>
-                        <View className="flex-row items-center">
-                            <Ionicons name="checkmark-circle" size={14} color="#197fe6" />
-                            <Text className="text-xs text-blue-600 ml-1 font-medium" style={{ flexWrap: 'wrap' }}>Verified Practitioner</Text>
+                        <Text style={{ fontSize: 18, fontWeight: '700', color: '#0f172a' }}>
+                            {greeting}, Dr. {displayName.split(' ')[0]}
+                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Ionicons 
+                                name={isVerified ? "checkmark-circle" : "time-outline"} 
+                                size={14} 
+                                color={isVerified ? "#2563eb" : "#f59e0b"} 
+                            />
+                            <Text style={{ 
+                                fontSize: 12, 
+                                color: isVerified ? '#2563eb' : '#f59e0b', 
+                                marginLeft: 4, 
+                                fontWeight: '500' 
+                            }}>
+                                {isVerified ? 'Verified Practitioner' : 'Verification Pending'}
+                            </Text>
                         </View>
                     </View>
                 </View>
-                <TouchableOpacity className="h-10 w-10 bg-white rounded-full items-center justify-center shadow-sm border border-slate-100">
+                <TouchableOpacity 
+                    onPress={handleNotifications}
+                    style={{
+                        height: 40,
+                        width: 40,
+                        backgroundColor: '#fff',
+                        borderRadius: 20,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderWidth: 1,
+                        borderColor: '#f1f5f9',
+                    }}
+                >
                     <Ionicons name="notifications-outline" size={22} color="#334155" />
-                    <View className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border border-white" />
                 </TouchableOpacity>
             </View>
 
-            <ScrollView className="flex-1 px-5 pt-4">
+            <ScrollView 
+                style={{ flex: 1, paddingHorizontal: 20, paddingTop: 16 }}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2563eb']} />
+                }
+            >
                 {/* Stats */}
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-6 -mx-1">
-                    {stats.map((stat, i) => (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 24, marginHorizontal: -4 }}>
+                    {statsData.map((stat, i) => (
                         <View
                             key={i}
                             style={{
@@ -113,50 +272,74 @@ export default function DoctorDashboardScreen() {
                 </ScrollView>
 
                 {/* Up Next */}
-                <View className="mb-6">
-                    <View className="flex-row justify-between items-center mb-3">
-                        <Text className="text-lg font-bold text-slate-900">Up Next</Text>
-                        <TouchableOpacity>
-                            <Text className="text-blue-600 font-bold text-sm">See All</Text>
+                <View style={{ marginBottom: 24 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                        <Text style={{ fontSize: 18, fontWeight: '700', color: '#0f172a' }}>Up Next</Text>
+                        <TouchableOpacity onPress={() => router.push('/(doctor)/appointments')}>
+                            <Text style={{ color: '#2563eb', fontWeight: '700', fontSize: 14 }}>See All</Text>
                         </TouchableOpacity>
                     </View>
 
                     {nextAppointment ? (
-                        <View className="bg-white rounded-2xl p-4 border border-slate-100 relative overflow-hidden">
-                            <View className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500" />
-                            {/* Appointment content */}
-                        </View>
+                        renderAppointmentCard(nextAppointment)
                     ) : (
-                        <View className="bg-white rounded-2xl p-6 border border-slate-100 items-center">
+                        <View style={{
+                            backgroundColor: '#fff',
+                            borderRadius: 16,
+                            padding: 32,
+                            borderWidth: 1,
+                            borderColor: '#f1f5f9',
+                            alignItems: 'center',
+                        }}>
                             <Ionicons name="calendar-outline" size={48} color="#cbd5e1" />
-                            <Text className="text-slate-400 mt-2">No upcoming appointments</Text>
+                            <Text style={{ color: '#94a3b8', marginTop: 12, fontSize: 15 }}>No upcoming appointments</Text>
+                            <Text style={{ color: '#cbd5e1', marginTop: 4, fontSize: 13 }}>Your schedule is clear for today</Text>
                         </View>
                     )}
                 </View>
 
                 {/* Clinical Tools */}
-                <View className="mb-6">
-                    <Text className="text-lg font-bold text-slate-900 mb-3">Clinical Tools</Text>
-                    <View className="flex-row flex-wrap justify-between">
+                <View style={{ marginBottom: 24 }}>
+                    <Text style={{ fontSize: 18, fontWeight: '700', color: '#0f172a', marginBottom: 12 }}>Quick Actions</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
                         {tools.map((tool, i) => (
                             <TouchableOpacity
                                 key={i}
-                                className="bg-white rounded-2xl p-4 border border-slate-100 items-center mb-3"
-                                style={{ width: '48%' }}
+                                onPress={() => handleToolPress(tool.route)}
+                                style={{
+                                    width: '48%',
+                                    backgroundColor: '#fff',
+                                    borderRadius: 16,
+                                    padding: 16,
+                                    borderWidth: 1,
+                                    borderColor: '#f1f5f9',
+                                    alignItems: 'center',
+                                    marginBottom: 12,
+                                }}
                             >
                                 <View
-                                    className="h-12 w-12 rounded-full items-center justify-center mb-2"
-                                    style={{ backgroundColor: tool.bgColor }}
+                                    style={{
+                                        height: 48,
+                                        width: 48,
+                                        borderRadius: 24,
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: tool.bgColor,
+                                        marginBottom: 8,
+                                    }}
                                 >
                                     <Ionicons name={tool.icon} size={24} color={tool.color} />
                                 </View>
-                                <Text className="text-sm font-bold text-slate-900" style={{ flexWrap: 'wrap', textAlign: 'center' }}>{tool.label}</Text>
+                                <Text style={{ fontSize: 14, fontWeight: '700', color: '#0f172a', textAlign: 'center' }}>
+                                    {tool.label}
+                                </Text>
                             </TouchableOpacity>
                         ))}
                     </View>
                 </View>
 
-                <View className="h-6" />
+                {/* Bottom spacing */}
+                <View style={{ height: 24 }} />
             </ScrollView>
         </SafeAreaView>
     );

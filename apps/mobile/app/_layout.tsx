@@ -4,6 +4,8 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "../contexts/AuthContext";
+import { DoctorProvider } from "../contexts/DoctorContext";
+import { PatientProvider } from "../contexts/PatientContext";
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from "@expo-google-fonts/inter";
@@ -45,16 +47,20 @@ export default function RootLayout() {
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
             <AuthProvider>
-                <SafeAreaProvider>
-                    <StatusBar style="auto" />
-                    <Stack screenOptions={{ headerShown: false }}>
-                        <Stack.Screen name="index" />
-                        <Stack.Screen name="(auth)" />
-                        <Stack.Screen name="(patient)" />
-                        <Stack.Screen name="(doctor)" />
-                        <Stack.Screen name="(common)" />
-                    </Stack>
-                </SafeAreaProvider>
+                <DoctorProvider>
+                    <PatientProvider>
+                        <SafeAreaProvider>
+                            <StatusBar style="auto" />
+                            <Stack screenOptions={{ headerShown: false }}>
+                                <Stack.Screen name="index" />
+                                <Stack.Screen name="(auth)" />
+                                <Stack.Screen name="(patient)" />
+                                <Stack.Screen name="(doctor)" />
+                                <Stack.Screen name="(common)" />
+                            </Stack>
+                        </SafeAreaProvider>
+                    </PatientProvider>
+                </DoctorProvider>
             </AuthProvider>
         </GestureHandlerRootView>
     );
