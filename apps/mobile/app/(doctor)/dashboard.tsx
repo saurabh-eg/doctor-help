@@ -33,9 +33,10 @@ export default function DoctorDashboardScreen() {
     const greeting = getGreeting();
     const displayName = user?.name || 'Doctor';
 
+    // Use SHORT labels to prevent truncation
     const stats: Stat[] = [
-        { label: 'Total Patients', value: '0', icon: 'people', color: '#3b82f6', bgColor: '#eff6ff' },
-        { label: "Today's Visits", value: '0', icon: 'medical', color: '#10b981', bgColor: '#ecfdf5' },
+        { label: 'Patients', value: '0', icon: 'people', color: '#3b82f6', bgColor: '#eff6ff' },
+        { label: 'Today', value: '0', icon: 'medical', color: '#10b981', bgColor: '#ecfdf5' },
         { label: 'Pending', value: '0', icon: 'time', color: '#f59e0b', bgColor: '#fffbeb' },
     ];
 
@@ -78,18 +79,35 @@ export default function DoctorDashboardScreen() {
                     {stats.map((stat, i) => (
                         <View
                             key={i}
-                            className="bg-white rounded-2xl p-4 mr-3 border border-slate-100 min-w-[140px]"
+                            style={{
+                                backgroundColor: '#fff',
+                                borderRadius: 16,
+                                padding: 16,
+                                marginRight: 12,
+                                borderWidth: 1,
+                                borderColor: '#f1f5f9',
+                                minWidth: 120,
+                            }}
                         >
-                            <View className="flex-row items-center mb-2">
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                                 <View
-                                    className="h-8 w-8 rounded-lg items-center justify-center mr-2"
-                                    style={{ backgroundColor: stat.bgColor }}
+                                    style={{
+                                        height: 32,
+                                        width: 32,
+                                        borderRadius: 8,
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: stat.bgColor,
+                                        marginRight: 8,
+                                    }}
                                 >
                                     <Ionicons name={stat.icon} size={18} color={stat.color} />
                                 </View>
-                                <Text className="text-xs text-slate-400 font-bold uppercase">{stat.label}</Text>
+                                <Text style={{ fontSize: 12, color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>
+                                    {stat.label}
+                                </Text>
                             </View>
-                            <Text className="text-2xl font-bold text-slate-900">{stat.value}</Text>
+                            <Text style={{ fontSize: 24, fontWeight: '700', color: '#0f172a' }}>{stat.value}</Text>
                         </View>
                     ))}
                 </ScrollView>

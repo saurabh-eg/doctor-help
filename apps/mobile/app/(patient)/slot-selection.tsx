@@ -203,11 +203,25 @@ export default function SlotSelectionScreen() {
                                         <Pressable
                                             key={slot}
                                             onPress={() => setSelectedSlot(slot)}
-                                            style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
-                                            className={`px-4 py-3 rounded-2xl mr-3 mb-3 border ${selectedSlot === slot ? 'bg-blue-600 border-blue-600' : 'bg-white border-slate-200'
-                                                }`}
+                                            style={({ pressed }) => [
+                                                {
+                                                    opacity: pressed ? 0.8 : 1,
+                                                    paddingHorizontal: 16,
+                                                    paddingVertical: 12,
+                                                    borderRadius: 16,
+                                                    marginRight: 12,
+                                                    marginBottom: 12,
+                                                    borderWidth: 1,
+                                                    backgroundColor: selectedSlot === slot ? '#2563eb' : '#fff',
+                                                    borderColor: selectedSlot === slot ? '#2563eb' : '#e2e8f0',
+                                                }
+                                            ]}
                                         >
-                                            <Text className={`font-semibold ${selectedSlot === slot ? 'text-white' : 'text-slate-600'}`}>
+                                            <Text style={{
+                                                fontWeight: '600',
+                                                fontSize: 14,
+                                                color: selectedSlot === slot ? '#fff' : '#475569',
+                                            }}>
                                                 {slot}
                                             </Text>
                                         </Pressable>
@@ -226,11 +240,25 @@ export default function SlotSelectionScreen() {
                                         <Pressable
                                             key={slot}
                                             onPress={() => setSelectedSlot(slot)}
-                                            style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
-                                            className={`px-4 py-3 rounded-2xl mr-3 mb-3 border ${selectedSlot === slot ? 'bg-blue-600 border-blue-600' : 'bg-white border-slate-200'
-                                                }`}
+                                            style={({ pressed }) => [
+                                                {
+                                                    opacity: pressed ? 0.8 : 1,
+                                                    paddingHorizontal: 16,
+                                                    paddingVertical: 12,
+                                                    borderRadius: 16,
+                                                    marginRight: 12,
+                                                    marginBottom: 12,
+                                                    borderWidth: 1,
+                                                    backgroundColor: selectedSlot === slot ? '#2563eb' : '#fff',
+                                                    borderColor: selectedSlot === slot ? '#2563eb' : '#e2e8f0',
+                                                }
+                                            ]}
                                         >
-                                            <Text className={`font-semibold ${selectedSlot === slot ? 'text-white' : 'text-slate-600'}`}>
+                                            <Text style={{
+                                                fontWeight: '600',
+                                                fontSize: 14,
+                                                color: selectedSlot === slot ? '#fff' : '#475569',
+                                            }}>
                                                 {slot}
                                             </Text>
                                         </Pressable>

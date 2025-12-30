@@ -8,10 +8,11 @@ import { Card } from '../../components/Card';
 export default function DoctorEarningsScreen() {
     const router = useRouter();
 
+    // Use SHORT labels to prevent truncation
     const stats = [
-        { label: 'Total Earnings', value: '₹45,000', icon: 'wallet', color: 'bg-emerald-100', iconColor: '#059669' },
+        { label: 'Total', value: '₹45,000', icon: 'wallet', color: 'bg-emerald-100', iconColor: '#059669' },
         { label: 'This Month', value: '₹12,400', icon: 'trending-up', color: 'bg-blue-100', iconColor: '#197fe6' },
-        { label: 'Appointments', value: '124', icon: 'people', color: 'bg-purple-100', iconColor: '#7c3aed' },
+        { label: 'Consults', value: '124', icon: 'people', color: 'bg-purple-100', iconColor: '#7c3aed' },
     ];
 
     const transactions = [
@@ -38,8 +39,8 @@ export default function DoctorEarningsScreen() {
                             <View className={`${stat.color} p-3 rounded-full mb-3`}>
                                 <Ionicons name={stat.icon as any} size={24} color={stat.iconColor} />
                             </View>
-                            <Text className="text-slate-400 text-sm">{stat.label}</Text>
-                            <Text className="text-2xl font-bold text-slate-900 mt-1">{stat.value}</Text>
+                            <Text style={{ color: '#94a3b8', fontSize: 13 }}>{stat.label}</Text>
+                            <Text style={{ fontSize: 24, fontWeight: '700', color: '#0f172a', marginTop: 4 }}>{stat.value}</Text>
                         </Card>
                     ))}
                 </View>
@@ -61,14 +62,14 @@ export default function DoctorEarningsScreen() {
                             <View className="bg-slate-100 p-2 rounded-full mr-3">
                                 <Ionicons name="person" size={20} color="#64748b" />
                             </View>
-                            <View className="flex-1">
-                                <Text className="font-bold text-slate-900" style={{ flexWrap: 'wrap' }}>{tx.patient}</Text>
-                                <Text className="text-slate-400 text-xs" style={{ flexWrap: 'wrap' }}>{tx.date}</Text>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ fontWeight: '700', color: '#0f172a', fontSize: 14 }}>{tx.patient}</Text>
+                                <Text style={{ color: '#94a3b8', fontSize: 12 }}>{tx.date}</Text>
                             </View>
                         </View>
                         <View className="items-end">
-                            <Text className="text-emerald-600 font-bold">+₹{tx.amount}</Text>
-                            <Text className="text-slate-400 text-[10px]">{tx.status}</Text>
+                            <Text style={{ color: '#059669', fontWeight: '700', fontSize: 14 }}>+₹{tx.amount}</Text>
+                            <Text style={{ color: '#94a3b8', fontSize: 12 }}>{tx.status}</Text>
                         </View>
                     </Card>
                 ))}

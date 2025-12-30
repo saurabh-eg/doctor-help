@@ -75,9 +75,9 @@ export default function DoctorAppointmentsScreen() {
                     return (
                         <View key={index} className="flex-row mb-4">
                             {/* Time Column */}
-                            <View className="w-16 items-center pt-2">
-                                <Text className="text-xs font-bold text-slate-500">{apt.time.split(' ')[0]}</Text>
-                                <Text className="text-xs text-slate-400">{apt.time.split(' ')[1]}</Text>
+                            <View style={{ width: 56, alignItems: 'center', paddingTop: 8 }}>
+                                <Text style={{ fontSize: 12, fontWeight: '700', color: '#64748b' }}>{apt.time.split(' ')[0]}</Text>
+                                <Text style={{ fontSize: 12, color: '#94a3b8' }}>{apt.time.split(' ')[1]}</Text>
                                 {index < appointments.length - 1 && (
                                     <View className="flex-1 w-0.5 bg-slate-200 my-2" />
                                 )}
@@ -86,17 +86,24 @@ export default function DoctorAppointmentsScreen() {
                             {/* Appointment Card */}
                             <View className={`flex-1 p-4 rounded-2xl border border-slate-100 ${style.bg}`}>
                                 <View className="flex-row justify-between items-start mb-2">
-                                    <Text className={`font-bold text-base ${style.text}`}>{apt.patientName}</Text>
+                                    <Text style={{ fontWeight: '700', fontSize: 15, color: apt.status === 'completed' ? '#94a3b8' : '#0f172a' }}>
+                                        {apt.patientName}
+                                    </Text>
                                     <View className={`px-2 py-0.5 rounded-full ${style.badge}`}>
-                                        <Text className={`text-xs font-bold uppercase ${apt.status === 'next' ? 'text-white' :
-                                                apt.status === 'completed' ? 'text-emerald-600' : 'text-slate-500'
-                                            }`}>
+                                        <Text style={{
+                                            fontSize: 12,
+                                            fontWeight: '700',
+                                            textTransform: 'uppercase',
+                                            color: apt.status === 'next' ? '#fff' : apt.status === 'completed' ? '#059669' : '#64748b'
+                                        }}>
                                             {apt.type}
                                         </Text>
                                     </View>
                                 </View>
-                                <Text className={`text-xs ${apt.status === 'next' ? 'text-blue-200' : 'text-slate-400'
-                                    }`}>
+                                <Text style={{
+                                    fontSize: 13,
+                                    color: apt.status === 'next' ? '#bfdbfe' : '#94a3b8'
+                                }}>
                                     {apt.notes}
                                 </Text>
 
