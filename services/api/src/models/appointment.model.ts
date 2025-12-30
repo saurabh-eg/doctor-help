@@ -50,5 +50,9 @@ const AppointmentSchema = new Schema<IAppointment>({
 AppointmentSchema.index({ patientId: 1, date: 1 });
 AppointmentSchema.index({ doctorId: 1, date: 1 });
 AppointmentSchema.index({ date: 1, status: 1 });
+AppointmentSchema.index({ status: 1, createdAt: -1 }); // Admin panel: filter by status
+AppointmentSchema.index({ type: 1, status: 1 }); // Admin panel: filter by type
+AppointmentSchema.index({ paymentStatus: 1, createdAt: -1 }); // Revenue stats
+AppointmentSchema.index({ createdAt: -1 }); // Dashboard recent appointments
 
 export const Appointment = mongoose.model<IAppointment>('Appointment', AppointmentSchema);

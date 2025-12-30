@@ -51,5 +51,7 @@ DoctorSchema.index({ specialization: 1 });
 DoctorSchema.index({ isVerified: 1, rating: -1 });
 DoctorSchema.index({ userId: 1 });
 DoctorSchema.index({ doctorId: 1 });
+DoctorSchema.index({ isVerified: 1, createdAt: -1 }); // Admin panel pending verifications
+DoctorSchema.index({ specialization: 'text' }); // Text search
 
 export const Doctor = mongoose.model<IDoctor>('Doctor', DoctorSchema);

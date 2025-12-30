@@ -29,7 +29,7 @@ export interface Doctor {
     rejectionReason?: string;
     bio?: string;
     photoUrl?: string;
-    documents?: string[];
+    documents?: string[]; // Array of document URLs
     availableSlots: {
         day: number;
         startTime: string;

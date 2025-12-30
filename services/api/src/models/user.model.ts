@@ -30,6 +30,9 @@ const UserSchema = new Schema<IUser>({
     suspendedAt: { type: Date },
 }, { timestamps: true });
 
-// Note: phone already has index from unique:true constraint
+// Indexes for admin panel queries
+UserSchema.index({ role: 1, createdAt: -1 }); // Users list filtered by role
+UserSchema.index({ name: 'text', phone: 'text', email: 'text' }); // Text search
+UserSchema.index({ isSuspended: 1 }); // Filter suspended users
 
 export const User = mongoose.model<IUser>('User', UserSchema);

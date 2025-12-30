@@ -237,55 +237,86 @@ export const suspendUser = async (req: Request, res: Response) => {
 
 /**
  * GET /api/admin/doctors
- * Paginated doctor list
+ * Paginated doctor list with optimized aggregation
  */
 export const getDoctors = async (req: Request, res: Response) => {
     try {
-        const { page = 1, limit = 20, search, specialization, isVerified, status } = req.query;
+        const { page = 1, limit = 20, search, specialization, status } = req.query;
         const skip = (Number(page) - 1) * Number(limit);
+        const pageLimit = Number(limit);
 
-        const query: any = {};
+        // Build match stage for aggregation
+        const matchStage: any = {};
         
         if (specialization) {
-            query.specialization = specialization;
+            matchStage.specialization = specialization;
         }
         
         if (status === 'pending') {
-            query.isVerified = false;
+            matchStage.isVerified = false;
         } else if (status === 'verified') {
-            query.isVerified = true;
-        } else if (isVerified !== undefined) {
-            query.isVerified = isVerified === 'true';
+            matchStage.isVerified = true;
         }
 
-        const [doctors, total] = await Promise.all([
-            Doctor.find(query)
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(Number(limit))
-                .populate('userId', 'name phone email')
-                .lean(),
-            Doctor.countDocuments(query),
+        // Use aggregation pipeline for optimized query with search
+        const pipeline: any[] = [
+            // Lookup user data first
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'userId',
+                    foreignField: '_id',
+                    as: 'userId',
+                    pipeline: [{ $project: { name: 1, phone: 1, email: 1 } }]
+                }
+            },
+            { $unwind: { path: '$userId', preserveNullAndEmptyArrays: true } },
+        ];
+
+        // Add search filter if provided (searches in user name and specialization)
+        if (search) {
+            const searchRegex = new RegExp(String(search), 'i');
+            pipeline.push({
+                $match: {
+                    $or: [
+                        { 'userId.name': searchRegex },
+                        { specialization: searchRegex }
+                    ]
+                }
+            });
+        }
+
+        // Add other filters
+        if (Object.keys(matchStage).length > 0) {
+            pipeline.push({ $match: matchStage });
+        }
+
+        // Get total count with same filters
+        const countPipeline = [...pipeline, { $count: 'total' }];
+        
+        // Add pagination and sorting
+        pipeline.push(
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: pageLimit }
+        );
+
+        // Execute both queries in parallel
+        const [doctors, countResult] = await Promise.all([
+            Doctor.aggregate(pipeline),
+            Doctor.aggregate(countPipeline)
         ]);
 
-        // If search, filter by user name
-        let filteredDoctors = doctors;
-        if (search) {
-            const searchLower = String(search).toLowerCase();
-            filteredDoctors = doctors.filter((doc: any) => 
-                doc.userId?.name?.toLowerCase().includes(searchLower) ||
-                doc.specialization?.toLowerCase().includes(searchLower)
-            );
-        }
+        const total = countResult[0]?.total || 0;
 
         res.json({
             success: true,
-            data: filteredDoctors,
+            data: doctors,
             pagination: {
                 page: Number(page),
-                limit: Number(limit),
+                limit: pageLimit,
                 total,
-                pages: Math.ceil(total / Number(limit)),
+                pages: Math.ceil(total / pageLimit),
             }
         });
     } catch (error) {
@@ -579,26 +610,49 @@ export const getAppointmentStats = async (req: Request, res: Response) => {
 
 /**
  * GET /api/admin/stats/revenue
- * Revenue statistics
+ * Revenue statistics - Optimized single aggregation query
  */
 export const getRevenueStats = async (req: Request, res: Response) => {
     try {
         const now = new Date();
+        const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+        // Single aggregation query for all 6 months
+        const revenueData = await Appointment.aggregate([
+            { 
+                $match: { 
+                    paymentStatus: 'paid', 
+                    createdAt: { $gte: sixMonthsAgo } 
+                } 
+            },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: '$createdAt' },
+                        month: { $month: '$createdAt' }
+                    },
+                    revenue: { $sum: '$amount' },
+                    appointments: { $sum: 1 }
+                }
+            },
+            { $sort: { '_id.year': 1, '_id.month': 1 } }
+        ]);
+
+        // Create all 6 months with default values
         const months: any[] = [];
+        const revenueMap = new Map(
+            revenueData.map(r => [`${r._id.year}-${r._id.month}`, r])
+        );
 
         for (let i = 5; i >= 0; i--) {
-            const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const key = `${date.getFullYear()}-${date.getMonth() + 1}`;
+            const data = revenueMap.get(key);
             
-            const revenue = await Appointment.aggregate([
-                { $match: { paymentStatus: 'paid', createdAt: { $gte: start, $lte: end } } },
-                { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } }
-            ]);
-
             months.push({
-                month: start.toLocaleString('default', { month: 'short', year: 'numeric' }),
-                revenue: revenue[0]?.total || 0,
-                appointments: revenue[0]?.count || 0,
+                month: date.toLocaleString('default', { month: 'short' }),
+                revenue: data?.revenue || 0,
+                appointments: data?.appointments || 0,
             });
         }
 
