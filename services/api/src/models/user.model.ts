@@ -7,7 +7,8 @@ export interface IUser extends Document {
     email?: string;
     avatar?: string;
     role: 'patient' | 'doctor' | 'admin';
-    isVerified: boolean;
+    isPhoneVerified: boolean;
+    isProfileComplete: boolean;
     userId?: number; // Numeric user ID
     isSuspended?: boolean;
     suspendedReason?: string;
@@ -23,7 +24,8 @@ const UserSchema = new Schema<IUser>({
     email: { type: String },
     avatar: { type: String },
     role: { type: String, enum: ['patient', 'doctor', 'admin'], default: 'patient' },
-    isVerified: { type: Boolean, default: false },
+    isPhoneVerified: { type: Boolean, default: false },
+    isProfileComplete: { type: Boolean, default: false },
     userId: { type: Number, unique: true, sparse: true },
     isSuspended: { type: Boolean, default: false },
     suspendedReason: { type: String },

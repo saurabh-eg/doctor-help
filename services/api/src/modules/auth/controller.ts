@@ -66,9 +66,16 @@ export const verifyOTP = async (req: Request, res: Response) => {
             phone,
             role: 'patient', // Default role
             isPhoneVerified: true,
+            isProfileComplete: false,
             userId: newUserId
         });
         isNewUser = true;
+    } else {
+        // Update phone verification status for existing users
+        if (!user.isPhoneVerified) {
+            user.isPhoneVerified = true;
+            await user.save();
+        }
     }
 
     const token = await new SignJWT({
@@ -90,8 +97,12 @@ export const verifyOTP = async (req: Request, res: Response) => {
                 id: user._id,
                 userId: user.userId,
                 phone: user.phone,
+                name: user.name,
+                email: user.email,
                 role: user.role,
-                numericUserId: user.userId,
+                avatar: user.avatar,
+                isPhoneVerified: user.isPhoneVerified,
+                isProfileComplete: user.isProfileComplete,
                 isNewUser
             }
         }
@@ -133,7 +144,9 @@ export const getMe = async (req: any, res: Response) => {
             email: user.email,
             role: user.role,
             avatar: user.avatar,
-            userId: user.userId
+            userId: user.userId,
+            isPhoneVerified: user.isPhoneVerified,
+            isProfileComplete: user.isProfileComplete
         }
     });
 };

@@ -3,7 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
 // API Configuration - Use environment variable or fallback
-// Set EXPO_PUBLIC_API_URL in .env or app.json for production/tunnel
 const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl
     || process.env.EXPO_PUBLIC_API_URL
     || 'http://localhost:3001/api';
@@ -16,6 +15,9 @@ interface User {
     role: 'patient' | 'doctor' | 'admin';
     avatar?: string;
     userId?: number;
+    isPhoneVerified?: boolean;
+    isProfileComplete?: boolean;
+    isNewUser?: boolean;
 }
 
 interface AuthState {
@@ -28,12 +30,19 @@ interface AuthState {
 
 interface AuthContextType extends AuthState {
     sendOtp: (phone: string) => Promise<{ success: boolean; error?: string; debug_otp?: string }>;
-    verifyOtp: (phone: string, otp: string) => Promise<{ success: boolean; error?: string; isNewUser?: boolean }>;
-    setRole: (role: 'patient' | 'doctor') => Promise<{ success: boolean }>;
+    verifyOtp: (phone: string, otp: string) => Promise<{ 
+        success: boolean; 
+        error?: string; 
+        isNewUser?: boolean;
+        user?: User;
+    }>;
+    setRole: (role: 'patient' | 'doctor') => Promise<{ success: boolean; error?: string }>;
+    completeProfile: (data: { name: string; email?: string }) => Promise<{ success: boolean; error?: string }>;
     setGuestMode: (enabled: boolean) => Promise<void>;
     logout: () => Promise<void>;
     updateUser: (data: Partial<User>) => void;
     requireAuth: (action: string) => boolean;
+    refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -73,9 +82,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             ]);
 
             if (storedToken && storedUser) {
+                const user = JSON.parse(storedUser);
                 setState({
                     token: storedToken,
-                    user: JSON.parse(storedUser),
+                    user,
                     isLoading: false,
                     isAuthenticated: true,
                     isGuest: false,
@@ -97,14 +107,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
     };
 
-    const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
+    const apiRequest = async (endpoint: string, options: RequestInit = {}, token?: string) => {
+        const authToken = token || state.token;
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
             ...(options.headers as Record<string, string>),
         };
 
-        if (state.token) {
-            headers['Authorization'] = `Bearer ${state.token}`;
+        if (authToken) {
+            headers['Authorization'] = `Bearer ${authToken}`;
         }
 
         try {
@@ -139,22 +150,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Save to storage
             await AsyncStorage.setItem('auth_token', token);
             await AsyncStorage.setItem('auth_user', JSON.stringify(user));
+            await AsyncStorage.removeItem('is_guest');
 
             setState({
                 token,
                 user,
                 isLoading: false,
                 isAuthenticated: true,
+                isGuest: false,
             });
 
-            return { success: true, isNewUser: user.isNewUser };
+            return { 
+                success: true, 
+                isNewUser: user.isNewUser,
+                user
+            };
         }
 
         return { success: false, error: response.error };
     };
 
     const setRole = async (role: 'patient' | 'doctor') => {
-        if (!state.user) return { success: false };
+        if (!state.user || !state.token) return { success: false, error: 'Not authenticated' };
 
         const response = await apiRequest(`/users/${state.user.id}/role`, {
             method: 'POST',
@@ -170,10 +187,46 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return response;
     };
 
+    const completeProfile = async (data: { name: string; email?: string }) => {
+        if (!state.user || !state.token) return { success: false, error: 'Not authenticated' };
+
+        const response = await apiRequest(`/users/${state.user.id}/complete-profile`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+
+        if (response.success && response.data) {
+            const updatedUser = { ...state.user, ...response.data, isProfileComplete: true };
+            await AsyncStorage.setItem('auth_user', JSON.stringify(updatedUser));
+            setState(prev => ({ ...prev, user: updatedUser }));
+        }
+
+        return response;
+    };
+
+    const refreshUser = async () => {
+        if (!state.user || !state.token) return;
+
+        const response = await apiRequest('/auth/me');
+        if (response.success && response.data) {
+            const updatedUser = { ...state.user, ...response.data };
+            await AsyncStorage.setItem('auth_user', JSON.stringify(updatedUser));
+            setState(prev => ({ ...prev, user: updatedUser }));
+        }
+    };
+
     const setGuestMode = async (enabled: boolean) => {
         if (enabled) {
             await AsyncStorage.setItem('is_guest', 'true');
-            setState(prev => ({ ...prev, isGuest: true }));
+            await AsyncStorage.removeItem('auth_token');
+            await AsyncStorage.removeItem('auth_user');
+            setState({
+                user: null,
+                token: null,
+                isLoading: false,
+                isAuthenticated: false,
+                isGuest: true,
+            });
         } else {
             await AsyncStorage.removeItem('is_guest');
             setState(prev => ({ ...prev, isGuest: false }));
@@ -181,8 +234,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     const requireAuth = (action: string): boolean => {
-        // Returns true if user is authenticated, false if guest
-        // Components can use this to show login prompt for guests
         return state.isAuthenticated && !state.isGuest;
     };
 
@@ -212,10 +263,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 sendOtp,
                 verifyOtp,
                 setRole,
+                completeProfile,
                 setGuestMode,
                 logout,
                 updateUser,
                 requireAuth,
+                refreshUser,
             }}
         >
             {children}

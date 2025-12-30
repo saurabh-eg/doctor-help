@@ -1,12 +1,93 @@
-import { View, Text, Pressable, Image } from "react-native";
+import { useEffect, useState } from "react";
+import { View, Text, Pressable, Image, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../contexts/AuthContext";
+import Constants from 'expo-constants';
+
+const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl
+    || process.env.EXPO_PUBLIC_API_URL
+    || 'http://localhost:3001/api';
 
 export default function Home() {
     const router = useRouter();
-    const { setGuestMode } = useAuth();
+    const { isLoading, isAuthenticated, isGuest, user, token, setGuestMode } = useAuth();
+    const [isRedirecting, setIsRedirecting] = useState(false);
+
+    // Check if doctor profile exists
+    const checkDoctorProfile = async (): Promise<boolean> => {
+        if (!user?.id || !token) return false;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/doctors/user/${user.id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            return data.success && data.data !== null;
+        } catch (error) {
+            console.error('Error checking doctor profile:', error);
+            return false;
+        }
+    };
+
+    // Redirect authenticated users to their appropriate screen
+    useEffect(() => {
+        const redirectUser = async () => {
+            if (isLoading || isRedirecting) return;
+
+            if (isGuest) {
+                // Guest user - go to patient home
+                setIsRedirecting(true);
+                router.replace('/(patient)/home');
+                return;
+            }
+
+            if (isAuthenticated && user) {
+                setIsRedirecting(true);
+
+                // Check if profile is complete
+                if (!user.isProfileComplete) {
+                    router.replace('/(auth)/profile-setup');
+                    return;
+                }
+
+                // Route based on role
+                if (user.role === 'doctor') {
+                    const hasDoctorProfile = await checkDoctorProfile();
+                    if (hasDoctorProfile) {
+                        router.replace('/(doctor)/dashboard');
+                    } else {
+                        router.replace('/(doctor)/verification');
+                    }
+                } else if (user.role === 'admin') {
+                    // Admin should use web panel
+                    router.replace('/(auth)/login');
+                } else {
+                    router.replace('/(patient)/home');
+                }
+            }
+        };
+
+        redirectUser();
+    }, [isLoading, isAuthenticated, isGuest, user]);
+
+    // Show loading while checking auth state or redirecting
+    if (isLoading || isRedirecting) {
+        return (
+            <SafeAreaView className="flex-1 bg-white items-center justify-center">
+                <View className="h-20 w-20 bg-white rounded-full items-center justify-center mb-4 shadow-sm overflow-hidden">
+                    <Image
+                        source={require('../assets/logo.jpg')}
+                        className="w-full h-full"
+                        resizeMode="cover"
+                    />
+                </View>
+                <ActivityIndicator size="large" color="#2563eb" />
+                <Text className="text-slate-500 mt-4">Loading...</Text>
+            </SafeAreaView>
+        );
+    }
 
     const handleRegister = () => {
         router.push("/(auth)/login");
@@ -79,8 +160,8 @@ export default function Home() {
 
             {/* Footer - Fixed at bottom */}
             <View className="px-6 pb-6">
-                <Text className="text-center text-slate-400 text-sm">
-                    By continuing, you agree to our Terms & Privacy Policy
+                <Text className="text-center text-slate-300 text-xs">
+                    By continuing, you agree to our Terms of Service and Privacy Policy
                 </Text>
             </View>
         </SafeAreaView>

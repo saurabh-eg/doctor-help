@@ -3,11 +3,16 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
+import Constants from 'expo-constants';
+
+const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl
+    || process.env.EXPO_PUBLIC_API_URL
+    || 'http://localhost:3001/api';
 
 export default function VerifyOtpScreen() {
     const router = useRouter();
     const { phoneNumber } = useLocalSearchParams<{ phoneNumber: string }>();
-    const { verifyOtp } = useAuth();
+    const { verifyOtp, sendOtp, token } = useAuth();
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [isLoading, setIsLoading] = useState(false);
     const [countdown, setCountdown] = useState(30);
@@ -36,6 +41,20 @@ export default function VerifyOtpScreen() {
         }
     };
 
+    // Check if doctor profile exists
+    const checkDoctorProfile = async (userId: string, authToken: string): Promise<boolean> => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/doctors/user/${userId}`, {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+            const data = await response.json();
+            return data.success && data.data !== null;
+        } catch (error) {
+            console.error('Error checking doctor profile:', error);
+            return false;
+        }
+    };
+
     const handleVerify = async () => {
         const otpString = otp.join('');
         if (otpString.length !== 6) return;
@@ -50,9 +69,37 @@ export default function VerifyOtpScreen() {
         try {
             const response = await verifyOtp(phoneNumber, otpString);
 
-            if (response.success) {
-                // Navigate to role selection for new users, or to home for existing
-                router.replace('/(auth)/role-select');
+            if (response.success && response.user) {
+                const { user } = response;
+                
+                // Determine where to navigate based on user state
+                if (response.isNewUser) {
+                    // New user -> Role selection
+                    router.replace('/(auth)/role-select');
+                } else if (!user.isProfileComplete) {
+                    // Existing user without complete profile -> Profile setup
+                    router.replace('/(auth)/profile-setup');
+                } else {
+                    // Existing user with complete profile -> Go to dashboard based on role
+                    if (user.role === 'doctor') {
+                        // Check if doctor has verification/profile
+                        const authToken = token || '';
+                        const hasDoctorProfile = await checkDoctorProfile(user.id, authToken);
+                        
+                        if (hasDoctorProfile) {
+                            router.replace('/(doctor)/dashboard');
+                        } else {
+                            router.replace('/(doctor)/verification');
+                        }
+                    } else if (user.role === 'admin') {
+                        // Admin role - redirect to login page (admin uses web)
+                        Alert.alert('Admin Access', 'Please use the web admin panel to access admin features.');
+                        router.replace('/(auth)/login');
+                    } else {
+                        // Patient
+                        router.replace('/(patient)/home');
+                    }
+                }
             } else {
                 Alert.alert('Error', response.error || 'Invalid OTP');
                 // Clear OTP on error
@@ -67,11 +114,23 @@ export default function VerifyOtpScreen() {
     };
 
     const handleResend = async () => {
-        if (countdown > 0) return;
-        // Reset countdown
+        if (countdown > 0 || !phoneNumber) return;
+        
         setCountdown(30);
-        // TODO: Call sendOtp again
-        Alert.alert('OTP Sent', 'A new OTP has been sent to your phone');
+        try {
+            const response = await sendOtp(phoneNumber);
+            if (response.success) {
+                if (response.debug_otp) {
+                    Alert.alert('Dev OTP', `Your new OTP is: ${response.debug_otp}`);
+                } else {
+                    Alert.alert('OTP Sent', 'A new OTP has been sent to your phone');
+                }
+            } else {
+                Alert.alert('Error', response.error || 'Failed to resend OTP');
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Failed to resend OTP');
+        }
     };
 
     return (
