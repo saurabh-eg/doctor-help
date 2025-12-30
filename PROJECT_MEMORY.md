@@ -6,7 +6,7 @@
 
 ## 📊 Current Status
 
-**Phase:** Mobile App Features  
+**Phase:** Mobile App Backend Integration  
 **Last Updated:** 2025-12-30
 **Deadline:** ~13 days (Production delivery for real client)
 
@@ -20,7 +20,8 @@
 | API Development (Elysia) | ✅ Complete |
 | Mobile API Integration | ✅ Complete |
 | API Migration to Express | ✅ Complete |
-| Mobile App UI/UX Fixes | ✅ In Progress |
+| Mobile App UI/UX Fixes | ✅ Complete |
+| Backend Wiring (Contexts) | ✅ Complete |
 
 ### User Preferences
 - **Expo Tunnel Mode**: Always use `--tunnel` flag (different networks)
@@ -117,7 +118,7 @@ doctor-help/
 
 ---
 
-### Session: 2025-12-30
+### Session: 2025-12-30 (Morning)
 
 **What Was Done:**
 - Debugged and fixed "My Bookings" screen data population issues (nested `doctorId.userId`).
@@ -130,10 +131,75 @@ doctor-help/
 **Key Decisions:**
 - Addressed NativeWind compatibility issues with `Pressable` by reverting to standard React Native styling for specific responsive components.
 
+---
+
+### Session: 2025-12-30 (Evening) - Backend Integration
+
+**What Was Done:**
+
+1. **Fixed OTP Resend Timer** - Added inline styles to ensure timer visibility on verify-otp screen
+
+2. **Created DoctorContext** (`apps/mobile/contexts/DoctorContext.tsx`)
+   - Central state management for doctor profile, appointments, stats
+   - Functions: `fetchProfile`, `fetchAppointments`, `fetchStats`, `updateAppointmentStatus`, `updateAvailability`, `refreshAll`
+   - Auto-calculates stats from appointments data (totalPatients, earnings, etc.)
+
+3. **Created PatientContext** (`apps/mobile/contexts/PatientContext.tsx`)
+   - Central state management for patient appointments and stats
+   - Functions: `fetchAppointments`, `cancelAppointment`, `bookAppointment`, `refreshAll`
+   - Separates upcoming/past appointments automatically
+   - Tracks stats: totalBookings, savedAmount, doctorsConsulted
+
+4. **Updated Root Layout** (`apps/mobile/app/_layout.tsx`)
+   - Wrapped app with DoctorProvider and PatientProvider
+
+5. **Rewired All Doctor Screens to API:**
+   - `dashboard.tsx` - Real stats, today's appointments, next appointment card
+   - `appointments.tsx` - Week picker, real appointments list, status updates (confirm/complete)
+   - `patients.tsx` - Unique patients extracted from appointment history
+   - `earnings.tsx` - Earnings calculated from paid appointments
+   - `profile.tsx` - Real profile data, verification status, stats display
+
+6. **Rewired All Patient Screens to API:**
+   - `home.tsx` - Real stats and upcoming appointments from PatientContext
+   - `bookings.tsx` - Appointments with cancel functionality, tabs for upcoming/past
+   - `profile.tsx` - Real stats (totalBookings, savedAmount, doctorsConsulted), guest mode handling
+
+7. **Fixed Expo Package Compatibility:**
+   - Downgraded `expo-document-picker` to ~13.0.3
+   - Downgraded `expo-image-picker` to ~16.0.6
+
+**Key Files Created/Modified:**
+- `apps/mobile/contexts/DoctorContext.tsx` (NEW)
+- `apps/mobile/contexts/PatientContext.tsx` (NEW)
+- `apps/mobile/app/_layout.tsx` (MODIFIED - added providers)
+- `apps/mobile/app/(doctor)/dashboard.tsx` (REWRITTEN)
+- `apps/mobile/app/(doctor)/appointments.tsx` (REWRITTEN)
+- `apps/mobile/app/(doctor)/patients.tsx` (REWRITTEN)
+- `apps/mobile/app/(doctor)/earnings.tsx` (REWRITTEN)
+- `apps/mobile/app/(doctor)/profile.tsx` (REWRITTEN)
+- `apps/mobile/app/(patient)/home.tsx` (REWRITTEN)
+- `apps/mobile/app/(patient)/bookings.tsx` (REWRITTEN)
+- `apps/mobile/app/(patient)/profile.tsx` (REWRITTEN)
+
+**Key Decisions:**
+- Use inline styles for critical UI elements (Design System v1.0 standard)
+- Calculate stats client-side from appointments data (reduces API calls)
+- Pull-to-refresh with RefreshControl on all main screens
+- Alert confirmations for destructive actions (logout, cancel appointment)
+- Guest mode in patient profile with registration benefits display
+
+**Already Wired (no changes needed):**
+- `search.tsx` - Already fetches from `/doctors` endpoint
+- `doctor-profile.tsx` - Already fetches from `/doctors/:id`
+- `slot-selection.tsx` - Already fetches doctor slots
+- `review-pay.tsx` - Already creates appointments via API
+
 **Next Steps:**
-- Continue verifying Doctor profile flow.
-- Complete remaining mobile app screens.
-- Verify production build requirements.
+- Test complete patient booking flow end-to-end
+- Test doctor verification and onboarding
+- Add doctor verification screen wiring
+- Production build configuration
 
 ---
 

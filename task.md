@@ -19,12 +19,27 @@
     - [x] Fix Doctor Verification screen text wrapping
     - [x] Fix Doctor Patients screen text wrapping
     - [x] Fix Doctor Earnings screen text wrapping
-- [/] Verify Doctor profile flow <!-- id: 1 -->
-- [/] Complete remaining mobile app screens <!-- id: 2 -->
+- [x] Verify Doctor profile flow <!-- id: 1 -->
+- [x] Complete remaining mobile app screens <!-- id: 2 -->
 - [ ] Verify production build requirements <!-- id: 3 -->
+
+## Backend Integration (Completed 2025-12-30)
+- [x] Create DoctorContext for state management
+- [x] Create PatientContext for state management
+- [x] Wire doctor dashboard to API
+- [x] Wire doctor appointments to API
+- [x] Wire doctor patients to API
+- [x] Wire doctor earnings to API
+- [x] Wire doctor profile to API
+- [x] Wire patient home to API
+- [x] Wire patient bookings to API
+- [x] Wire patient profile to API
+- [x] Fix OTP resend timer visibility
 
 ## Next Steps
 - [ ] Test complete patient booking flow (API running)
 - [ ] Test doctor verification and onboarding
 - [ ] Test all navigation flows
 - [ ] Production build configuration
+- [ ] Wire doctor verification screen
+- [ ] Add push notifications
