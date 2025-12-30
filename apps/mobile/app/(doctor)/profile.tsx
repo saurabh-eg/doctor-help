@@ -49,20 +49,20 @@ export default function DoctorProfileScreen() {
                 <Text className="text-slate-500 text-sm mt-1" style={{ flexWrap: 'wrap', textAlign: 'center' }}>MBBS, MD - 12 years experience</Text>
 
                 {/* Stats */}
-                <View className="flex-row mt-6 gap-6">
-                    <View className="items-center">
-                        <Text className="text-2xl font-bold text-blue-600">1.2K</Text>
-                        <Text className="text-slate-500 text-xs font-medium">Patients</Text>
+                <View style={{ flexDirection: 'row', marginTop: 24, alignItems: 'center' }}>
+                    <View style={{ alignItems: 'center', paddingHorizontal: 16 }}>
+                        <Text style={{ fontSize: 24, fontWeight: '700', color: '#2563eb' }}>1.2K</Text>
+                        <Text style={{ color: '#64748b', fontSize: 13, fontWeight: '500', marginTop: 2 }}>Patients</Text>
                     </View>
-                    <View className="h-10 w-px bg-slate-200" />
-                    <View className="items-center">
-                        <Text className="text-2xl font-bold text-emerald-600">4.9</Text>
-                        <Text className="text-slate-500 text-xs font-medium">Rating</Text>
+                    <View style={{ height: 40, width: 1, backgroundColor: '#e2e8f0' }} />
+                    <View style={{ alignItems: 'center', paddingHorizontal: 16 }}>
+                        <Text style={{ fontSize: 24, fontWeight: '700', color: '#10b981' }}>4.9</Text>
+                        <Text style={{ color: '#64748b', fontSize: 13, fontWeight: '500', marginTop: 2 }}>Rating</Text>
                     </View>
-                    <View className="h-10 w-px bg-slate-200" />
-                    <View className="items-center">
-                        <Text className="text-2xl font-bold text-amber-600">₹85K</Text>
-                        <Text className="text-slate-500 text-xs font-medium">Earnings</Text>
+                    <View style={{ height: 40, width: 1, backgroundColor: '#e2e8f0' }} />
+                    <View style={{ alignItems: 'center', paddingHorizontal: 16 }}>
+                        <Text style={{ fontSize: 24, fontWeight: '700', color: '#f59e0b' }}>₹85K</Text>
+                        <Text style={{ color: '#64748b', fontSize: 13, fontWeight: '500', marginTop: 2 }}>Earnings</Text>
                     </View>
                 </View>
             </View>

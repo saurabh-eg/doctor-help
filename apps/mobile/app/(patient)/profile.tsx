@@ -148,20 +148,20 @@ export default function PatientProfileScreen() {
                 <Text className="text-slate-500 font-medium" style={{ flexWrap: 'wrap' }}>{displayPhone}</Text>
 
                 {/* Quick Stats */}
-                <View className="flex-row mt-6 gap-6">
-                    <View className="items-center">
-                        <Text className="text-2xl font-bold text-blue-600">0</Text>
-                        <Text className="text-slate-500 text-xs font-medium">Bookings</Text>
+                <View style={{ flexDirection: 'row', marginTop: 24, alignItems: 'center' }}>
+                    <View style={{ alignItems: 'center', paddingHorizontal: 16 }}>
+                        <Text style={{ fontSize: 24, fontWeight: '700', color: '#2563eb' }}>0</Text>
+                        <Text style={{ color: '#64748b', fontSize: 13, fontWeight: '500', marginTop: 2 }}>Bookings</Text>
                     </View>
-                    <View className="h-10 w-px bg-slate-200" />
-                    <View className="items-center">
-                        <Text className="text-2xl font-bold text-emerald-600">₹0</Text>
-                        <Text className="text-slate-500 text-xs font-medium">Saved</Text>
+                    <View style={{ height: 40, width: 1, backgroundColor: '#e2e8f0' }} />
+                    <View style={{ alignItems: 'center', paddingHorizontal: 16 }}>
+                        <Text style={{ fontSize: 24, fontWeight: '700', color: '#10b981' }}>₹0</Text>
+                        <Text style={{ color: '#64748b', fontSize: 13, fontWeight: '500', marginTop: 2 }}>Saved</Text>
                     </View>
-                    <View className="h-10 w-px bg-slate-200" />
-                    <View className="items-center">
-                        <Text className="text-2xl font-bold text-amber-600">0</Text>
-                        <Text className="text-slate-500 text-xs font-medium">Doctors</Text>
+                    <View style={{ height: 40, width: 1, backgroundColor: '#e2e8f0' }} />
+                    <View style={{ alignItems: 'center', paddingHorizontal: 16 }}>
+                        <Text style={{ fontSize: 24, fontWeight: '700', color: '#f59e0b' }}>0</Text>
+                        <Text style={{ color: '#64748b', fontSize: 13, fontWeight: '500', marginTop: 2 }}>Doctors</Text>
                     </View>
                 </View>
             </View>

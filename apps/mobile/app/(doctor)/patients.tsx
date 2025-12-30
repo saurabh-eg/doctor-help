@@ -38,18 +38,18 @@ export default function DoctorPatientsScreen() {
             </View>
 
             {/* Stats */}
-            <View className="flex-row px-5 py-4 gap-3">
-                <View className="flex-1 bg-blue-50 rounded-xl p-3 items-center">
-                    <Text className="text-2xl font-bold text-blue-600">1,240</Text>
-                    <Text className="text-xs text-blue-600 font-medium">Total Patients</Text>
+            <View style={{ flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 16 }}>
+                <View style={{ flex: 1, backgroundColor: '#eff6ff', borderRadius: 12, padding: 12, alignItems: 'center', marginRight: 8 }}>
+                    <Text style={{ fontSize: 22, fontWeight: '700', color: '#2563eb' }}>1,240</Text>
+                    <Text style={{ fontSize: 12, color: '#2563eb', fontWeight: '500', marginTop: 2 }}>Total Patients</Text>
                 </View>
-                <View className="flex-1 bg-emerald-50 rounded-xl p-3 items-center">
-                    <Text className="text-2xl font-bold text-emerald-600">48</Text>
-                    <Text className="text-xs text-emerald-600 font-medium">This Month</Text>
+                <View style={{ flex: 1, backgroundColor: '#ecfdf5', borderRadius: 12, padding: 12, alignItems: 'center', marginRight: 8 }}>
+                    <Text style={{ fontSize: 22, fontWeight: '700', color: '#10b981' }}>48</Text>
+                    <Text style={{ fontSize: 12, color: '#10b981', fontWeight: '500', marginTop: 2 }}>This Month</Text>
                 </View>
-                <View className="flex-1 bg-amber-50 rounded-xl p-3 items-center">
-                    <Text className="text-2xl font-bold text-amber-600">12</Text>
-                    <Text className="text-xs text-amber-600 font-medium">Follow-ups</Text>
+                <View style={{ flex: 1, backgroundColor: '#fffbeb', borderRadius: 12, padding: 12, alignItems: 'center' }}>
+                    <Text style={{ fontSize: 22, fontWeight: '700', color: '#f59e0b' }}>12</Text>
+                    <Text style={{ fontSize: 12, color: '#f59e0b', fontWeight: '500', marginTop: 2 }}>Follow-ups</Text>
                 </View>
             </View>
 

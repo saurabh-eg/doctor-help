@@ -137,27 +137,27 @@ export default function DoctorProfileScreen() {
                 </View>
 
                 {/* Stats */}
-                <View className="flex-row justify-between mt-8">
-                    <View className="flex-1 mx-1 items-center py-4 bg-slate-50 rounded-2xl">
-                        <View className="bg-blue-100 p-2 rounded-full mb-2">
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 32, paddingHorizontal: 0 }}>
+                    <View style={{ flex: 1, alignItems: 'center', paddingVertical: 16, paddingHorizontal: 8, backgroundColor: '#f8fafc', borderRadius: 16, marginHorizontal: 4 }}>
+                        <View style={{ backgroundColor: '#dbeafe', padding: 8, borderRadius: 50, marginBottom: 8 }}>
                             <Ionicons name="briefcase" size={20} color="#197fe6" />
                         </View>
-                        <Text className="text-slate-900 font-bold">{doctor.experience} Yrs</Text>
-                        <Text className="text-slate-400 text-xs">Experience</Text>
+                        <Text style={{ color: '#0f172a', fontWeight: '700', fontSize: 16 }}>{doctor.experience} Yrs</Text>
+                        <Text style={{ color: '#64748b', fontSize: 12, marginTop: 4, textAlign: 'center' }}>Exp</Text>
                     </View>
-                    <View className="flex-1 mx-1 items-center py-4 bg-slate-50 rounded-2xl">
-                        <View className="bg-blue-100 p-2 rounded-full mb-2">
+                    <View style={{ flex: 1, alignItems: 'center', paddingVertical: 16, paddingHorizontal: 8, backgroundColor: '#f8fafc', borderRadius: 16, marginHorizontal: 4 }}>
+                        <View style={{ backgroundColor: '#dbeafe', padding: 8, borderRadius: 50, marginBottom: 8 }}>
                             <Ionicons name="star" size={20} color="#197fe6" />
                         </View>
-                        <Text className="text-slate-900 font-bold">{doctor.rating?.toFixed(1) || '0.0'}</Text>
-                        <Text className="text-slate-400 text-xs">Rating</Text>
+                        <Text style={{ color: '#0f172a', fontWeight: '700', fontSize: 16 }}>{doctor.rating?.toFixed(1) || '0.0'}</Text>
+                        <Text style={{ color: '#64748b', fontSize: 12, marginTop: 4, textAlign: 'center' }}>Stars</Text>
                     </View>
-                    <View className="flex-1 mx-1 items-center py-4 bg-slate-50 rounded-2xl">
-                        <View className="bg-blue-100 p-2 rounded-full mb-2">
+                    <View style={{ flex: 1, alignItems: 'center', paddingVertical: 16, paddingHorizontal: 8, backgroundColor: '#f8fafc', borderRadius: 16, marginHorizontal: 4 }}>
+                        <View style={{ backgroundColor: '#dbeafe', padding: 8, borderRadius: 50, marginBottom: 8 }}>
                             <Ionicons name="chatbubbles" size={20} color="#197fe6" />
                         </View>
-                        <Text className="text-slate-900 font-bold">{doctor.reviewCount || 0}</Text>
-                        <Text className="text-slate-400 text-xs">Reviews</Text>
+                        <Text style={{ color: '#0f172a', fontWeight: '700', fontSize: 16 }}>{doctor.reviewCount || 0}</Text>
+                        <Text style={{ color: '#64748b', fontSize: 12, marginTop: 4, textAlign: 'center' }}>Reviews</Text>
                     </View>
                 </View>
 
