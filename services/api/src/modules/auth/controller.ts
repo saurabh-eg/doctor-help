@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { SignJWT, jwtVerify } from 'jose';
+
 import { User } from '../../models';
+import { Counter } from '../../models/counter.model';
 
 const JWT_SECRET = new TextEncoder().encode(
     process.env.JWT_SECRET || 'super-secret-key-change-in-production'
@@ -51,11 +53,20 @@ export const verifyOTP = async (req: Request, res: Response) => {
     let user = await User.findOne({ phone });
     let isNewUser = false;
 
+
     if (!user) {
+        // Atomic increment for userId (can be role-based if needed)
+        const counter = await Counter.findByIdAndUpdate(
+            'user',
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true }
+        );
+        const newUserId = counter.seq;
         user = await User.create({
             phone,
             role: 'patient', // Default role
-            isPhoneVerified: true
+            isPhoneVerified: true,
+            userId: newUserId
         });
         isNewUser = true;
     }
@@ -63,7 +74,8 @@ export const verifyOTP = async (req: Request, res: Response) => {
     const token = await new SignJWT({
         userId: user._id.toString(),
         phone: user.phone,
-        role: user.role
+        role: user.role,
+        numericUserId: user.userId
     })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
@@ -76,8 +88,10 @@ export const verifyOTP = async (req: Request, res: Response) => {
             token,
             user: {
                 id: user._id,
+                userId: user.userId,
                 phone: user.phone,
                 role: user.role,
+                numericUserId: user.userId,
                 isNewUser
             }
         }
@@ -90,7 +104,8 @@ export const refresh = async (req: any, res: Response) => {
     const newToken = await new SignJWT({
         userId: user.userId,
         phone: user.phone,
-        role: user.role
+        role: user.role,
+        numericUserId: user.numericUserId
     })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
@@ -117,7 +132,8 @@ export const getMe = async (req: any, res: Response) => {
             name: user.name,
             email: user.email,
             role: user.role,
-            avatar: user.avatar
+            avatar: user.avatar,
+            userId: user.userId
         }
     });
 };

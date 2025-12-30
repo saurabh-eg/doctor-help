@@ -10,6 +10,7 @@ export interface AuthenticatedRequest extends Request {
         userId: string;
         phone: string;
         role: 'patient' | 'doctor' | 'admin';
+        numericUserId?: number;
     };
 }
 

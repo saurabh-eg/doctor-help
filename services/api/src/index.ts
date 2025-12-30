@@ -14,6 +14,7 @@ import { authRouter } from './modules/auth/routes';
 import { usersRouter } from './modules/users/routes';
 import { doctorsRouter } from './modules/doctors/routes';
 import { appointmentsRouter } from './modules/appointments/routes';
+import { doctorUploadRouter } from './modules/doctors/upload';
 
 dotenv.config();
 
@@ -70,6 +71,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/doctors', doctorsRouter);
 app.use('/api/appointments', appointmentsRouter);
+app.use('/api/doctors', doctorUploadRouter);
 
 // Error Handling
 app.use(errorHandler);

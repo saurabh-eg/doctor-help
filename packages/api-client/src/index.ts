@@ -72,6 +72,8 @@ export interface VerifyOtpResponse {
         phone: string;
         name?: string;
         role: 'patient' | 'doctor' | 'admin';
+        userId?: number;
+        numericUserId?: number;
         isNewUser: boolean;
     };
 }
@@ -105,6 +107,7 @@ export interface User {
     email?: string;
     avatar?: string;
     role: 'patient' | 'doctor' | 'admin';
+    userId?: number;
 }
 
 export const usersApi = {
@@ -129,6 +132,7 @@ export const usersApi = {
 export interface Doctor {
     _id: string;
     userId: User;
+    doctorId?: number;
     specialization: string;
     qualification: string;
     experience: number;
@@ -137,6 +141,8 @@ export interface Doctor {
     reviewCount: number;
     isVerified: boolean;
     bio?: string;
+    photoUrl?: string;
+    documents?: string[];
     availableSlots: {
         day: number;
         startTime: string;
@@ -173,6 +179,8 @@ export const doctorsApi = {
         experience: number;
         consultationFee: number;
         bio?: string;
+        photoUrl?: string;
+        documents?: string[];
     }) =>
         apiRequest<Doctor>('/doctors/register', {
             method: 'POST',

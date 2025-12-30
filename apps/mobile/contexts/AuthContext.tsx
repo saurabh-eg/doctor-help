@@ -15,6 +15,7 @@ interface User {
     email?: string;
     role: 'patient' | 'doctor' | 'admin';
     avatar?: string;
+    userId?: number;
 }
 
 interface AuthState {

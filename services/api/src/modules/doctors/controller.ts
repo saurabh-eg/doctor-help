@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Doctor } from '../../models';
+import { Doctor, User } from '../../models';
 
 export const listDoctors = async (req: Request, res: Response) => {
     const {
@@ -86,7 +86,8 @@ export const registerDoctor = async (req: Request, res: Response) => {
         experience,
         consultationFee,
         bio,
-        photoUrl
+        photoUrl,
+        documents
     } = req.body;
 
     // Check if doctor profile already exists
@@ -95,14 +96,30 @@ export const registerDoctor = async (req: Request, res: Response) => {
         return res.status(400).json({ success: false, error: 'Doctor profile already exists for this user' });
     }
 
+    // Get numeric doctorId from user
+    const user = await User.findById(userId);
+    let doctorId: number | undefined = undefined;
+    if (user && user.userId) {
+        doctorId = user.userId;
+    }
+
+    // If photoUrl is present, ensure it uses the new upload path (doctor/{doctorId}/profile/profile.jpg)
+    let finalPhotoUrl = photoUrl;
+    if (doctorId && photoUrl && !photoUrl.includes(`/doctor/${doctorId}/profile/`)) {
+        // Optionally rewrite or validate here
+        // For now, just keep as is
+    }
+
     const doctor = await Doctor.create({
         userId,
+        doctorId,
         specialization,
         qualification,
         experience,
         consultationFee,
         bio,
-        photoUrl,
+        photoUrl: finalPhotoUrl,
+        documents: documents || [],
         isVerified: false // Admin needs to verify
     });
 

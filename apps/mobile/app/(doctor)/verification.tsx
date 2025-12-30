@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
-import { Card } from '../../components/Card';
-import { useAuth } from '../../contexts/AuthContext';
 import { api } from '@doctor-help/api-client';
+import { useAuth } from '../../contexts/AuthContext';
+import { pickAndUploadImage, pickAndUploadDocument } from '../../utils/uploadImage';
 
 export default function DoctorVerificationScreen() {
     const router = useRouter();
-    const { user } = useAuth();
+    const { user, token } = useAuth();
     const [loading, setLoading] = useState(false);
 
     const [form, setForm] = useState({
@@ -22,6 +22,9 @@ export default function DoctorVerificationScreen() {
         bio: '',
         photoUrl: ''
     });
+    const [uploading, setUploading] = useState(false);
+    const [docUploading, setDocUploading] = useState(false);
+    const [documents, setDocuments] = useState<string[]>([]);
 
     const handleSubmit = async () => {
         if (!form.specialization || !form.qualification || !form.experience || !form.consultationFee) {
@@ -40,7 +43,8 @@ export default function DoctorVerificationScreen() {
                 experience: parseInt(form.experience),
                 consultationFee: parseInt(form.consultationFee),
                 bio: form.bio,
-                photoUrl: form.photoUrl
+                photoUrl: form.photoUrl,
+                documents,
             });
 
             if (result.success) {
@@ -80,11 +84,28 @@ export default function DoctorVerificationScreen() {
                     value={form.specialization}
                     onChangeText={(text) => setForm(prev => ({ ...prev, specialization: text }))}
                 />
-                <Input
-                    label="Profile Photo URL"
-                    placeholder="Paste a direct image URL (e.g. from Imgur, Cloudinary)"
-                    value={form.photoUrl}
-                    onChangeText={(text) => setForm(prev => ({ ...prev, photoUrl: text }))}
+
+                {/* Profile Photo Picker & Preview */}
+                <Text className="text-gray-700 font-semibold mb-2 ml-1">Profile Photo</Text>
+                {form.photoUrl ? (
+                    <View className="items-center mb-2">
+                        <Image source={{ uri: form.photoUrl }} style={{ width: 100, height: 100, borderRadius: 50 }} />
+                    </View>
+                ) : null}
+                <Button
+                    title={uploading ? 'Uploading...' : (form.photoUrl ? 'Change Photo' : 'Upload Photo')}
+                    loading={uploading}
+                    onPress={async () => {
+                        if (!token) {
+                            Alert.alert('Error', 'Please login again.');
+                            return;
+                        }
+                        setUploading(true);
+                        const url = await pickAndUploadImage(token);
+                        if (url) setForm(prev => ({ ...prev, photoUrl: url }));
+                        setUploading(false);
+                    }}
+                    className="mb-4"
                 />
 
                 <Input
@@ -122,13 +143,32 @@ export default function DoctorVerificationScreen() {
                     className="h-32"
                 />
 
-                {/* Document Upload Mock */}
                 <Text className="text-gray-700 font-semibold mb-2 ml-1">Upload Documents</Text>
-                <TouchableOpacity className="border-2 border-dashed border-slate-200 rounded-3xl p-8 items-center justify-center mb-8 bg-slate-50">
-                    <Ionicons name="cloud-upload-outline" size={40} color="#197fe6" />
-                    <Text className="text-slate-500 mt-2">Upload Degree/ID Proof</Text>
-                    <Text className="text-slate-400 text-xs mt-1">(PDF, JPG, PNG up to 5MB)</Text>
-                </TouchableOpacity>
+                <View className="border-2 border-dashed border-slate-200 rounded-3xl p-4 mb-4 bg-slate-50">
+                    {documents.length === 0 && (
+                        <Text className="text-slate-500 text-sm mb-3">Add degree/ID proof (PDF or image)</Text>
+                    )}
+                    {documents.map((doc, idx) => (
+                        <View key={idx} className="flex-row items-center mb-2">
+                            <Ionicons name="document-text-outline" size={18} color="#475569" />
+                            <Text className="text-slate-700 ml-2 flex-1" numberOfLines={1}>{doc}</Text>
+                        </View>
+                    ))}
+                    <Button
+                        title={docUploading ? 'Uploading...' : 'Add Document'}
+                        loading={docUploading}
+                        onPress={async () => {
+                            if (!token) {
+                                Alert.alert('Error', 'Please login again.');
+                                return;
+                            }
+                            setDocUploading(true);
+                            const url = await pickAndUploadDocument(token);
+                            if (url) setDocuments(prev => [...prev, url]);
+                            setDocUploading(false);
+                        }}
+                    />
+                </View>
 
                 <Button
                     title="Submit for Verification"

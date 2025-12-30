@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IDoctor extends Document {
     userId: mongoose.Types.ObjectId;
+    doctorId?: number;
     specialization: string;
     qualification: string;
     experience: number;
@@ -11,6 +12,7 @@ export interface IDoctor extends Document {
     isVerified: boolean;
     bio?: string;
     photoUrl?: string;
+    documents?: string[];
     availableSlots: {
         day: number; // 0-6 (Sunday-Saturday)
         startTime: string; // HH:mm
@@ -22,6 +24,7 @@ export interface IDoctor extends Document {
 
 const DoctorSchema = new Schema<IDoctor>({
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    doctorId: { type: Number, unique: true, sparse: true },
     specialization: { type: String, required: true },
     qualification: { type: String, required: true },
     experience: { type: Number, required: true },
@@ -31,6 +34,7 @@ const DoctorSchema = new Schema<IDoctor>({
     isVerified: { type: Boolean, default: false },
     bio: { type: String },
     photoUrl: { type: String },
+    documents: [{ type: String }],
     availableSlots: [{
         day: { type: Number, required: true },
         startTime: { type: String, required: true },
@@ -42,5 +46,6 @@ const DoctorSchema = new Schema<IDoctor>({
 DoctorSchema.index({ specialization: 1 });
 DoctorSchema.index({ isVerified: 1, rating: -1 });
 DoctorSchema.index({ userId: 1 });
+DoctorSchema.index({ doctorId: 1 });
 
 export const Doctor = mongoose.model<IDoctor>('Doctor', DoctorSchema);

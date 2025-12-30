@@ -1,4 +1,4 @@
-import { View, Text, TextInput, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, ScrollView, Pressable, ActivityIndicator, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -95,26 +95,39 @@ export default function PatientSearchScreen() {
             </View>
 
             {/* Specialization Filters */}
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                className="px-5 py-2 bg-white border-b border-slate-100"
-            >
-                {specializations.map((spec, i) => (
-                    <Pressable
-                        key={i}
-                        onPress={() => setSelectedSpec(spec.value)}
-                        style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
-                        className={`h-9 px-5 rounded-full mr-3 items-center justify-center ${selectedSpec === spec.value ? 'bg-blue-600' : 'bg-slate-100'
-                            }`}
-                    >
-                        <Text className={`text-sm font-bold ${selectedSpec === spec.value ? 'text-white' : 'text-slate-600'
-                            }`}>
-                            {spec.label}
-                        </Text>
-                    </Pressable>
-                ))}
-            </ScrollView>
+            <View style={{ backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }}>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 8 }}
+                >
+                    {specializations.map((spec, i) => (
+                        <View key={i} style={{ marginRight: 12 }}>
+                            <Pressable
+                                onPress={() => setSelectedSpec(spec.value)}
+                                style={{
+                                    height: 36,
+                                    paddingHorizontal: 20,
+                                    borderRadius: 18,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    backgroundColor: selectedSpec === spec.value ? '#2563eb' : '#e2e8f0',
+                                }}
+                            >
+                                <Text
+                                    style={{
+                                        fontSize: 14,
+                                        fontWeight: '700',
+                                        color: selectedSpec === spec.value ? '#ffffff' : '#334155',
+                                    }}
+                                >
+                                    {spec.label}
+                                </Text>
+                            </Pressable>
+                        </View>
+                    ))}
+                </ScrollView>
+            </View>
 
             {/* Doctor List */}
             {loading ? (
@@ -122,65 +135,64 @@ export default function PatientSearchScreen() {
                     <ActivityIndicator size="large" color="#197fe6" />
                     <Text className="text-slate-500 mt-4">Loading doctors...</Text>
                 </View>
-            ) : doctors.length === 0 ? (
-                <View className="flex-1 items-center justify-center px-6">
-                    <Ionicons name="search-outline" size={64} color="#cbd5e1" />
-                    <Text className="text-slate-500 mt-4 text-center" style={{ flexWrap: 'wrap' }}>No doctors found</Text>
-                </View>
             ) : (
-                <ScrollView className="px-5 pt-2" contentContainerClassName="pt-0">
-                    {doctors.map((doctor) => (
+                <FlatList
+                    data={doctors}
+                    keyExtractor={(item) => item._id}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24 }}
+                    style={{ flex: 1 }}
+                    ListEmptyComponent={
+                        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80 }}>
+                            <Ionicons name="search-outline" size={64} color="#cbd5e1" />
+                            <Text style={{ color: '#64748b', marginTop: 16, textAlign: 'center' }}>No doctors found</Text>
+                        </View>
+                    }
+                    renderItem={({ item: doctor }) => (
                         <Pressable
-                            key={doctor._id}
                             onPress={() => handleDoctorPress(doctor._id)}
                             style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
                             className="bg-white rounded-2xl p-4 mb-4 border border-slate-100"
                         >
                             <View className="flex-row">
-                                {/* Avatar */}
                                 <View className="h-16 w-16 rounded-full bg-blue-50 items-center justify-center mr-4">
                                     <Ionicons name="person" size={32} color="#197fe6" />
                                 </View>
-
-                                {/* Info */}
-                                <View className="flex-1">
-                                    <Text className="text-lg font-bold text-slate-900" style={{ flexWrap: 'wrap' }}>
+                                <View style={{ flex: 1 }}>
+                                    <Text className="text-lg font-bold text-slate-900" numberOfLines={1}>
                                         {doctor.userId?.name || 'Doctor'}
                                     </Text>
-                                    <Text className="text-slate-500 text-sm" style={{ flexWrap: 'wrap' }}>{doctor.specialization}</Text>
-
-                                    <View className="flex-row items-center mt-1">
+                                    <Text className="text-slate-500 text-sm" numberOfLines={1}>{doctor.specialization}</Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
                                         <Ionicons name="star" size={14} color="#f59e0b" />
-                                        <Text className="text-slate-700 font-bold text-sm ml-1">
+                                        <Text style={{ color: '#334155', fontWeight: '700', fontSize: 14, marginLeft: 4 }}>
                                             {doctor.rating?.toFixed(1) || '0.0'}
                                         </Text>
-                                        <Text className="text-slate-400 text-sm ml-1">
-                                            ({doctor.reviewCount || 0} reviews)
+                                        <Text style={{ color: '#94a3b8', fontSize: 14, marginLeft: 4 }}>
+                                            ({doctor.reviewCount || 0})
                                         </Text>
                                     </View>
                                 </View>
                             </View>
 
-                            {/* Details Row */}
                             <View className="flex-row items-center mt-4 pt-4 border-t border-slate-100">
-                                <View className="flex-1 flex-row items-center">
+                                <View className="flex-row items-center" style={{ flex: 1 }}>
                                     <Ionicons name="briefcase-outline" size={16} color="#64748b" />
-                                    <Text className="text-slate-600 text-sm ml-1">{doctor.experience} yrs</Text>
+                                    <Text className="text-slate-600 text-sm ml-1" numberOfLines={1}>{doctor.experience} yrs</Text>
                                 </View>
-                                <View className="flex-1 items-center">
+                                <View style={{ flex: 1, alignItems: 'center' }}>
                                     {doctor.isVerified && (
-                                        <View className="flex-row items-center">
-                                            <Ionicons name="checkmark-circle" size={14} color="#10b981" />
-                                            <Text className="text-emerald-600 text-xs font-bold ml-1">Verified</Text>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <Ionicons name="checkmark-circle" size={18} color="#10b981" />
+                                            <Text style={{ color: '#10b981', fontSize: 14, fontWeight: '700', marginLeft: 4 }}>Verified</Text>
                                         </View>
                                     )}
                                 </View>
-                                <View className="flex-1 items-end">
-                                    <Text className="text-blue-600 font-bold">₹{doctor.consultationFee}</Text>
+                                <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                                    <Text className="text-blue-600 font-bold" numberOfLines={1}>₹{doctor.consultationFee}</Text>
                                 </View>
                             </View>
 
-                            {/* Action Button */}
                             <Pressable
                                 onPress={() => handleDoctorPress(doctor._id)}
                                 style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
@@ -189,10 +201,8 @@ export default function PatientSearchScreen() {
                                 <Text className="text-white font-bold">Book Appointment</Text>
                             </Pressable>
                         </Pressable>
-                    ))}
-
-                    <View className="h-6" />
-                </ScrollView>
+                    )}
+                />
             )}
         </SafeAreaView>
     );
