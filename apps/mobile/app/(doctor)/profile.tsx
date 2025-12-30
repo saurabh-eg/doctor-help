@@ -96,7 +96,8 @@ export default function DoctorProfileScreen() {
                     <Text className="text-red-600 font-bold ml-2">Logout</Text>
                 </TouchableOpacity>
 
-                <View className="h-6" />
+                {/* Bottom padding for tab bar */}
+                <View style={{ height: 100 }} />
             </ScrollView>
         </SafeAreaView>
     );

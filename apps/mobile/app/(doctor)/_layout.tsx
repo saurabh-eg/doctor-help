@@ -27,7 +27,7 @@ export default function DoctorLayout() {
             <Tabs.Screen
                 name="dashboard"
                 options={{
-                    title: 'Dashboard',
+                    title: 'Home',
                     tabBarIcon: ({ color }) => (
                         <Ionicons name="grid" size={24} color={color} />
                     ),
@@ -36,7 +36,7 @@ export default function DoctorLayout() {
             <Tabs.Screen
                 name="appointments"
                 options={{
-                    title: 'Appointments',
+                    title: 'Schedule',
                     tabBarIcon: ({ color }) => (
                         <Ionicons name="calendar" size={24} color={color} />
                     ),
@@ -52,12 +52,28 @@ export default function DoctorLayout() {
                 }}
             />
             <Tabs.Screen
+                name="earnings"
+                options={{
+                    title: 'Earnings',
+                    tabBarIcon: ({ color }) => (
+                        <Ionicons name="wallet" size={24} color={color} />
+                    ),
+                }}
+            />
+            <Tabs.Screen
                 name="profile"
                 options={{
                     title: 'Profile',
                     tabBarIcon: ({ color }) => (
                         <Ionicons name="person" size={24} color={color} />
                     ),
+                }}
+            />
+            {/* Hide verification from tabs - it's accessed via navigation only */}
+            <Tabs.Screen
+                name="verification"
+                options={{
+                    href: null, // Hides from tab bar
                 }}
             />
         </Tabs>

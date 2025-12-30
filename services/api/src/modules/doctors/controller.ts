@@ -167,3 +167,20 @@ export const getMetaSpecializations = (req: Request, res: Response) => {
         ]
     });
 };
+
+// Get doctor profile by user ID (for checking if doctor profile exists)
+export const getDoctorByUserId = async (req: Request, res: Response) => {
+    try {
+        const doctor = await Doctor.findOne({ userId: req.params.userId })
+            .populate('userId', 'name phone avatar')
+            .select('-__v');
+
+        // Return success with null data if no doctor found (not an error)
+        res.json({
+            success: true,
+            data: doctor
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to check doctor profile' });
+    }
+};

@@ -1,80 +1,235 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, ScrollView, Pressable, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Card } from '../../components/Card';
 
 export default function DoctorEarningsScreen() {
-    const router = useRouter();
-
-    // Use SHORT labels to prevent truncation
+    // Stats data with SHORT labels to prevent truncation
     const stats = [
-        { label: 'Total', value: '₹45,000', icon: 'wallet', color: 'bg-emerald-100', iconColor: '#059669' },
-        { label: 'This Month', value: '₹12,400', icon: 'trending-up', color: 'bg-blue-100', iconColor: '#197fe6' },
-        { label: 'Consults', value: '124', icon: 'people', color: 'bg-purple-100', iconColor: '#7c3aed' },
+        { label: 'Total Earned', value: '₹45,000', icon: 'wallet', bgColor: '#ecfdf5', iconColor: '#059669' },
+        { label: 'Monthly', value: '₹12,400', icon: 'trending-up', bgColor: '#eff6ff', iconColor: '#2563eb' },
+        { label: 'Consults', value: '124', icon: 'people', bgColor: '#f5f3ff', iconColor: '#7c3aed' },
     ];
 
     const transactions = [
-        { id: '1', patient: 'Rahul Sharma', amount: 500, date: '26 Dec, 2025', status: 'Completed' },
-        { id: '2', patient: 'Anjali Gupta', amount: 400, date: '25 Dec, 2025', status: 'Completed' },
-        { id: '3', patient: 'Amit Kumar', amount: 500, date: '25 Dec, 2025', status: 'Completed' },
-        { id: '4', patient: 'Priya Verma', amount: 450, date: '24 Dec, 2025', status: 'Completed' },
+        { id: '1', patient: 'Rahul Sharma', amount: 500, date: '26 Dec', type: 'Consultation' },
+        { id: '2', patient: 'Anjali Gupta', amount: 400, date: '25 Dec', type: 'Follow-up' },
+        { id: '3', patient: 'Amit Kumar', amount: 500, date: '25 Dec', type: 'Consultation' },
+        { id: '4', patient: 'Priya Verma', amount: 450, date: '24 Dec', type: 'Consultation' },
+        { id: '5', patient: 'Sanjay Patel', amount: 500, date: '23 Dec', type: 'Consultation' },
     ];
 
     return (
-        <SafeAreaView className="flex-1 bg-slate-50">
-            <View className="flex-row items-center px-5 py-4 bg-white border-b border-slate-100">
-                <TouchableOpacity onPress={() => router.back()}>
-                    <Ionicons name="arrow-back" size={24} color="#1e293b" />
-                </TouchableOpacity>
-                <Text className="text-xl font-bold text-slate-900 ml-4">Earnings</Text>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+            {/* Header */}
+            <View style={{
+                paddingHorizontal: 20,
+                paddingVertical: 16,
+                backgroundColor: '#fff',
+                borderBottomWidth: 1,
+                borderBottomColor: '#f1f5f9',
+            }}>
+                <Text style={{ fontSize: 24, fontWeight: '700', color: '#0f172a', textAlign: 'center' }}>
+                    Earnings
+                </Text>
             </View>
 
-            <ScrollView className="flex-1 px-5 pt-4" showsVerticalScrollIndicator={false}>
-                {/* Stats Grid */}
-                <View className="flex-row flex-wrap justify-between">
-                    {stats.map((stat, i) => (
-                        <Card key={i} className={`items-center justify-center py-6 mb-4 ${i === 0 ? 'w-full' : 'w-[48%]'}`}>
-                            <View className={`${stat.color} p-3 rounded-full mb-3`}>
-                                <Ionicons name={stat.icon as any} size={24} color={stat.iconColor} />
+            <ScrollView 
+                style={{ flex: 1 }} 
+                contentContainerStyle={{ padding: 20 }}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Total Earnings Hero Card */}
+                <View style={{
+                    backgroundColor: '#2563eb',
+                    borderRadius: 20,
+                    padding: 24,
+                    marginBottom: 20,
+                }}>
+                    <Text style={{ color: '#bfdbfe', fontSize: 14, fontWeight: '500' }}>
+                        Total Earnings
+                    </Text>
+                    <Text style={{ color: '#fff', fontSize: 36, fontWeight: '700', marginTop: 4 }}>
+                        ₹45,000
+                    </Text>
+                    
+                    {/* Next Payout */}
+                    <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginTop: 20,
+                        paddingTop: 16,
+                        borderTopWidth: 1,
+                        borderTopColor: 'rgba(255,255,255,0.2)',
+                    }}>
+                        <View>
+                            <Text style={{ color: '#bfdbfe', fontSize: 12, fontWeight: '500' }}>
+                                Next Payout
+                            </Text>
+                            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700', marginTop: 2 }}>
+                                01 Jan, 2026
+                            </Text>
+                        </View>
+                        <Pressable
+                            style={({ pressed }) => [{
+                                backgroundColor: pressed ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.2)',
+                                paddingVertical: 10,
+                                paddingHorizontal: 20,
+                                borderRadius: 12,
+                            }]}
+                        >
+                            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>
+                                Withdraw
+                            </Text>
+                        </Pressable>
+                    </View>
+                </View>
+
+                {/* Quick Stats Row */}
+                <View style={{ flexDirection: 'row', marginBottom: 24 }}>
+                    {stats.slice(1).map((stat, i) => (
+                        <View
+                            key={i}
+                            style={{
+                                flex: 1,
+                                backgroundColor: '#fff',
+                                borderRadius: 16,
+                                padding: 16,
+                                marginLeft: i > 0 ? 12 : 0,
+                                alignItems: 'center',
+                                borderWidth: 1,
+                                borderColor: '#f1f5f9',
+                            }}
+                        >
+                            <View style={{
+                                backgroundColor: stat.bgColor,
+                                padding: 10,
+                                borderRadius: 12,
+                                marginBottom: 12,
+                            }}>
+                                <Ionicons name={stat.icon as any} size={22} color={stat.iconColor} />
                             </View>
-                            <Text style={{ color: '#94a3b8', fontSize: 13 }}>{stat.label}</Text>
-                            <Text style={{ fontSize: 24, fontWeight: '700', color: '#0f172a', marginTop: 4 }}>{stat.value}</Text>
-                        </Card>
+                            <Text style={{ fontSize: 22, fontWeight: '700', color: '#0f172a' }}>
+                                {stat.value}
+                            </Text>
+                            <Text style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+                                {stat.label}
+                            </Text>
+                        </View>
                     ))}
                 </View>
 
-                {/* Payout Information */}
-                <Card className="bg-blue-600 border-blue-600 mb-8">
-                    <Text className="text-blue-100 text-sm">Next Payout Date</Text>
-                    <Text className="text-white text-xl font-bold mt-1">01 Jan, 2026</Text>
-                    <TouchableOpacity className="mt-4 bg-white/20 py-2 rounded-xl items-center">
-                        <Text className="text-white font-semibold">Withdraw Now</Text>
-                    </TouchableOpacity>
-                </Card>
+                {/* Transactions Header */}
+                <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 16,
+                }}>
+                    <Text style={{ fontSize: 18, fontWeight: '700', color: '#0f172a' }}>
+                        Recent Transactions
+                    </Text>
+                    <Pressable style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}>
+                        <Text style={{ fontSize: 14, fontWeight: '600', color: '#2563eb' }}>
+                            See All
+                        </Text>
+                    </Pressable>
+                </View>
 
-                {/* Recent Transactions */}
-                <Text className="text-lg font-bold text-slate-900 mb-4">Recent Transactions</Text>
-                {transactions.map((tx) => (
-                    <Card key={tx.id} className="flex-row items-center justify-between mb-3 py-4">
-                        <View className="flex-row items-center">
-                            <View className="bg-slate-100 p-2 rounded-full mr-3">
-                                <Ionicons name="person" size={20} color="#64748b" />
-                            </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={{ fontWeight: '700', color: '#0f172a', fontSize: 14 }}>{tx.patient}</Text>
-                                <Text style={{ color: '#94a3b8', fontSize: 12 }}>{tx.date}</Text>
+                {/* Transaction List */}
+                {transactions.map((tx, index) => (
+                    <View
+                        key={tx.id}
+                        style={{
+                            backgroundColor: '#fff',
+                            borderRadius: 16,
+                            padding: 16,
+                            marginBottom: 12,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            borderWidth: 1,
+                            borderColor: '#f1f5f9',
+                        }}
+                    >
+                        {/* Avatar */}
+                        <View style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 24,
+                            backgroundColor: '#eff6ff',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginRight: 14,
+                        }}>
+                            <Ionicons name="person" size={22} color="#2563eb" />
+                        </View>
+
+                        {/* Info */}
+                        <View style={{ flex: 1, marginRight: 12 }}>
+                            <Text 
+                                style={{ fontSize: 15, fontWeight: '600', color: '#0f172a' }}
+                                numberOfLines={1}
+                            >
+                                {tx.patient}
+                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                                <Text style={{ fontSize: 13, color: '#64748b' }}>
+                                    {tx.date}
+                                </Text>
+                                <View style={{
+                                    width: 4,
+                                    height: 4,
+                                    borderRadius: 2,
+                                    backgroundColor: '#cbd5e1',
+                                    marginHorizontal: 8,
+                                }} />
+                                <Text style={{ fontSize: 13, color: '#64748b' }}>
+                                    {tx.type}
+                                </Text>
                             </View>
                         </View>
-                        <View className="items-end">
-                            <Text style={{ color: '#059669', fontWeight: '700', fontSize: 14 }}>+₹{tx.amount}</Text>
-                            <Text style={{ color: '#94a3b8', fontSize: 12 }}>{tx.status}</Text>
+
+                        {/* Amount */}
+                        <View style={{ alignItems: 'flex-end' }}>
+                            <Text style={{ fontSize: 16, fontWeight: '700', color: '#059669' }}>
+                                +₹{tx.amount}
+                            </Text>
                         </View>
-                    </Card>
+                    </View>
                 ))}
 
-                <View className="h-10" />
+                {/* Summary Card */}
+                <View style={{
+                    backgroundColor: '#fffbeb',
+                    borderRadius: 16,
+                    padding: 16,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginTop: 8,
+                    borderWidth: 1,
+                    borderColor: '#fef3c7',
+                }}>
+                    <View style={{
+                        backgroundColor: '#fef3c7',
+                        padding: 10,
+                        borderRadius: 12,
+                        marginRight: 14,
+                    }}>
+                        <Ionicons name="information-circle" size={22} color="#d97706" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 14, fontWeight: '600', color: '#92400e' }}>
+                            Payments are processed weekly
+                        </Text>
+                        <Text style={{ fontSize: 13, color: '#b45309', marginTop: 2 }}>
+                            Next processing: Monday, 6 Jan
+                        </Text>
+                    </View>
+                </View>
+
+                {/* Bottom padding for tab bar */}
+                <View style={{ height: Platform.OS === 'ios' ? 100 : 80 }} />
             </ScrollView>
         </SafeAreaView>
     );

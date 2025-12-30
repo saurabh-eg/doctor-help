@@ -4,12 +4,31 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
+import Constants from 'expo-constants';
+
+const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:3001/api';
 
 export default function RoleSelectScreen() {
     const router = useRouter();
-    const { setRole, user } = useAuth();
+    const { setRole, user, token } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [selectedRole, setSelectedRole] = useState<'patient' | 'doctor' | null>(null);
+
+    // Check if doctor profile exists for current user
+    const checkDoctorProfile = async (): Promise<boolean> => {
+        if (!user?.id || !token) return false;
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/doctors/user/${user.id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            return data.success && data.data !== null;
+        } catch (error) {
+            console.error('Error checking doctor profile:', error);
+            return false;
+        }
+    };
 
     const handleRoleSelect = async (role: 'patient' | 'doctor') => {
         setSelectedRole(role);
@@ -22,7 +41,16 @@ export default function RoleSelectScreen() {
                 if (role === 'patient') {
                     router.replace('/(patient)/home');
                 } else {
-                    router.replace('/(doctor)/dashboard');
+                    // For doctors, check if profile exists
+                    const hasDoctorProfile = await checkDoctorProfile();
+                    
+                    if (hasDoctorProfile) {
+                        // Existing doctor - go to dashboard
+                        router.replace('/(doctor)/dashboard');
+                    } else {
+                        // New doctor - go to verification/registration
+                        router.replace('/(doctor)/verification');
+                    }
                 }
             } else {
                 Alert.alert('Error', 'Failed to set role. Please try again.');

@@ -36,6 +36,7 @@ router.get('/:id', doctorsController.getDoctor);
 
 // Protected routes
 router.use(auth);
+router.get('/user/:userId', doctorsController.getDoctorByUserId); // Check if doctor profile exists
 router.post('/register', validate(registerDoctorSchema), doctorsController.registerDoctor);
 router.patch('/:id/availability', validate(availabilitySchema), doctorsController.updateAvailability);
 
