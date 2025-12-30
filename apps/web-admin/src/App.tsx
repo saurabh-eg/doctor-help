@@ -15,7 +15,6 @@ import Profile from './screens/Patient/Profile';
 import Referral from './screens/Patient/Referral';
 import LabDetails from './screens/Patient/LabDetails';
 import Success from './screens/Patient/Success';
-import AIAssistant from './screens/Patient/AIAssistant';
 import DoctorDashboard from './screens/Doctor/Dashboard';
 import DoctorCalendar from './screens/Doctor/Calendar';
 import DoctorEditProfile from './screens/Doctor/EditProfile';
@@ -53,7 +52,6 @@ const App: React.FC = () => {
           <Route path="/patient/profile" element={<Profile />} />
           <Route path="/patient/referral" element={<Referral />} />
           <Route path="/patient/lab/:id" element={<LabDetails />} />
-          <Route path="/patient/ai-assistant" element={<AIAssistant />} />
 
           {/* Doctor Routes */}
           <Route path="/doctor/home" element={<DoctorDashboard />} />
