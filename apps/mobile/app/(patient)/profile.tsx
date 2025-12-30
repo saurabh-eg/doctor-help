@@ -8,6 +8,7 @@ interface MenuItem {
     icon: keyof typeof Ionicons.glyphMap;
     label: string;
     subtitle: string;
+    route?: string;
 }
 
 export default function PatientProfileScreen() {
@@ -18,10 +19,16 @@ export default function PatientProfileScreen() {
         { icon: 'person-outline', label: 'Edit Profile', subtitle: 'Change name, phone...' },
         { icon: 'document-text-outline', label: 'Medical History', subtitle: 'Your past consultations' },
         { icon: 'wallet-outline', label: 'Payment Methods', subtitle: 'Manage cards and UPI' },
-        { icon: 'heart-outline', label: 'Health Records', subtitle: 'Lab reports, prescriptions' },
+        { icon: 'heart-outline', label: 'Health Records', subtitle: 'Lab reports, prescriptions', route: '/(patient)/records' },
         { icon: 'settings-outline', label: 'Settings', subtitle: 'Theme, notifications...' },
         { icon: 'help-circle-outline', label: 'Help & Support', subtitle: 'FAQs and contact us' },
     ];
+
+    const handleMenuPress = (item: MenuItem) => {
+        if (item.route) {
+            router.push(item.route as any);
+        }
+    };
 
     const handleLogout = () => {
         Alert.alert(
@@ -173,6 +180,7 @@ export default function PatientProfileScreen() {
                         key={index}
                         className="bg-white rounded-2xl p-4 mb-3 flex-row items-center border border-slate-100"
                         activeOpacity={0.7}
+                        onPress={() => handleMenuPress(item)}
                     >
                         <View className="h-11 w-11 rounded-xl bg-slate-50 items-center justify-center mr-4">
                             <Ionicons name={item.icon} size={22} color="#64748b" />

@@ -79,6 +79,10 @@ export default function PatientLayout() {
                 name="success"
                 options={{ href: null }}
             />
+            <Tabs.Screen
+                name="records"
+                options={{ href: null }}
+            />
         </Tabs>
     );
 }

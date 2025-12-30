@@ -134,13 +134,17 @@ export default function VerifyOtpScreen() {
                     </Pressable>
 
                     <View className="flex-row justify-center mt-8">
-                        <Text className="text-slate-500">Didn't receive code? </Text>
+                        <Text style={{ color: '#64748b', fontSize: 14 }}>Didn't receive code? </Text>
                         <Pressable
                             onPress={handleResend}
                             disabled={countdown > 0}
                             style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
                         >
-                            <Text className={countdown > 0 ? 'text-slate-400' : 'text-blue-600 font-bold'}>
+                            <Text style={{ 
+                                color: countdown > 0 ? '#64748b' : '#2563eb', 
+                                fontWeight: countdown > 0 ? '500' : '700',
+                                fontSize: 14
+                            }}>
                                 {countdown > 0 ? `Resend in ${countdown}s` : 'Resend OTP'}
                             </Text>
                         </Pressable>

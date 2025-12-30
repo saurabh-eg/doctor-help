@@ -7,19 +7,26 @@ interface MenuItem {
     icon: keyof typeof Ionicons.glyphMap;
     label: string;
     subtitle: string;
+    route?: string;
 }
 
 export default function DoctorProfileScreen() {
     const router = useRouter();
 
     const menuItems: MenuItem[] = [
-        { icon: 'person-outline', label: 'Edit Profile', subtitle: 'Update your information' },
-        { icon: 'calendar-outline', label: 'Availability', subtitle: 'Set your working hours' },
+        { icon: 'person-outline', label: 'Edit Profile', subtitle: 'Update your information', route: '/(doctor)/edit-profile' },
+        { icon: 'calendar-outline', label: 'Availability', subtitle: 'Set your working hours', route: '/(doctor)/availability' },
         { icon: 'card-outline', label: 'Bank Details', subtitle: 'Manage payout methods' },
         { icon: 'document-text-outline', label: 'Documents', subtitle: 'Certificates & licenses' },
         { icon: 'settings-outline', label: 'Settings', subtitle: 'App preferences' },
         { icon: 'help-circle-outline', label: 'Help & Support', subtitle: 'FAQs and contact' },
     ];
+
+    const handleMenuPress = (item: MenuItem) => {
+        if (item.route) {
+            router.push(item.route as any);
+        }
+    };
 
     const handleLogout = () => {
         router.replace('/(auth)/login');
@@ -74,6 +81,7 @@ export default function DoctorProfileScreen() {
                         key={index}
                         className="bg-white rounded-2xl p-4 mb-3 flex-row items-center border border-slate-100"
                         activeOpacity={0.7}
+                        onPress={() => handleMenuPress(item)}
                     >
                         <View className="h-11 w-11 rounded-xl bg-slate-50 items-center justify-center mr-4">
                             <Ionicons name={item.icon} size={22} color="#64748b" />

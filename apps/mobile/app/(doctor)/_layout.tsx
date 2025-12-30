@@ -76,6 +76,15 @@ export default function DoctorLayout() {
                     href: null, // Hides from tab bar
                 }}
             />
+            {/* Hidden screens - accessed via navigation */}
+            <Tabs.Screen
+                name="edit-profile"
+                options={{ href: null }}
+            />
+            <Tabs.Screen
+                name="availability"
+                options={{ href: null }}
+            />
         </Tabs>
     );
 }
