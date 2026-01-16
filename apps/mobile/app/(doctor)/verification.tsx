@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,12 +7,22 @@ import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { api } from '@doctor-help/api-client';
 import { useAuth } from '../../contexts/AuthContext';
+import { useDoctor } from '../../contexts/DoctorContext';
 import { pickAndUploadImage, pickAndUploadDocument } from '../../utils/uploadImage';
 
 export default function DoctorVerificationScreen() {
     const router = useRouter();
     const { user, token } = useAuth();
+    const { profile, isLoading: isProfileLoading, fetchProfile } = useDoctor();
     const [loading, setLoading] = useState(false);
+
+    // Check if doctor already has a profile - redirect to dashboard
+    useEffect(() => {
+        if (!isProfileLoading && profile) {
+            // Doctor already has a profile, redirect to dashboard
+            router.replace('/(doctor)/dashboard');
+        }
+    }, [profile, isProfileLoading]);
 
     const [form, setForm] = useState({
         specialization: '',
@@ -48,6 +58,9 @@ export default function DoctorVerificationScreen() {
             });
 
             if (result.success) {
+                // Refresh doctor profile in context
+                await fetchProfile();
+                
                 Alert.alert(
                     'Success',
                     'Your verification request has been submitted. We will notify you once approved.',
@@ -65,16 +78,16 @@ export default function DoctorVerificationScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
-            <View className="flex-row items-center px-5 py-4 border-b border-slate-100">
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }}>
                 <TouchableOpacity onPress={() => router.back()}>
                     <Ionicons name="arrow-back" size={24} color="#1e293b" />
                 </TouchableOpacity>
-                <Text className="text-xl font-bold text-slate-900 ml-4">Professional Verification</Text>
+                <Text style={{ fontSize: 20, fontWeight: '700', color: '#0f172a', marginLeft: 16 }}>Professional Verification</Text>
             </View>
 
-            <ScrollView className="flex-1 px-5 pt-4" showsVerticalScrollIndicator={false}>
-                <Text className="text-slate-500 mb-6" style={{ flexWrap: 'wrap' }}>
+            <ScrollView style={{ flex: 1, paddingHorizontal: 20, paddingTop: 16 }} showsVerticalScrollIndicator={false}>
+                <Text style={{ color: '#64748b', marginBottom: 24 }}>
                     Please provide your professional details to get verified and start consulting patients.
                 </Text>
 
@@ -86,9 +99,9 @@ export default function DoctorVerificationScreen() {
                 />
 
                 {/* Profile Photo Picker & Preview */}
-                <Text className="text-gray-700 font-semibold mb-2 ml-1">Profile Photo</Text>
+                <Text style={{ color: '#374151', fontWeight: '600', marginBottom: 8, marginLeft: 4 }}>Profile Photo</Text>
                 {form.photoUrl ? (
-                    <View className="items-center mb-2">
+                    <View style={{ alignItems: 'center', marginBottom: 8 }}>
                         <Image source={{ uri: form.photoUrl }} style={{ width: 100, height: 100, borderRadius: 50 }} />
                     </View>
                 ) : null}
@@ -105,8 +118,9 @@ export default function DoctorVerificationScreen() {
                         if (url) setForm(prev => ({ ...prev, photoUrl: url }));
                         setUploading(false);
                     }}
-                    className="mb-4"
                 />
+
+                <View style={{ marginBottom: 16 }} />
 
                 <Input
                     label="Qualification"
@@ -115,23 +129,25 @@ export default function DoctorVerificationScreen() {
                     onChangeText={(text) => setForm(prev => ({ ...prev, qualification: text }))}
                 />
 
-                <View className="flex-row">
-                    <Input
-                        label="Experience (Years)"
-                        placeholder="e.g. 5"
-                        keyboardType="numeric"
-                        value={form.experience}
-                        onChangeText={(text) => setForm(prev => ({ ...prev, experience: text }))}
-                        className="flex-1 mr-2"
-                    />
-                    <Input
-                        label="Consultation Fee (₹)"
-                        placeholder="e.g. 500"
-                        keyboardType="numeric"
-                        value={form.consultationFee}
-                        onChangeText={(text) => setForm(prev => ({ ...prev, consultationFee: text }))}
-                        className="flex-1 ml-2"
-                    />
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <View style={{ flex: 1 }}>
+                        <Input
+                            label="Experience (Years)"
+                            placeholder="e.g. 5"
+                            keyboardType="numeric"
+                            value={form.experience}
+                            onChangeText={(text) => setForm(prev => ({ ...prev, experience: text }))}
+                        />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Input
+                            label="Consultation Fee (₹)"
+                            placeholder="e.g. 500"
+                            keyboardType="numeric"
+                            value={form.consultationFee}
+                            onChangeText={(text) => setForm(prev => ({ ...prev, consultationFee: text }))}
+                        />
+                    </View>
                 </View>
 
                 <Input
@@ -140,18 +156,17 @@ export default function DoctorVerificationScreen() {
                     value={form.bio}
                     onChangeText={(text) => setForm(prev => ({ ...prev, bio: text }))}
                     multiline
-                    className="h-32"
                 />
 
-                <Text className="text-gray-700 font-semibold mb-2 ml-1">Upload Documents</Text>
-                <View className="border-2 border-dashed border-slate-200 rounded-3xl p-4 mb-4 bg-slate-50">
+                <Text style={{ color: '#374151', fontWeight: '600', marginBottom: 8, marginLeft: 4 }}>Upload Documents</Text>
+                <View style={{ borderWidth: 2, borderStyle: 'dashed', borderColor: '#e2e8f0', borderRadius: 24, padding: 16, marginBottom: 16, backgroundColor: '#f8fafc' }}>
                     {documents.length === 0 && (
-                        <Text className="text-slate-500 text-sm mb-3">Add degree/ID proof (PDF or image)</Text>
+                        <Text style={{ color: '#64748b', fontSize: 14, marginBottom: 12 }}>Add degree/ID proof (PDF or image)</Text>
                     )}
                     {documents.map((doc, idx) => (
-                        <View key={idx} className="flex-row items-center mb-2">
+                        <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                             <Ionicons name="document-text-outline" size={18} color="#475569" />
-                            <Text className="text-slate-700 ml-2 flex-1" numberOfLines={1}>{doc}</Text>
+                            <Text style={{ color: '#334155', marginLeft: 8, flex: 1 }} numberOfLines={1}>{doc}</Text>
                         </View>
                     ))}
                     <Button
@@ -174,8 +189,8 @@ export default function DoctorVerificationScreen() {
                     title="Submit for Verification"
                     loading={loading}
                     onPress={handleSubmit}
-                    className="mb-10"
                 />
+                <View style={{ height: 40 }} />
             </ScrollView>
         </SafeAreaView>
     );

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, Pressable, Image, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, Image, ActivityIndicator, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -75,16 +75,16 @@ export default function Home() {
     // Show loading while checking auth state or redirecting
     if (isLoading || isRedirecting) {
         return (
-            <SafeAreaView className="flex-1 bg-white items-center justify-center">
-                <View className="h-20 w-20 bg-white rounded-full items-center justify-center mb-4 shadow-sm overflow-hidden">
+            <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+                <View style={{ height: 80, width: 80, backgroundColor: '#fff', borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2, overflow: 'hidden' }}>
                     <Image
                         source={require('../assets/logo.jpg')}
-                        className="w-full h-full"
+                        style={{ width: '100%', height: '100%' }}
                         resizeMode="cover"
                     />
                 </View>
                 <ActivityIndicator size="large" color="#2563eb" />
-                <Text className="text-slate-500 mt-4">Loading...</Text>
+                <Text style={{ color: '#64748b', marginTop: 16 }}>Loading...</Text>
             </SafeAreaView>
         );
     }
@@ -99,71 +99,97 @@ export default function Home() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
-            <View className="flex-1 px-6 justify-center">
-                {/* Logo & Branding Section */}
-                <View className="items-center mb-12">
-                    <View className="h-28 w-28 bg-white rounded-full items-center justify-center mb-6 shadow-sm overflow-hidden">
-                        <Image
-                            source={require('../assets/logo.jpg')}
-                            className="w-full h-full"
-                            resizeMode="cover"
-                        />
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+            <ScrollView 
+                contentContainerStyle={{ flexGrow: 1 }}
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 40, paddingBottom: 20, justifyContent: 'space-between' }}>
+                    {/* Logo & Branding Section */}
+                    <View style={{ alignItems: 'center', marginBottom: 40 }}>
+                        <View style={{ height: 112, width: 112, backgroundColor: '#fff', borderRadius: 56, alignItems: 'center', justifyContent: 'center', marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2, overflow: 'hidden' }}>
+                            <Image
+                                source={require('../assets/logo.jpg')}
+                                style={{ width: '100%', height: '100%' }}
+                                resizeMode="cover"
+                            />
+                        </View>
+                        <Text style={{ fontSize: 36, fontWeight: '700', color: '#0f172a', letterSpacing: -0.5 }}>
+                            Doctor Help
+                        </Text>
+                        <View style={{ width: '100%', marginTop: 12 }}>
+                            <Text style={{ fontSize: 18, color: '#64748b', textAlign: 'center', lineHeight: 24 }}>
+                                Heal with Trust,{"\n"}Care with Heart
+                            </Text>
+                        </View>
                     </View>
-                    <Text className="text-4xl font-bold text-slate-900 tracking-tight">
-                        Doctor Help
-                    </Text>
-                    <View className="w-full mt-3">
-                        <Text className="text-lg text-slate-500 text-center leading-6">
-                            Heal with Trust,{"\n"}Care with Heart
+
+                    {/* Action Buttons */}
+                    <View style={{ width: '100%' }}>
+                        {/* Primary Button - Register / Login */}
+                        <Pressable
+                            onPress={handleRegister}
+                            style={({ pressed }) => [{
+                                backgroundColor: '#2563eb',
+                                paddingVertical: 20,
+                                borderRadius: 16,
+                                alignItems: 'center',
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.15,
+                                shadowRadius: 3,
+                                elevation: 3,
+                                flexDirection: 'row',
+                                justifyContent: 'center',
+                                opacity: pressed ? 0.8 : 1
+                            }]}
+                        >
+                            <Ionicons name="person-add" size={22} color="#fff" style={{ marginRight: 10 }} />
+                            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 18, letterSpacing: 0.5 }}>
+                                Register / Login
+                            </Text>
+                        </Pressable>
+
+                        {/* Spacer */}
+                        <View style={{ height: 16 }} />
+
+                        {/* Secondary Button - Visit as Guest */}
+                        <Pressable
+                            onPress={handleGuestMode}
+                            style={({ pressed }) => [{
+                                backgroundColor: '#fff',
+                                paddingVertical: 20,
+                                borderRadius: 16,
+                                alignItems: 'center',
+                                borderWidth: 2,
+                                borderColor: pressed ? '#60a5fa' : '#e2e8f0',
+                                flexDirection: 'row',
+                                justifyContent: 'center',
+                                opacity: pressed ? 0.8 : 1
+                            }]}
+                        >
+                            <Ionicons name="eye-outline" size={22} color="#475569" style={{ marginRight: 10 }} />
+                            <Text style={{ color: '#334155', fontWeight: '600', fontSize: 18 }}>
+                                Visit as Guest
+                            </Text>
+                        </Pressable>
+
+                        {/* Guest Mode Info */}
+                        <View style={{ marginTop: 16, paddingHorizontal: 16 }}>
+                            <Text style={{ textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>
+                                Browse doctors and explore the app without signing up
+                            </Text>
+                        </View>
+                    </View>
+
+                    {/* Footer */}
+                    <View style={{ paddingTop: 32 }}>
+                        <Text style={{ textAlign: 'center', color: '#cbd5e1', fontSize: 12 }}>
+                            By continuing, you agree to our Terms of Service and Privacy Policy
                         </Text>
                     </View>
                 </View>
-
-                {/* Action Buttons */}
-                <View className="w-full">
-                    {/* Primary Button - Register / Login */}
-                    <Pressable
-                        onPress={handleRegister}
-                        className="bg-blue-600 py-5 rounded-2xl items-center shadow-md flex-row justify-center"
-                        style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
-                    >
-                        <Ionicons name="person-add" size={22} color="#fff" style={{ marginRight: 10 }} />
-                        <Text className="text-white font-bold text-lg tracking-wide">
-                            Register / Login
-                        </Text>
-                    </Pressable>
-
-                    {/* Spacer */}
-                    <View className="h-4" />
-
-                    {/* Secondary Button - Visit as Guest */}
-                    <Pressable
-                        onPress={handleGuestMode}
-                        className="bg-white py-5 rounded-2xl items-center border-2 border-slate-200 flex-row justify-center"
-                        style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1, borderColor: pressed ? '#60a5fa' : '#e2e8f0' }]}
-                    >
-                        <Ionicons name="eye-outline" size={22} color="#475569" style={{ marginRight: 10 }} />
-                        <Text className="text-slate-700 font-semibold text-lg">
-                            Visit as Guest
-                        </Text>
-                    </Pressable>
-
-                    {/* Guest Mode Info */}
-                    <View className="mt-4 px-4">
-                        <Text className="text-center text-slate-400 text-sm">
-                            Browse doctors and explore the app without signing up
-                        </Text>
-                    </View>
-                </View>
-            </View>
-
-            {/* Footer - Fixed at bottom */}
-            <View className="px-6 pb-6">
-                <Text className="text-center text-slate-300 text-xs">
-                    By continuing, you agree to our Terms of Service and Privacy Policy
-                </Text>
-            </View>
+            </ScrollView>
         </SafeAreaView>
     );
 }

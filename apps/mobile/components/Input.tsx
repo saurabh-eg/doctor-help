@@ -10,6 +10,7 @@ interface InputProps {
     keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad';
     error?: string;
     className?: string;
+    multiline?: boolean;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -20,7 +21,8 @@ export const Input: React.FC<InputProps> = ({
     secureTextEntry,
     keyboardType = 'default',
     error,
-    className = ''
+    className = '',
+    multiline = false
 }) => {
     return (
         <View className={`mb-4 ${className}`}>
@@ -35,7 +37,10 @@ export const Input: React.FC<InputProps> = ({
                 placeholder={placeholder}
                 secureTextEntry={secureTextEntry}
                 keyboardType={keyboardType}
-                className={`bg-gray-50 border ${error ? 'border-red-500' : 'border-gray-200'} p-4 rounded-2xl text-lg`}
+                multiline={multiline}
+                numberOfLines={multiline ? 4 : 1}
+                textAlignVertical={multiline ? 'top' : 'center'}
+                className={`bg-gray-50 border ${error ? 'border-red-500' : 'border-gray-200'} p-4 rounded-2xl text-lg ${multiline ? 'min-h-[120px]' : ''}`}
                 placeholderTextColor="#9ca3af"
             />
             {error && (
