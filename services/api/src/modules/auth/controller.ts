@@ -94,7 +94,7 @@ export const verifyOTP = async (req: Request, res: Response) => {
         data: {
             token,
             user: {
-                id: user._id,
+                _id: user._id,
                 userId: user.userId,
                 phone: user.phone,
                 name: user.name,
@@ -138,7 +138,7 @@ export const getMe = async (req: any, res: Response) => {
     res.json({
         success: true,
         data: {
-            id: user._id,
+            _id: user._id,
             phone: user.phone,
             name: user.name,
             email: user.email,

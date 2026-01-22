@@ -31,9 +31,10 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final authNotifier = ref.read(authStateProvider.notifier);
+    final emailText = _emailController.text.trim();
     final success = await authNotifier.completeProfile(
       name: _nameController.text,
-      email: _emailController.text,
+      email: emailText.isEmpty ? null : emailText,
     );
 
     if (!mounted) return;

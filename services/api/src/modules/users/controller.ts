@@ -79,7 +79,7 @@ export const completeProfile = async (req: Request, res: Response) => {
         success: true,
         message: 'Profile completed successfully',
         data: {
-            id: user._id,
+            _id: user._id,
             userId: user.userId,
             phone: user.phone,
             name: user.name,

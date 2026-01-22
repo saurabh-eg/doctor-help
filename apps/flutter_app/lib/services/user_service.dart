@@ -37,7 +37,7 @@ class UserService {
       ApiEndpoints.completeProfile.replaceFirst(':id', userId),
       body: {
         'name': name,
-        if (email != null) 'email': email,
+        if (email != null && email.isNotEmpty) 'email': email,
       },
       fromJson: (json) => User.fromJson(json),
     );
