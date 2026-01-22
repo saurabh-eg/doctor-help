@@ -62,6 +62,15 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
     final doctorService = ref.read(doctorServiceProvider);
     final theme = Theme.of(context);
 
+    Future<List<Doctor>> loadDoctors() async {
+      final query = _searchController.text.trim();
+      if (query.length >= 2) {
+        final response = await doctorService.searchDoctors(query);
+        return response.data ?? <Doctor>[];
+      }
+      return doctorService.listDoctors();
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Find Doctors'),
@@ -170,7 +179,7 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
             // Doctors List
             Expanded(
               child: FutureBuilder<List<Doctor>>(
-                future: doctorService.listDoctors(),
+                future: loadDoctors(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
@@ -200,14 +209,16 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
 
                   List<Doctor> doctors = snapshot.data ?? [];
 
-                  // Apply search filter
-                  if (_searchController.text.isNotEmpty) {
+                    // Apply client-side search by name or specialization
+                    if (_searchController.text.isNotEmpty) {
                     final query = _searchController.text.toLowerCase();
                     doctors = doctors
-                        .where((d) =>
-                            d.specialization.toLowerCase().contains(query))
-                        .toList();
-                  }
+                      .where((d) =>
+                        (d.userId.name?.toLowerCase().contains(query) ??
+                          false) ||
+                        d.specialization.toLowerCase().contains(query))
+                      .toList();
+                    }
 
                   // Apply specialization filter
                   if (selectedSpecialization != null) {

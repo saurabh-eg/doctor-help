@@ -48,10 +48,17 @@ export const searchDoctors = async (req: Request, res: Response) => {
         return res.status(400).json({ success: false, error: 'Search query too short' });
     }
 
+    const regex = new RegExp(q as string, 'i');
+
+    // Find users whose name matches to include doctor matches by user
+    const matchedUsers = await User.find({ name: { $regex: regex } }).select('_id');
+    const matchedUserIds = matchedUsers.map(u => u._id);
+
     const doctors = await Doctor.find({
         isVerified: true,
         $or: [
-            { specialization: { $regex: q as string, $options: 'i' } },
+            { specialization: { $regex: regex } },
+            { userId: { $in: matchedUserIds } }
         ]
     })
         .populate('userId', 'name phone avatar')
