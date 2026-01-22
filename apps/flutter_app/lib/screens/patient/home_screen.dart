@@ -16,16 +16,8 @@ class PatientHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _PatientHomeScreenState extends ConsumerState<PatientHomeScreen> {
-  final List<String> specializations = [
-    'Cardiology',
-    'Dermatology',
-    'Orthopedic',
-    'Neurology',
-    'Pediatric',
-    'General',
-  ];
-
   String selectedSpecialization = 'All';
+  List<String> availableSpecializations = [];
 
   @override
   void initState() {
@@ -113,48 +105,73 @@ class _PatientHomeScreenState extends ConsumerState<PatientHomeScreen> {
                 ),
               ),
 
-              // Specializations
-              Padding(
-                padding: const EdgeInsets.all(UIConstants.spacingLarge),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Specializations',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: UIConstants.spacingMedium),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
+              // Specializations - Dynamic from API
+              FutureBuilder<List<Doctor>>(
+                future: doctorService.listDoctors(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    final doctors = snapshot.data ?? [];
+                    // Extract unique specializations
+                    final specs = doctors
+                        .map((d) => d.specialization)
+                        .toSet()
+                        .toList()
+                      ..sort();
+
+                    if (availableSpecializations.isEmpty && specs.isNotEmpty) {
+                      // Update available specializations on first load
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        setState(() {
+                          availableSpecializations = specs;
+                        });
+                      });
+                    }
+
+                    return Padding(
+                      padding: const EdgeInsets.all(UIConstants.spacingLarge),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _SpecializationChip(
-                            label: 'All',
-                            isSelected: selectedSpecialization == 'All',
-                            onTap: () {
-                              setState(() {
-                                selectedSpecialization = 'All';
-                              });
-                            },
+                          Text(
+                            'Specializations',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                          ...specializations.map(
-                            (spec) => _SpecializationChip(
-                              label: spec,
-                              isSelected: selectedSpecialization == spec,
-                              onTap: () {
-                                setState(() {
-                                  selectedSpecialization = spec;
-                                });
-                              },
+                          const SizedBox(height: UIConstants.spacingMedium),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                _SpecializationChip(
+                                  label: 'All',
+                                  isSelected: selectedSpecialization == 'All',
+                                  onTap: () {
+                                    setState(() {
+                                      selectedSpecialization = 'All';
+                                    });
+                                  },
+                                ),
+                                ...specs.map(
+                                  (spec) => _SpecializationChip(
+                                    label: spec,
+                                    isSelected: selectedSpecialization == spec,
+                                    onTap: () {
+                                      setState(() {
+                                        selectedSpecialization = spec;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
               ),
 
               // Featured/Top Rated Doctors
@@ -236,7 +253,7 @@ class _PatientHomeScreenState extends ConsumerState<PatientHomeScreen> {
                               doctor: doctor,
                               onTap: () {
                                 context.push(
-                                  '${AppRoutes.doctorProfile}?id=${doctor.id}',
+                                  '${AppRoutes.doctorViewProfile}?id=${doctor.id}',
                                 );
                               },
                             );

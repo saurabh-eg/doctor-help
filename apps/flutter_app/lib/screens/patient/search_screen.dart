@@ -23,15 +23,26 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
   double? minFee;
   double? maxFee;
   double minRating = 0;
+  List<String> availableSpecializations = [];
 
-  final List<String> specializations = [
-    'Cardiology',
-    'Dermatology',
-    'Orthopedic',
-    'Neurology',
-    'Pediatric',
-    'General',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadSpecializations();
+  }
+
+  Future<void> _loadSpecializations() async {
+    try {
+      final doctors = await ref.read(doctorServiceProvider).listDoctors();
+      final specs = doctors.map((d) => d.specialization).toSet().toList()
+        ..sort();
+      setState(() {
+        availableSpecializations = specs;
+      });
+    } catch (e) {
+      // Handle error silently
+    }
+  }
 
   final List<String> sortOptions = [
     'rating',
@@ -274,7 +285,7 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
                         doctor: doctor,
                         onTap: () {
                           context.push(
-                            '${AppRoutes.doctorProfile}?id=${doctor.id}',
+                            '${AppRoutes.doctorViewProfile}?id=${doctor.id}',
                           );
                         },
                       );
@@ -310,7 +321,7 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
             Wrap(
               spacing: UIConstants.spacingSmall,
               runSpacing: UIConstants.spacingSmall,
-              children: specializations.map((spec) {
+              children: availableSpecializations.map((spec) {
                 final isSelected = selectedSpecialization == spec;
                 return FilterChip(
                   label: Text(spec),
