@@ -85,7 +85,7 @@ class _DoctorProfileScreenState extends ConsumerState<DoctorProfileScreen> {
 
     try {
       final userService = ref.read(userServiceProvider);
-      final success = await userService.updateProfile(
+      final response = await userService.updateProfile(
         name: _nameController.text,
         email: _emailController.text,
         phone: _phoneController.text,
@@ -95,7 +95,13 @@ class _DoctorProfileScreenState extends ConsumerState<DoctorProfileScreen> {
 
       if (!mounted) return;
 
-      if (success) {
+      if (response.success && response.data != null) {
+        ref.read(authStateProvider.notifier).updateUser(response.data!);
+        _nameController.text = response.data!.name ?? '';
+        _emailController.text = response.data!.email ?? '';
+        _phoneController.text = response.data!.phone;
+        _addressController.text = response.data!.address ?? '';
+
         setState(() => _isEditing = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

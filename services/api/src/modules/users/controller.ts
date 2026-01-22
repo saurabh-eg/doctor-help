@@ -1,8 +1,22 @@
 import { Request, Response } from 'express';
 import { User } from '../../models';
+import { AuthenticatedRequest } from '../../middleware/auth';
+
+// Resolve :id path param, supporting `me` to map to the authenticated user
+const resolveUserId = (req: AuthenticatedRequest) => {
+    if (req.params.id === 'me') {
+        return req.user?.userId || '';
+    }
+    return req.params.id;
+};
 
 export const getUser = async (req: Request, res: Response) => {
-    const user = await User.findById(req.params.id).select('-__v');
+    const id = resolveUserId(req as AuthenticatedRequest);
+    if (!id) {
+        return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const user = await User.findById(id).select('-__v');
 
     if (!user) {
         return res.status(404).json({ success: false, error: 'User not found' });
@@ -15,8 +29,13 @@ export const getUser = async (req: Request, res: Response) => {
 };
 
 export const updateUser = async (req: Request, res: Response) => {
+    const id = resolveUserId(req as AuthenticatedRequest);
+    if (!id) {
+        return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
     const user = await User.findByIdAndUpdate(
-        req.params.id,
+        id,
         { $set: req.body },
         { new: true }
     ).select('-__v');
@@ -35,8 +54,13 @@ export const updateUser = async (req: Request, res: Response) => {
 export const completeProfile = async (req: Request, res: Response) => {
     const { name, email } = req.body;
 
+    const id = resolveUserId(req as AuthenticatedRequest);
+    if (!id) {
+        return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
     const user = await User.findByIdAndUpdate(
-        req.params.id,
+        id,
         { 
             $set: { 
                 name, 
@@ -69,8 +93,13 @@ export const completeProfile = async (req: Request, res: Response) => {
 };
 
 export const setRole = async (req: Request, res: Response) => {
+    const id = resolveUserId(req as AuthenticatedRequest);
+    if (!id) {
+        return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
     const user = await User.findByIdAndUpdate(
-        req.params.id,
+        id,
         { role: req.body.role },
         { new: true }
     );

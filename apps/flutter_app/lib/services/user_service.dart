@@ -43,29 +43,25 @@ class UserService {
     );
   }
 
-  /// Update user profile
-  Future<bool> updateProfile({
+  /// Update user profile and return updated user
+  Future<ApiResponse<User>> updateProfile({
     String? name,
     String? email,
     String? phone,
     String? address,
     String? avatar,
-  }) async {
-    try {
-      final response = await _apiService.patch(
-        ApiEndpoints.updateProfile.replaceFirst(':id', 'me'),
-        body: {
-          if (name != null) 'name': name,
-          if (email != null) 'email': email,
-          if (phone != null) 'phone': phone,
-          if (address != null) 'address': address,
-          if (avatar != null) 'avatar': avatar,
-        },
-        fromJson: (json) => User.fromJson(json),
-      );
-      return response.success;
-    } catch (e) {
-      return false;
-    }
+  }) {
+    return _apiService.patch(
+      // Use 'me' so backend resolves authenticated user id
+      ApiEndpoints.updateProfile.replaceFirst(':id', 'me'),
+      body: {
+        if (name != null) 'name': name,
+        if (email != null) 'email': email,
+        if (phone != null) 'phone': phone,
+        if (address != null) 'address': address,
+        if (avatar != null) 'avatar': avatar,
+      },
+      fromJson: (json) => User.fromJson(json),
+    );
   }
 }

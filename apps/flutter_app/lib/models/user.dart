@@ -1,3 +1,5 @@
+// ignore_for_file: invalid_annotation_target
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'user.freezed.dart';
@@ -6,7 +8,7 @@ part 'user.g.dart';
 @freezed
 class User with _$User {
   const factory User({
-    required String id,
+    @JsonKey(name: '_id') required String id,
     required String phone,
     String? name,
     String? email,
