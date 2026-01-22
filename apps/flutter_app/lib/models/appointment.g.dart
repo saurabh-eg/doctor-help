@@ -8,19 +8,19 @@ part of 'appointment.dart';
 
 _$AppointmentImpl _$$AppointmentImplFromJson(Map<String, dynamic> json) =>
     _$AppointmentImpl(
-      id: json['id'] as String,
+      id: json['_id'] as String,
       patientId: json['patientId'] as String,
       doctorId: json['doctorId'] as String,
       date: DateTime.parse(json['date'] as String),
       timeSlot: AppointmentTimeSlot.fromJson(
           json['timeSlot'] as Map<String, dynamic>),
       type: json['type'] as String,
-      status: json['status'] as String,
+      status: json['status'] as String? ?? 'pending',
       symptoms: json['symptoms'] as String?,
       notes: json['notes'] as String?,
       prescription: json['prescription'] as String?,
-      amount: (json['amount'] as num).toDouble(),
-      paymentStatus: json['paymentStatus'] as String,
+      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+      paymentStatus: json['paymentStatus'] as String? ?? 'pending',
       meetingLink: json['meetingLink'] as String?,
       createdAt: json['createdAt'] == null
           ? null
@@ -29,7 +29,7 @@ _$AppointmentImpl _$$AppointmentImplFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$$AppointmentImplToJson(_$AppointmentImpl instance) =>
     <String, dynamic>{
-      'id': instance.id,
+      '_id': instance.id,
       'patientId': instance.patientId,
       'doctorId': instance.doctorId,
       'date': instance.date.toIso8601String(),
@@ -62,7 +62,7 @@ Map<String, dynamic> _$$AppointmentTimeSlotImplToJson(
 _$DoctorAppointmentImpl _$$DoctorAppointmentImplFromJson(
         Map<String, dynamic> json) =>
     _$DoctorAppointmentImpl(
-      id: json['id'] as String,
+      id: json['_id'] as String,
       patientId:
           PatientInfo.fromJson(json['patientId'] as Map<String, dynamic>),
       doctorId: json['doctorId'] as String,
@@ -70,18 +70,18 @@ _$DoctorAppointmentImpl _$$DoctorAppointmentImplFromJson(
       timeSlot: AppointmentTimeSlot.fromJson(
           json['timeSlot'] as Map<String, dynamic>),
       type: json['type'] as String,
-      status: json['status'] as String,
+      status: json['status'] as String? ?? 'pending',
       symptoms: json['symptoms'] as String?,
       notes: json['notes'] as String?,
       prescription: json['prescription'] as String?,
-      amount: (json['amount'] as num).toDouble(),
-      paymentStatus: json['paymentStatus'] as String,
+      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+      paymentStatus: json['paymentStatus'] as String? ?? 'pending',
     );
 
 Map<String, dynamic> _$$DoctorAppointmentImplToJson(
         _$DoctorAppointmentImpl instance) =>
     <String, dynamic>{
-      'id': instance.id,
+      '_id': instance.id,
       'patientId': instance.patientId,
       'doctorId': instance.doctorId,
       'date': instance.date.toIso8601String(),
@@ -97,15 +97,15 @@ Map<String, dynamic> _$$DoctorAppointmentImplToJson(
 
 _$PatientInfoImpl _$$PatientInfoImplFromJson(Map<String, dynamic> json) =>
     _$PatientInfoImpl(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      phone: json['phone'] as String,
+      id: json['_id'] as String,
+      name: json['name'] as String?,
+      phone: json['phone'] as String?,
       avatar: json['avatar'] as String?,
     );
 
 Map<String, dynamic> _$$PatientInfoImplToJson(_$PatientInfoImpl instance) =>
     <String, dynamic>{
-      'id': instance.id,
+      '_id': instance.id,
       'name': instance.name,
       'phone': instance.phone,
       'avatar': instance.avatar,

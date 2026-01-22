@@ -14,9 +14,12 @@ final storageProvider = FutureProvider((ref) async {
   return StorageService;
 });
 
-// API Service provider
+// Shared API Service instance to ensure token is consistent across all services
+final _sharedApiService = ApiService();
+
+// API Service provider - returns the shared instance
 final apiServiceProvider = Provider((ref) {
-  return ApiService();
+  return _sharedApiService;
 });
 
 // Auth Service provider

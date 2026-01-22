@@ -20,6 +20,7 @@ Appointment _$AppointmentFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Appointment {
+  @JsonKey(name: '_id')
   String get id => throw _privateConstructorUsedError;
   String get patientId => throw _privateConstructorUsedError;
   String get doctorId => throw _privateConstructorUsedError;
@@ -52,7 +53,7 @@ abstract class $AppointmentCopyWith<$Res> {
       _$AppointmentCopyWithImpl<$Res, Appointment>;
   @useResult
   $Res call(
-      {String id,
+      {@JsonKey(name: '_id') String id,
       String patientId,
       String doctorId,
       DateTime date,
@@ -180,7 +181,7 @@ abstract class _$$AppointmentImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {String id,
+      {@JsonKey(name: '_id') String id,
       String patientId,
       String doctorId,
       DateTime date,
@@ -292,18 +293,18 @@ class __$$AppointmentImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$AppointmentImpl implements _Appointment {
   const _$AppointmentImpl(
-      {required this.id,
+      {@JsonKey(name: '_id') required this.id,
       required this.patientId,
       required this.doctorId,
       required this.date,
       required this.timeSlot,
       required this.type,
-      required this.status,
+      this.status = 'pending',
       this.symptoms,
       this.notes,
       this.prescription,
-      required this.amount,
-      required this.paymentStatus,
+      this.amount = 0.0,
+      this.paymentStatus = 'pending',
       this.meetingLink,
       this.createdAt});
 
@@ -311,6 +312,7 @@ class _$AppointmentImpl implements _Appointment {
       _$$AppointmentImplFromJson(json);
 
   @override
+  @JsonKey(name: '_id')
   final String id;
   @override
   final String patientId;
@@ -323,6 +325,7 @@ class _$AppointmentImpl implements _Appointment {
   @override
   final String type;
   @override
+  @JsonKey()
   final String status;
   @override
   final String? symptoms;
@@ -331,8 +334,10 @@ class _$AppointmentImpl implements _Appointment {
   @override
   final String? prescription;
   @override
+  @JsonKey()
   final double amount;
   @override
+  @JsonKey()
   final String paymentStatus;
   @override
   final String? meetingLink;
@@ -410,18 +415,18 @@ class _$AppointmentImpl implements _Appointment {
 
 abstract class _Appointment implements Appointment {
   const factory _Appointment(
-      {required final String id,
+      {@JsonKey(name: '_id') required final String id,
       required final String patientId,
       required final String doctorId,
       required final DateTime date,
       required final AppointmentTimeSlot timeSlot,
       required final String type,
-      required final String status,
+      final String status,
       final String? symptoms,
       final String? notes,
       final String? prescription,
-      required final double amount,
-      required final String paymentStatus,
+      final double amount,
+      final String paymentStatus,
       final String? meetingLink,
       final DateTime? createdAt}) = _$AppointmentImpl;
 
@@ -429,6 +434,7 @@ abstract class _Appointment implements Appointment {
       _$AppointmentImpl.fromJson;
 
   @override
+  @JsonKey(name: '_id')
   String get id;
   @override
   String get patientId;
@@ -639,6 +645,7 @@ DoctorAppointment _$DoctorAppointmentFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$DoctorAppointment {
+  @JsonKey(name: '_id')
   String get id => throw _privateConstructorUsedError;
   PatientInfo get patientId => throw _privateConstructorUsedError;
   String get doctorId => throw _privateConstructorUsedError;
@@ -669,7 +676,7 @@ abstract class $DoctorAppointmentCopyWith<$Res> {
       _$DoctorAppointmentCopyWithImpl<$Res, DoctorAppointment>;
   @useResult
   $Res call(
-      {String id,
+      {@JsonKey(name: '_id') String id,
       PatientInfo patientId,
       String doctorId,
       DateTime date,
@@ -796,7 +803,7 @@ abstract class _$$DoctorAppointmentImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {String id,
+      {@JsonKey(name: '_id') String id,
       PatientInfo patientId,
       String doctorId,
       DateTime date,
@@ -898,23 +905,24 @@ class __$$DoctorAppointmentImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$DoctorAppointmentImpl implements _DoctorAppointment {
   const _$DoctorAppointmentImpl(
-      {required this.id,
+      {@JsonKey(name: '_id') required this.id,
       required this.patientId,
       required this.doctorId,
       required this.date,
       required this.timeSlot,
       required this.type,
-      required this.status,
+      this.status = 'pending',
       this.symptoms,
       this.notes,
       this.prescription,
-      required this.amount,
-      required this.paymentStatus});
+      this.amount = 0.0,
+      this.paymentStatus = 'pending'});
 
   factory _$DoctorAppointmentImpl.fromJson(Map<String, dynamic> json) =>
       _$$DoctorAppointmentImplFromJson(json);
 
   @override
+  @JsonKey(name: '_id')
   final String id;
   @override
   final PatientInfo patientId;
@@ -927,6 +935,7 @@ class _$DoctorAppointmentImpl implements _DoctorAppointment {
   @override
   final String type;
   @override
+  @JsonKey()
   final String status;
   @override
   final String? symptoms;
@@ -935,8 +944,10 @@ class _$DoctorAppointmentImpl implements _DoctorAppointment {
   @override
   final String? prescription;
   @override
+  @JsonKey()
   final double amount;
   @override
+  @JsonKey()
   final String paymentStatus;
 
   @override
@@ -1005,23 +1016,24 @@ class _$DoctorAppointmentImpl implements _DoctorAppointment {
 
 abstract class _DoctorAppointment implements DoctorAppointment {
   const factory _DoctorAppointment(
-      {required final String id,
+      {@JsonKey(name: '_id') required final String id,
       required final PatientInfo patientId,
       required final String doctorId,
       required final DateTime date,
       required final AppointmentTimeSlot timeSlot,
       required final String type,
-      required final String status,
+      final String status,
       final String? symptoms,
       final String? notes,
       final String? prescription,
-      required final double amount,
-      required final String paymentStatus}) = _$DoctorAppointmentImpl;
+      final double amount,
+      final String paymentStatus}) = _$DoctorAppointmentImpl;
 
   factory _DoctorAppointment.fromJson(Map<String, dynamic> json) =
       _$DoctorAppointmentImpl.fromJson;
 
   @override
+  @JsonKey(name: '_id')
   String get id;
   @override
   PatientInfo get patientId;
@@ -1060,9 +1072,10 @@ PatientInfo _$PatientInfoFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$PatientInfo {
+  @JsonKey(name: '_id')
   String get id => throw _privateConstructorUsedError;
-  String get name => throw _privateConstructorUsedError;
-  String get phone => throw _privateConstructorUsedError;
+  String? get name => throw _privateConstructorUsedError;
+  String? get phone => throw _privateConstructorUsedError;
   String? get avatar => throw _privateConstructorUsedError;
 
   /// Serializes this PatientInfo to a JSON map.
@@ -1081,7 +1094,11 @@ abstract class $PatientInfoCopyWith<$Res> {
           PatientInfo value, $Res Function(PatientInfo) then) =
       _$PatientInfoCopyWithImpl<$Res, PatientInfo>;
   @useResult
-  $Res call({String id, String name, String phone, String? avatar});
+  $Res call(
+      {@JsonKey(name: '_id') String id,
+      String? name,
+      String? phone,
+      String? avatar});
 }
 
 /// @nodoc
@@ -1100,8 +1117,8 @@ class _$PatientInfoCopyWithImpl<$Res, $Val extends PatientInfo>
   @override
   $Res call({
     Object? id = null,
-    Object? name = null,
-    Object? phone = null,
+    Object? name = freezed,
+    Object? phone = freezed,
     Object? avatar = freezed,
   }) {
     return _then(_value.copyWith(
@@ -1109,14 +1126,14 @@ class _$PatientInfoCopyWithImpl<$Res, $Val extends PatientInfo>
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
-      name: null == name
+      name: freezed == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      phone: null == phone
+              as String?,
+      phone: freezed == phone
           ? _value.phone
           : phone // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       avatar: freezed == avatar
           ? _value.avatar
           : avatar // ignore: cast_nullable_to_non_nullable
@@ -1133,7 +1150,11 @@ abstract class _$$PatientInfoImplCopyWith<$Res>
       __$$PatientInfoImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String id, String name, String phone, String? avatar});
+  $Res call(
+      {@JsonKey(name: '_id') String id,
+      String? name,
+      String? phone,
+      String? avatar});
 }
 
 /// @nodoc
@@ -1150,8 +1171,8 @@ class __$$PatientInfoImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
-    Object? name = null,
-    Object? phone = null,
+    Object? name = freezed,
+    Object? phone = freezed,
     Object? avatar = freezed,
   }) {
     return _then(_$PatientInfoImpl(
@@ -1159,14 +1180,14 @@ class __$$PatientInfoImplCopyWithImpl<$Res>
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
-      name: null == name
+      name: freezed == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      phone: null == phone
+              as String?,
+      phone: freezed == phone
           ? _value.phone
           : phone // ignore: cast_nullable_to_non_nullable
-              as String,
+              as String?,
       avatar: freezed == avatar
           ? _value.avatar
           : avatar // ignore: cast_nullable_to_non_nullable
@@ -1179,17 +1200,21 @@ class __$$PatientInfoImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$PatientInfoImpl implements _PatientInfo {
   const _$PatientInfoImpl(
-      {required this.id, required this.name, required this.phone, this.avatar});
+      {@JsonKey(name: '_id') required this.id,
+      this.name,
+      this.phone,
+      this.avatar});
 
   factory _$PatientInfoImpl.fromJson(Map<String, dynamic> json) =>
       _$$PatientInfoImplFromJson(json);
 
   @override
+  @JsonKey(name: '_id')
   final String id;
   @override
-  final String name;
+  final String? name;
   @override
-  final String phone;
+  final String? phone;
   @override
   final String? avatar;
 
@@ -1231,20 +1256,21 @@ class _$PatientInfoImpl implements _PatientInfo {
 
 abstract class _PatientInfo implements PatientInfo {
   const factory _PatientInfo(
-      {required final String id,
-      required final String name,
-      required final String phone,
+      {@JsonKey(name: '_id') required final String id,
+      final String? name,
+      final String? phone,
       final String? avatar}) = _$PatientInfoImpl;
 
   factory _PatientInfo.fromJson(Map<String, dynamic> json) =
       _$PatientInfoImpl.fromJson;
 
   @override
+  @JsonKey(name: '_id')
   String get id;
   @override
-  String get name;
+  String? get name;
   @override
-  String get phone;
+  String? get phone;
   @override
   String? get avatar;
 

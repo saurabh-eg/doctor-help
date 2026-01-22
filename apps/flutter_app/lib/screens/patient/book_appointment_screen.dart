@@ -154,7 +154,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
       final appointmentService = ref.read(appointmentServiceProvider);
       final authState = ref.read(authStateProvider);
 
-      final success = await appointmentService.bookAppointment(
+      final response = await appointmentService.bookAppointment(
         doctorId: widget.doctorId,
         patientId: authState.user?.id ?? '',
         date: selectedDate!,
@@ -166,7 +166,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
 
       if (!mounted) return;
 
-      if (success) {
+      if (response.success) {
         // Show success dialog
         showDialog(
           context: context,
@@ -188,8 +188,8 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to book appointment'),
+          SnackBar(
+            content: Text(response.error ?? 'Failed to book appointment'),
             backgroundColor: Colors.red,
           ),
         );

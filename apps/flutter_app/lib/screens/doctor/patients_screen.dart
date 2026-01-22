@@ -44,7 +44,7 @@ class _DoctorPatientsScreenState extends ConsumerState<DoctorPatientsScreen> {
       );
     }).where((p) {
       final q = _searchController.text.trim().toLowerCase();
-      return q.isEmpty || (p.info.name.toLowerCase().contains(q));
+      return q.isEmpty || (p.info.name?.toLowerCase().contains(q) ?? false);
     }).toList();
 
     return Scaffold(
@@ -133,8 +133,8 @@ class _DoctorPatientsScreenState extends ConsumerState<DoctorPatientsScreen> {
                               ? '${p.lastVisit!.day}/${p.lastVisit!.month}/${p.lastVisit!.year}'
                               : 'N/A';
                           return _PatientCard(
-                            patientName: p.info.name,
-                            phone: p.info.phone,
+                            patientName: p.info.name ?? 'Patient',
+                            phone: p.info.phone ?? 'N/A',
                             lastVisit: lastVisit,
                             visitCount: p.visitCount.toString(),
                             onTap: () {
@@ -150,7 +150,7 @@ class _DoctorPatientsScreenState extends ConsumerState<DoctorPatientsScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          p.info.name,
+                                          p.info.name ?? 'Patient',
                                           style: Theme.of(context)
                                               .textTheme
                                               .titleMedium
@@ -159,7 +159,7 @@ class _DoctorPatientsScreenState extends ConsumerState<DoctorPatientsScreen> {
                                         ),
                                         const SizedBox(
                                             height: UIConstants.spacingSmall),
-                                        Text('Phone: ${p.info.phone}'),
+                                        Text('Phone: ${p.info.phone ?? 'N/A'}'),
                                         const SizedBox(
                                             height: UIConstants.spacingSmall),
                                         Text('Last visit: $lastVisit'),

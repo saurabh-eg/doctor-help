@@ -112,7 +112,8 @@ class AppointmentService {
   }
 
   /// Book appointment (simplified method for patient booking)
-  Future<bool> bookAppointment({
+  /// Book appointment with error details
+  Future<ApiResponse<Appointment>> bookAppointment({
     required String doctorId,
     required String patientId,
     required DateTime date,
@@ -120,27 +121,22 @@ class AppointmentService {
     required String reason,
     String? notes,
   }) async {
-    try {
-      final response = await _apiService.post(
-        ApiEndpoints.createAppointment,
-        body: {
-          'patientId': patientId,
-          'doctorId': doctorId,
-          'date': date.toIso8601String(),
-          'timeSlot': {
-            'start': time,
-            'end': time,
-          },
-          'type': 'consultation',
-          'symptoms': reason,
-          if (notes != null) 'notes': notes,
+    return _apiService.post(
+      ApiEndpoints.createAppointment,
+      body: {
+        'patientId': patientId,
+        'doctorId': doctorId,
+        'date': date.toIso8601String(),
+        'timeSlot': {
+          'start': time,
+          'end': time,
         },
-        fromJson: (json) => Appointment.fromJson(json),
-      );
-      return response.success;
-    } catch (e) {
-      return false;
-    }
+        'type': 'clinic',
+        'symptoms': reason,
+        if (notes != null) 'notes': notes,
+      },
+      fromJson: (json) => Appointment.fromJson(json),
+    );
   }
 
   /// Reschedule appointment (update date and time slot)

@@ -6,18 +6,18 @@ part 'appointment.g.dart';
 @freezed
 class Appointment with _$Appointment {
   const factory Appointment({
-    required String id,
+    @JsonKey(name: '_id') required String id,
     required String patientId,
     required String doctorId,
     required DateTime date,
     required AppointmentTimeSlot timeSlot,
     required String type,
-    required String status,
+    @Default('pending') String status,
     String? symptoms,
     String? notes,
     String? prescription,
-    required double amount,
-    required String paymentStatus,
+    @Default(0.0) double amount,
+    @Default('pending') String paymentStatus,
     String? meetingLink,
     DateTime? createdAt,
   }) = _Appointment;
@@ -40,18 +40,18 @@ class AppointmentTimeSlot with _$AppointmentTimeSlot {
 @freezed
 class DoctorAppointment with _$DoctorAppointment {
   const factory DoctorAppointment({
-    required String id,
+    @JsonKey(name: '_id') required String id,
     required PatientInfo patientId,
     required String doctorId,
     required DateTime date,
     required AppointmentTimeSlot timeSlot,
     required String type,
-    required String status,
+    @Default('pending') String status,
     String? symptoms,
     String? notes,
     String? prescription,
-    required double amount,
-    required String paymentStatus,
+    @Default(0.0) double amount,
+    @Default('pending') String paymentStatus,
   }) = _DoctorAppointment;
 
   factory DoctorAppointment.fromJson(Map<String, dynamic> json) =>
@@ -61,9 +61,9 @@ class DoctorAppointment with _$DoctorAppointment {
 @freezed
 class PatientInfo with _$PatientInfo {
   const factory PatientInfo({
-    required String id,
-    required String name,
-    required String phone,
+    @JsonKey(name: '_id') required String id,
+    String? name,
+    String? phone,
     String? avatar,
   }) = _PatientInfo;
 

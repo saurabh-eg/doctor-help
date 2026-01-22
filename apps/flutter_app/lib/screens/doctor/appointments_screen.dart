@@ -309,7 +309,7 @@ class _AppointmentsList extends ConsumerWidget {
                   padding:
                       const EdgeInsets.only(bottom: UIConstants.spacingMedium),
                   child: _AppointmentCard(
-                    patientName: patient.name,
+                    patientName: patient.name ?? 'Patient',
                     appointmentDate: dateLabel,
                     appointmentTime: timeLabel,
                     consultationType: typeLabel,

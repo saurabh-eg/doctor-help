@@ -99,6 +99,7 @@ class ApiService {
       if (ApiConfig.debugMode) {
         logger.i('POST: $url');
         logger.i('Body: ${jsonEncode(body)}');
+        logger.i('Token present: ${_token != null}');
       }
 
       final response = await http
@@ -110,6 +111,11 @@ class ApiService {
           .timeout(ApiConfig.timeout, onTimeout: () {
         throw Exception('Request timeout');
       });
+
+      if (ApiConfig.debugMode) {
+        logger.i('Response status: ${response.statusCode}');
+        logger.i('Response body: ${response.body}');
+      }
 
       return _handleResponse(response, fromJson);
     } catch (e) {
