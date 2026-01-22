@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/providers.dart';
+import '../../providers/doctor_provider.dart';
 import '../../navigation/app_router.dart';
 import '../../config/constants.dart';
 import '../../widgets/doctor_bottom_nav.dart';
+import '../../utils/extensions.dart';
 
 class DoctorDashboardScreen extends ConsumerStatefulWidget {
   const DoctorDashboardScreen({super.key});
@@ -18,22 +20,19 @@ class _DoctorDashboardScreenState extends ConsumerState<DoctorDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch appointments on init
+    // Fetch doctor profile and appointments on init
     Future.microtask(() {
-      final authState = ref.read(authStateProvider);
-      if (authState.user != null) {
-        ref.read(appointmentServiceProvider).getDoctorAppointments(
-              authState.user!.id,
-            );
-      }
+      ref.read(doctorProvider.notifier).fetchProfile();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
+    final doctorState = ref.watch(doctorProvider);
     final theme = Theme.of(context);
     final user = authState.user;
+    final stats = doctorState.stats;
 
     return Scaffold(
       appBar: AppBar(
@@ -100,24 +99,24 @@ class _DoctorDashboardScreenState extends ConsumerState<DoctorDashboardScreen> {
                             ),
                           ),
                           const SizedBox(height: UIConstants.spacingMedium),
-                          const Row(
+                          Row(
                             children: [
                               Expanded(
                                 child: _StatCard(
                                   icon: Icons.calendar_today,
                                   label: 'Appointments',
-                                  value: '5',
+                                  value: '${stats.todayAppointments}',
                                   color: Colors.blue,
                                 ),
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 width: UIConstants.spacingMedium,
                               ),
                               Expanded(
                                 child: _StatCard(
                                   icon: Icons.pending_actions,
                                   label: 'Pending',
-                                  value: '2',
+                                  value: '${stats.pendingAppointments}',
                                   color: Colors.orange,
                                 ),
                               ),
@@ -126,24 +125,24 @@ class _DoctorDashboardScreenState extends ConsumerState<DoctorDashboardScreen> {
                           const SizedBox(
                             height: UIConstants.spacingMedium,
                           ),
-                          const Row(
+                          Row(
                             children: [
                               Expanded(
                                 child: _StatCard(
                                   icon: Icons.people,
                                   label: 'Patients',
-                                  value: '24',
+                                  value: '${stats.totalPatients}',
                                   color: Colors.green,
                                 ),
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 width: UIConstants.spacingMedium,
                               ),
                               Expanded(
                                 child: _StatCard(
                                   icon: Icons.currency_rupee,
                                   label: 'Earnings',
-                                  value: '₹2,450',
+                                  value: '₹${stats.thisMonthEarnings.toInt()}',
                                   color: Colors.purple,
                                 ),
                               ),
@@ -178,26 +177,39 @@ class _DoctorDashboardScreenState extends ConsumerState<DoctorDashboardScreen> {
                           const SizedBox(
                             height: UIConstants.spacingMedium,
                           ),
-                          // Sample upcoming appointment
-                          _UpcomingAppointmentCard(
-                            patientName: 'John Doe',
-                            appointmentTime: '2:30 PM - 3:00 PM',
-                            consultationType: 'Video Call',
-                            reasonForVisit: 'Routine Checkup',
-                            onTap: () =>
-                                context.push(AppRoutes.doctorAppointments),
-                          ),
-                          const SizedBox(
-                            height: UIConstants.spacingSmall,
-                          ),
-                          _UpcomingAppointmentCard(
-                            patientName: 'Jane Smith',
-                            appointmentTime: '3:15 PM - 3:45 PM',
-                            consultationType: 'In-Person',
-                            reasonForVisit: 'Follow-up',
-                            onTap: () =>
-                                context.push(AppRoutes.doctorAppointments),
-                          ),
+                          // Real upcoming appointments
+                          if (doctorState.todayAppointments.isEmpty)
+                            Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(
+                                    UIConstants.spacingLarge),
+                                child: Text(
+                                  'No appointments today',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ),
+                            )
+                          else
+                            ...doctorState.todayAppointments.take(2).map(
+                                  (apt) => Padding(
+                                    padding: const EdgeInsets.only(
+                                      bottom: UIConstants.spacingSmall,
+                                    ),
+                                    child: _UpcomingAppointmentCard(
+                                      patientName:
+                                          apt.patientId.name ?? 'Patient',
+                                      appointmentTime:
+                                          '${apt.timeSlot.start} - ${apt.timeSlot.end}',
+                                      consultationType: apt.type.capitalize(),
+                                      reasonForVisit:
+                                          apt.symptoms ?? 'Consultation',
+                                      onTap: () => context
+                                          .push(AppRoutes.doctorAppointments),
+                                    ),
+                                  ),
+                                ),
                         ],
                       ),
                     ),

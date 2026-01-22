@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../config/constants.dart';
 import '../../widgets/doctor_bottom_nav.dart';
+import '../../providers/doctor_provider.dart';
 
 class DoctorEarningsScreen extends ConsumerStatefulWidget {
   const DoctorEarningsScreen({super.key});
@@ -15,8 +17,18 @@ class _DoctorEarningsScreenState extends ConsumerState<DoctorEarningsScreen> {
   String _selectedPeriod = 'month'; // day, week, month, year
 
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(doctorProvider.notifier).fetchProfile();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final doctorState = ref.watch(doctorProvider);
+    final stats = doctorState.stats;
 
     return Scaffold(
       appBar: AppBar(
@@ -54,27 +66,27 @@ class _DoctorEarningsScreenState extends ConsumerState<DoctorEarningsScreen> {
                     ),
                     const SizedBox(height: UIConstants.spacingSmall),
                     Text(
-                      '₹15,450',
+                      '₹${stats.totalEarnings.toInt()}',
                       style: theme.textTheme.displaySmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: UIConstants.spacingMedium),
-                    const Row(
+                    Row(
                       children: [
                         Expanded(
                           child: _EarningsMetric(
                             label: 'This Month',
-                            value: '₹2,450',
+                            value: '₹${stats.thisMonthEarnings.toInt()}',
                             color: Colors.white70,
                           ),
                         ),
-                        SizedBox(width: UIConstants.spacingLarge),
-                        Expanded(
+                        const SizedBox(width: UIConstants.spacingLarge),
+                        const Expanded(
                           child: _EarningsMetric(
                             label: 'Pending',
-                            value: '₹500',
+                            value: '₹0',
                             color: Colors.white70,
                           ),
                         ),
@@ -197,44 +209,38 @@ class _DoctorEarningsScreenState extends ConsumerState<DoctorEarningsScreen> {
                       ],
                     ),
                     const SizedBox(height: UIConstants.spacingMedium),
-                    ...[
-                      (
-                        patient: 'John Doe',
-                        amount: '+₹500',
-                        date: 'Jan 20, 2026',
-                        type: 'consultation'
-                      ),
-                      (
-                        patient: 'Jane Smith',
-                        amount: '+₹450',
-                        date: 'Jan 19, 2026',
-                        type: 'consultation'
-                      ),
-                      (
-                        patient: 'Withdrawal',
-                        amount: '-₹5000',
-                        date: 'Jan 15, 2026',
-                        type: 'withdrawal'
-                      ),
-                      (
-                        patient: 'Mike Johnson',
-                        amount: '+₹500',
-                        date: 'Jan 12, 2026',
-                        type: 'consultation'
-                      ),
-                    ].map(
-                      (transaction) => Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: UIConstants.spacingMedium,
+                    if (doctorState.appointments.isEmpty)
+                      Center(
+                        child: Padding(
+                          padding:
+                              const EdgeInsets.all(UIConstants.spacingLarge),
+                          child: Text(
+                            'No transactions yet',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey[600],
+                            ),
+                          ),
                         ),
-                        child: _TransactionItem(
-                          title: transaction.patient,
-                          amount: transaction.amount,
-                          date: transaction.date,
-                          isWithdrawal: transaction.type == 'withdrawal',
-                        ),
-                      ),
-                    ),
+                      )
+                    else
+                      ...doctorState.appointments
+                          .where((a) =>
+                              a.paymentStatus == AppConstants.paymentPaid)
+                          .take(5)
+                          .map(
+                            (transaction) => Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: UIConstants.spacingMedium,
+                              ),
+                              child: _TransactionItem(
+                                title: transaction.patientId.name ?? 'Patient',
+                                amount: '+₹${transaction.amount.toInt()}',
+                                date: DateFormat('MMM dd, yyyy')
+                                    .format(transaction.date),
+                                isWithdrawal: false,
+                              ),
+                            ),
+                          ),
                   ],
                 ),
               ),
