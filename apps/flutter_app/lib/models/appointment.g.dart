@@ -10,7 +10,8 @@ _$AppointmentImpl _$$AppointmentImplFromJson(Map<String, dynamic> json) =>
     _$AppointmentImpl(
       id: json['_id'] as String,
       patientId: json['patientId'] as String,
-      doctorId: json['doctorId'] as String,
+      doctorId:
+          AppointmentDoctor.fromJson(json['doctorId'] as Map<String, dynamic>),
       date: DateTime.parse(json['date'] as String),
       timeSlot: AppointmentTimeSlot.fromJson(
           json['timeSlot'] as Map<String, dynamic>),
@@ -43,6 +44,39 @@ Map<String, dynamic> _$$AppointmentImplToJson(_$AppointmentImpl instance) =>
       'paymentStatus': instance.paymentStatus,
       'meetingLink': instance.meetingLink,
       'createdAt': instance.createdAt?.toIso8601String(),
+    };
+
+_$AppointmentDoctorImpl _$$AppointmentDoctorImplFromJson(
+        Map<String, dynamic> json) =>
+    _$AppointmentDoctorImpl(
+      id: json['_id'] as String,
+      userId: json['userId'] == null
+          ? null
+          : AppointmentDoctorUser.fromJson(
+              json['userId'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$$AppointmentDoctorImplToJson(
+        _$AppointmentDoctorImpl instance) =>
+    <String, dynamic>{
+      '_id': instance.id,
+      'userId': instance.userId,
+    };
+
+_$AppointmentDoctorUserImpl _$$AppointmentDoctorUserImplFromJson(
+        Map<String, dynamic> json) =>
+    _$AppointmentDoctorUserImpl(
+      id: json['_id'] as String?,
+      name: json['name'] as String?,
+      phone: json['phone'] as String?,
+    );
+
+Map<String, dynamic> _$$AppointmentDoctorUserImplToJson(
+        _$AppointmentDoctorUserImpl instance) =>
+    <String, dynamic>{
+      '_id': instance.id,
+      'name': instance.name,
+      'phone': instance.phone,
     };
 
 _$AppointmentTimeSlotImpl _$$AppointmentTimeSlotImplFromJson(

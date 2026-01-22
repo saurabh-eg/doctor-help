@@ -105,7 +105,7 @@ class AppointmentService {
 
   /// Cancel appointment
   Future<ApiResponse<Appointment>> cancelAppointment(String appointmentId) {
-    return _apiService.delete(
+    return _apiService.post(
       ApiEndpoints.cancelAppointment.replaceFirst(':id', appointmentId),
       fromJson: (json) => Appointment.fromJson(json),
     );

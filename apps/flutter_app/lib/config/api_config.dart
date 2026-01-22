@@ -70,7 +70,8 @@ class ApiEndpoints {
   static const String getDoctorAppointments = '/appointments/doctor/:doctorId';
   static const String updateAppointmentStatus = '/appointments/:id/status';
   static const String updateAppointmentTimeSlot = '/appointments/:id/time-slot';
-  static const String cancelAppointment = '/appointments/:id';
+  // Cancel appointment (POST)
+  static const String cancelAppointment = '/appointments/:id/cancel';
 
   // Admin
   static const String getDashboardStats = '/admin/dashboard';

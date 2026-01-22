@@ -179,7 +179,31 @@ class _AppointmentsList extends ConsumerWidget {
         final response = snapshot.data;
         final appointments = response?.data ?? [];
 
-        if (appointments.isEmpty) {
+        // Split into upcoming vs past using date + start time
+        DateTime appointmentDateTime(Appointment apt) {
+          final base = apt.date;
+          final parts = apt.timeSlot.start.split(':');
+          final hour = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 0 : 0;
+          final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
+          return DateTime(base.year, base.month, base.day, hour, minute);
+        }
+
+        final now = DateTime.now();
+        final filteredAppointments = appointments.where((apt) {
+          final dt = appointmentDateTime(apt);
+          final isUpcomingAppointment = dt.isAfter(now);
+          final isCancelled = apt.status.toLowerCase() == 'cancelled';
+
+          if (isUpcoming) {
+            // Upcoming: future + not cancelled
+            return isUpcomingAppointment && !isCancelled;
+          } else {
+            // Past tab: include anything not upcoming, including cancelled
+            return !isUpcomingAppointment || isCancelled;
+          }
+        }).toList();
+
+        if (filteredAppointments.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -218,11 +242,11 @@ class _AppointmentsList extends ConsumerWidget {
           },
           child: ListView.separated(
             padding: const EdgeInsets.all(UIConstants.spacingLarge),
-            itemCount: appointments.length,
+            itemCount: filteredAppointments.length,
             separatorBuilder: (_, __) =>
                 const SizedBox(height: UIConstants.spacingMedium),
             itemBuilder: (context, index) {
-              final appointment = appointments[index];
+              final appointment = filteredAppointments[index];
               return _AppointmentCard(
                 appointment: appointment,
                 isUpcoming: isUpcoming,
@@ -365,7 +389,7 @@ class _AppointmentCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Dr. ${appointment.doctorId}',
+                            'Dr. ${appointment.doctorId.userId?.name ?? 'Doctor'}',
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -432,7 +456,41 @@ class _AppointmentCard extends StatelessWidget {
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: () {
-                              // Navigate to appointment details
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Appointment Details'),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                          'Doctor: ${appointment.doctorId.userId?.name ?? 'Doctor'}'),
+                                      const SizedBox(height: 6),
+                                      Text('Type: ${appointment.type}'),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                          'Date: ${_formatDate(appointment.date)}'),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                          'Time: ${appointment.timeSlot.start}'),
+                                      if (appointment.symptoms != null) ...[
+                                        const SizedBox(height: 6),
+                                        Text('Reason: ${appointment.symptoms}')
+                                      ],
+                                      const SizedBox(height: 6),
+                                      Text('Status: ${appointment.status}'),
+                                    ],
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: const Text('Close'),
+                                    ),
+                                  ],
+                                ),
+                              );
                             },
                             icon: const Icon(Icons.info_outline, size: 18),
                             label: const Text('Details'),

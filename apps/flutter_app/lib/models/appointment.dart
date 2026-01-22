@@ -1,3 +1,4 @@
+// ignore_for_file: invalid_annotation_target
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'appointment.freezed.dart';
@@ -8,7 +9,7 @@ class Appointment with _$Appointment {
   const factory Appointment({
     @JsonKey(name: '_id') required String id,
     required String patientId,
-    required String doctorId,
+    required AppointmentDoctor doctorId,
     required DateTime date,
     required AppointmentTimeSlot timeSlot,
     required String type,
@@ -24,6 +25,30 @@ class Appointment with _$Appointment {
 
   factory Appointment.fromJson(Map<String, dynamic> json) =>
       _$AppointmentFromJson(json);
+}
+
+/// Minimal doctor info returned in patient appointments list
+@freezed
+class AppointmentDoctor with _$AppointmentDoctor {
+  const factory AppointmentDoctor({
+    @JsonKey(name: '_id') required String id,
+    AppointmentDoctorUser? userId,
+  }) = _AppointmentDoctor;
+
+  factory AppointmentDoctor.fromJson(Map<String, dynamic> json) =>
+      _$AppointmentDoctorFromJson(json);
+}
+
+@freezed
+class AppointmentDoctorUser with _$AppointmentDoctorUser {
+  const factory AppointmentDoctorUser({
+    @JsonKey(name: '_id') String? id,
+    String? name,
+    String? phone,
+  }) = _AppointmentDoctorUser;
+
+  factory AppointmentDoctorUser.fromJson(Map<String, dynamic> json) =>
+      _$AppointmentDoctorUserFromJson(json);
 }
 
 @freezed

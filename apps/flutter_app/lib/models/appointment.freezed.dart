@@ -23,7 +23,7 @@ mixin _$Appointment {
   @JsonKey(name: '_id')
   String get id => throw _privateConstructorUsedError;
   String get patientId => throw _privateConstructorUsedError;
-  String get doctorId => throw _privateConstructorUsedError;
+  AppointmentDoctor get doctorId => throw _privateConstructorUsedError;
   DateTime get date => throw _privateConstructorUsedError;
   AppointmentTimeSlot get timeSlot => throw _privateConstructorUsedError;
   String get type => throw _privateConstructorUsedError;
@@ -55,7 +55,7 @@ abstract class $AppointmentCopyWith<$Res> {
   $Res call(
       {@JsonKey(name: '_id') String id,
       String patientId,
-      String doctorId,
+      AppointmentDoctor doctorId,
       DateTime date,
       AppointmentTimeSlot timeSlot,
       String type,
@@ -68,6 +68,7 @@ abstract class $AppointmentCopyWith<$Res> {
       String? meetingLink,
       DateTime? createdAt});
 
+  $AppointmentDoctorCopyWith<$Res> get doctorId;
   $AppointmentTimeSlotCopyWith<$Res> get timeSlot;
 }
 
@@ -113,7 +114,7 @@ class _$AppointmentCopyWithImpl<$Res, $Val extends Appointment>
       doctorId: null == doctorId
           ? _value.doctorId
           : doctorId // ignore: cast_nullable_to_non_nullable
-              as String,
+              as AppointmentDoctor,
       date: null == date
           ? _value.date
           : date // ignore: cast_nullable_to_non_nullable
@@ -165,6 +166,16 @@ class _$AppointmentCopyWithImpl<$Res, $Val extends Appointment>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
+  $AppointmentDoctorCopyWith<$Res> get doctorId {
+    return $AppointmentDoctorCopyWith<$Res>(_value.doctorId, (value) {
+      return _then(_value.copyWith(doctorId: value) as $Val);
+    });
+  }
+
+  /// Create a copy of Appointment
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
   $AppointmentTimeSlotCopyWith<$Res> get timeSlot {
     return $AppointmentTimeSlotCopyWith<$Res>(_value.timeSlot, (value) {
       return _then(_value.copyWith(timeSlot: value) as $Val);
@@ -183,7 +194,7 @@ abstract class _$$AppointmentImplCopyWith<$Res>
   $Res call(
       {@JsonKey(name: '_id') String id,
       String patientId,
-      String doctorId,
+      AppointmentDoctor doctorId,
       DateTime date,
       AppointmentTimeSlot timeSlot,
       String type,
@@ -196,6 +207,8 @@ abstract class _$$AppointmentImplCopyWith<$Res>
       String? meetingLink,
       DateTime? createdAt});
 
+  @override
+  $AppointmentDoctorCopyWith<$Res> get doctorId;
   @override
   $AppointmentTimeSlotCopyWith<$Res> get timeSlot;
 }
@@ -240,7 +253,7 @@ class __$$AppointmentImplCopyWithImpl<$Res>
       doctorId: null == doctorId
           ? _value.doctorId
           : doctorId // ignore: cast_nullable_to_non_nullable
-              as String,
+              as AppointmentDoctor,
       date: null == date
           ? _value.date
           : date // ignore: cast_nullable_to_non_nullable
@@ -317,7 +330,7 @@ class _$AppointmentImpl implements _Appointment {
   @override
   final String patientId;
   @override
-  final String doctorId;
+  final AppointmentDoctor doctorId;
   @override
   final DateTime date;
   @override
@@ -417,7 +430,7 @@ abstract class _Appointment implements Appointment {
   const factory _Appointment(
       {@JsonKey(name: '_id') required final String id,
       required final String patientId,
-      required final String doctorId,
+      required final AppointmentDoctor doctorId,
       required final DateTime date,
       required final AppointmentTimeSlot timeSlot,
       required final String type,
@@ -439,7 +452,7 @@ abstract class _Appointment implements Appointment {
   @override
   String get patientId;
   @override
-  String get doctorId;
+  AppointmentDoctor get doctorId;
   @override
   DateTime get date;
   @override
@@ -469,6 +482,390 @@ abstract class _Appointment implements Appointment {
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$AppointmentImplCopyWith<_$AppointmentImpl> get copyWith =>
       throw _privateConstructorUsedError;
+}
+
+AppointmentDoctor _$AppointmentDoctorFromJson(Map<String, dynamic> json) {
+  return _AppointmentDoctor.fromJson(json);
+}
+
+/// @nodoc
+mixin _$AppointmentDoctor {
+  @JsonKey(name: '_id')
+  String get id => throw _privateConstructorUsedError;
+  AppointmentDoctorUser? get userId => throw _privateConstructorUsedError;
+
+  /// Serializes this AppointmentDoctor to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of AppointmentDoctor
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $AppointmentDoctorCopyWith<AppointmentDoctor> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $AppointmentDoctorCopyWith<$Res> {
+  factory $AppointmentDoctorCopyWith(
+          AppointmentDoctor value, $Res Function(AppointmentDoctor) then) =
+      _$AppointmentDoctorCopyWithImpl<$Res, AppointmentDoctor>;
+  @useResult
+  $Res call({@JsonKey(name: '_id') String id, AppointmentDoctorUser? userId});
+
+  $AppointmentDoctorUserCopyWith<$Res>? get userId;
+}
+
+/// @nodoc
+class _$AppointmentDoctorCopyWithImpl<$Res, $Val extends AppointmentDoctor>
+    implements $AppointmentDoctorCopyWith<$Res> {
+  _$AppointmentDoctorCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of AppointmentDoctor
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? userId = freezed,
+  }) {
+    return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      userId: freezed == userId
+          ? _value.userId
+          : userId // ignore: cast_nullable_to_non_nullable
+              as AppointmentDoctorUser?,
+    ) as $Val);
+  }
+
+  /// Create a copy of AppointmentDoctor
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $AppointmentDoctorUserCopyWith<$Res>? get userId {
+    if (_value.userId == null) {
+      return null;
+    }
+
+    return $AppointmentDoctorUserCopyWith<$Res>(_value.userId!, (value) {
+      return _then(_value.copyWith(userId: value) as $Val);
+    });
+  }
+}
+
+/// @nodoc
+abstract class _$$AppointmentDoctorImplCopyWith<$Res>
+    implements $AppointmentDoctorCopyWith<$Res> {
+  factory _$$AppointmentDoctorImplCopyWith(_$AppointmentDoctorImpl value,
+          $Res Function(_$AppointmentDoctorImpl) then) =
+      __$$AppointmentDoctorImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({@JsonKey(name: '_id') String id, AppointmentDoctorUser? userId});
+
+  @override
+  $AppointmentDoctorUserCopyWith<$Res>? get userId;
+}
+
+/// @nodoc
+class __$$AppointmentDoctorImplCopyWithImpl<$Res>
+    extends _$AppointmentDoctorCopyWithImpl<$Res, _$AppointmentDoctorImpl>
+    implements _$$AppointmentDoctorImplCopyWith<$Res> {
+  __$$AppointmentDoctorImplCopyWithImpl(_$AppointmentDoctorImpl _value,
+      $Res Function(_$AppointmentDoctorImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of AppointmentDoctor
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? userId = freezed,
+  }) {
+    return _then(_$AppointmentDoctorImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      userId: freezed == userId
+          ? _value.userId
+          : userId // ignore: cast_nullable_to_non_nullable
+              as AppointmentDoctorUser?,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$AppointmentDoctorImpl implements _AppointmentDoctor {
+  const _$AppointmentDoctorImpl(
+      {@JsonKey(name: '_id') required this.id, this.userId});
+
+  factory _$AppointmentDoctorImpl.fromJson(Map<String, dynamic> json) =>
+      _$$AppointmentDoctorImplFromJson(json);
+
+  @override
+  @JsonKey(name: '_id')
+  final String id;
+  @override
+  final AppointmentDoctorUser? userId;
+
+  @override
+  String toString() {
+    return 'AppointmentDoctor(id: $id, userId: $userId)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$AppointmentDoctorImpl &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.userId, userId) || other.userId == userId));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, id, userId);
+
+  /// Create a copy of AppointmentDoctor
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$AppointmentDoctorImplCopyWith<_$AppointmentDoctorImpl> get copyWith =>
+      __$$AppointmentDoctorImplCopyWithImpl<_$AppointmentDoctorImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$AppointmentDoctorImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _AppointmentDoctor implements AppointmentDoctor {
+  const factory _AppointmentDoctor(
+      {@JsonKey(name: '_id') required final String id,
+      final AppointmentDoctorUser? userId}) = _$AppointmentDoctorImpl;
+
+  factory _AppointmentDoctor.fromJson(Map<String, dynamic> json) =
+      _$AppointmentDoctorImpl.fromJson;
+
+  @override
+  @JsonKey(name: '_id')
+  String get id;
+  @override
+  AppointmentDoctorUser? get userId;
+
+  /// Create a copy of AppointmentDoctor
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$AppointmentDoctorImplCopyWith<_$AppointmentDoctorImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+AppointmentDoctorUser _$AppointmentDoctorUserFromJson(
+    Map<String, dynamic> json) {
+  return _AppointmentDoctorUser.fromJson(json);
+}
+
+/// @nodoc
+mixin _$AppointmentDoctorUser {
+  @JsonKey(name: '_id')
+  String? get id => throw _privateConstructorUsedError;
+  String? get name => throw _privateConstructorUsedError;
+  String? get phone => throw _privateConstructorUsedError;
+
+  /// Serializes this AppointmentDoctorUser to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of AppointmentDoctorUser
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $AppointmentDoctorUserCopyWith<AppointmentDoctorUser> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $AppointmentDoctorUserCopyWith<$Res> {
+  factory $AppointmentDoctorUserCopyWith(AppointmentDoctorUser value,
+          $Res Function(AppointmentDoctorUser) then) =
+      _$AppointmentDoctorUserCopyWithImpl<$Res, AppointmentDoctorUser>;
+  @useResult
+  $Res call({@JsonKey(name: '_id') String? id, String? name, String? phone});
+}
+
+/// @nodoc
+class _$AppointmentDoctorUserCopyWithImpl<$Res,
+        $Val extends AppointmentDoctorUser>
+    implements $AppointmentDoctorUserCopyWith<$Res> {
+  _$AppointmentDoctorUserCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of AppointmentDoctorUser
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = freezed,
+    Object? name = freezed,
+    Object? phone = freezed,
+  }) {
+    return _then(_value.copyWith(
+      id: freezed == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String?,
+      name: freezed == name
+          ? _value.name
+          : name // ignore: cast_nullable_to_non_nullable
+              as String?,
+      phone: freezed == phone
+          ? _value.phone
+          : phone // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$AppointmentDoctorUserImplCopyWith<$Res>
+    implements $AppointmentDoctorUserCopyWith<$Res> {
+  factory _$$AppointmentDoctorUserImplCopyWith(
+          _$AppointmentDoctorUserImpl value,
+          $Res Function(_$AppointmentDoctorUserImpl) then) =
+      __$$AppointmentDoctorUserImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({@JsonKey(name: '_id') String? id, String? name, String? phone});
+}
+
+/// @nodoc
+class __$$AppointmentDoctorUserImplCopyWithImpl<$Res>
+    extends _$AppointmentDoctorUserCopyWithImpl<$Res,
+        _$AppointmentDoctorUserImpl>
+    implements _$$AppointmentDoctorUserImplCopyWith<$Res> {
+  __$$AppointmentDoctorUserImplCopyWithImpl(_$AppointmentDoctorUserImpl _value,
+      $Res Function(_$AppointmentDoctorUserImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of AppointmentDoctorUser
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = freezed,
+    Object? name = freezed,
+    Object? phone = freezed,
+  }) {
+    return _then(_$AppointmentDoctorUserImpl(
+      id: freezed == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String?,
+      name: freezed == name
+          ? _value.name
+          : name // ignore: cast_nullable_to_non_nullable
+              as String?,
+      phone: freezed == phone
+          ? _value.phone
+          : phone // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$AppointmentDoctorUserImpl implements _AppointmentDoctorUser {
+  const _$AppointmentDoctorUserImpl(
+      {@JsonKey(name: '_id') this.id, this.name, this.phone});
+
+  factory _$AppointmentDoctorUserImpl.fromJson(Map<String, dynamic> json) =>
+      _$$AppointmentDoctorUserImplFromJson(json);
+
+  @override
+  @JsonKey(name: '_id')
+  final String? id;
+  @override
+  final String? name;
+  @override
+  final String? phone;
+
+  @override
+  String toString() {
+    return 'AppointmentDoctorUser(id: $id, name: $name, phone: $phone)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$AppointmentDoctorUserImpl &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.name, name) || other.name == name) &&
+            (identical(other.phone, phone) || other.phone == phone));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, id, name, phone);
+
+  /// Create a copy of AppointmentDoctorUser
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$AppointmentDoctorUserImplCopyWith<_$AppointmentDoctorUserImpl>
+      get copyWith => __$$AppointmentDoctorUserImplCopyWithImpl<
+          _$AppointmentDoctorUserImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$AppointmentDoctorUserImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _AppointmentDoctorUser implements AppointmentDoctorUser {
+  const factory _AppointmentDoctorUser(
+      {@JsonKey(name: '_id') final String? id,
+      final String? name,
+      final String? phone}) = _$AppointmentDoctorUserImpl;
+
+  factory _AppointmentDoctorUser.fromJson(Map<String, dynamic> json) =
+      _$AppointmentDoctorUserImpl.fromJson;
+
+  @override
+  @JsonKey(name: '_id')
+  String? get id;
+  @override
+  String? get name;
+  @override
+  String? get phone;
+
+  /// Create a copy of AppointmentDoctorUser
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$AppointmentDoctorUserImplCopyWith<_$AppointmentDoctorUserImpl>
+      get copyWith => throw _privateConstructorUsedError;
 }
 
 AppointmentTimeSlot _$AppointmentTimeSlotFromJson(Map<String, dynamic> json) {
