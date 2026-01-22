@@ -1,7 +1,6 @@
 {
     "name": "api",
     "version": "1.0.0",
-    "type": "module",
     "scripts": {
         "dev": "tsx watch src/index.ts",
         "start": "tsx src/index.ts",
@@ -11,6 +10,8 @@
     },
     "dependencies": {
         "@mongodb-js/saslprep": "^1.4.4",
+        "@types/multer": "^2.0.0",
+        "cloudinary": "^2.9.0",
         "cors": "^2.8.5",
         "dotenv": "^16.4.7",
         "express": "^4.21.2",
@@ -19,6 +20,7 @@
         "jose": "^5.9.6",
         "mongoose": "^8.9.2",
         "morgan": "^1.10.0",
+        "multer": "^2.0.2",
         "zod": "^3.24.1"
     },
     "devDependencies": {
