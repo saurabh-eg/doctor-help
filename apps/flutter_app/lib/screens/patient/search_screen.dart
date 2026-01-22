@@ -403,42 +403,50 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
   }
 
   void _showRatingFilter(BuildContext context) {
+    double tempRating = minRating;
     showModalBottomSheet(
       context: context,
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(UIConstants.spacingLarge),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Minimum Rating',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: UIConstants.spacingLarge),
-            Slider(
-              value: minRating,
-              min: 0,
-              max: 5,
-              divisions: 10,
-              label: minRating.toStringAsFixed(1),
-              onChanged: (value) {
-                setState(() {
-                  minRating = value;
-                });
-              },
-            ),
-            const SizedBox(height: UIConstants.spacingLarge),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Apply'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: const EdgeInsets.all(UIConstants.spacingLarge),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Minimum Rating',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
-            ),
-          ],
+              const SizedBox(height: UIConstants.spacingLarge),
+              Slider(
+                value: tempRating,
+                min: 0,
+                max: 5,
+                divisions: 10,
+                label: tempRating.toStringAsFixed(1),
+                onChanged: (value) {
+                  setModalState(() {
+                    tempRating = value;
+                  });
+                },
+              ),
+              const SizedBox(height: UIConstants.spacingLarge),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      minRating = tempRating;
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Apply'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
