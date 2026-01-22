@@ -136,7 +136,7 @@ class _DoctorProfileScreenState extends ConsumerState<DoctorProfileScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Dr. ${doctor.specialization}',
+                                    doctor.userId.name ?? 'Doctor',
                                     style:
                                         theme.textTheme.headlineSmall?.copyWith(
                                       fontWeight: FontWeight.bold,

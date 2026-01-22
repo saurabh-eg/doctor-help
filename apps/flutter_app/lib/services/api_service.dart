@@ -215,6 +215,7 @@ class ApiService {
           );
         }
 
+        // Handle Map response
         if (data is Map<String, dynamic>) {
           return ApiResponse<T>(
             success: true,
@@ -223,7 +224,27 @@ class ApiService {
           );
         }
 
-        // If backend returns non-map but we expected map, avoid cast error
+        // Handle List response - pass the whole json to fromJson
+        if (data is List) {
+          try {
+            // Create a wrapper map with the list data for the parser
+            final result = fromJson({'data': data});
+            return ApiResponse<T>(
+              success: true,
+              data: result,
+              message: json['message']?.toString(),
+            );
+          } catch (e) {
+            logger.e('List Parse Error: $e');
+            return ApiResponse<T>(
+              success: true,
+              data: null,
+              message: json['message']?.toString(),
+            );
+          }
+        }
+
+        // If backend returns null data
         return ApiResponse<T>(
           success: true,
           data: null,

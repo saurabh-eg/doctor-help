@@ -54,12 +54,11 @@ class AppointmentService {
     return _apiService.get(
       '${ApiEndpoints.getPatientAppointments.replaceFirst(':patientId', patientId)}$queryString',
       fromJson: (json) {
-        if (json is List) {
-          return (json as List)
-              .map((item) => Appointment.fromJson(item as Map<String, dynamic>))
-              .toList();
-        }
-        return [];
+        // Handle the wrapper format from API service
+        final list = json['data'] as List? ?? [];
+        return list
+            .map((item) => Appointment.fromJson(item as Map<String, dynamic>))
+            .toList();
       },
     );
   }
@@ -82,13 +81,12 @@ class AppointmentService {
     return _apiService.get(
       '${ApiEndpoints.getDoctorAppointments.replaceFirst(':doctorId', doctorId)}$queryString',
       fromJson: (json) {
-        if (json is List) {
-          return (json as List)
-              .map((item) =>
-                  DoctorAppointment.fromJson(item as Map<String, dynamic>))
-              .toList();
-        }
-        return [];
+        // Handle the wrapper format from API service
+        final list = json['data'] as List? ?? [];
+        return list
+            .map((item) =>
+                DoctorAppointment.fromJson(item as Map<String, dynamic>))
+            .toList();
       },
     );
   }

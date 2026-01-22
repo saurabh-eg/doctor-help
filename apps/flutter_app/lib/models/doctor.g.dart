@@ -7,16 +7,16 @@ part of 'doctor.dart';
 // **************************************************************************
 
 _$DoctorImpl _$$DoctorImplFromJson(Map<String, dynamic> json) => _$DoctorImpl(
-      id: json['id'] as String,
-      userId: json['userId'] as String,
+      id: json['_id'] as String,
+      userId: DoctorUser.fromJson(json['userId'] as Map<String, dynamic>),
       doctorId: json['doctorId'] as String?,
       specialization: json['specialization'] as String,
       qualification: json['qualification'] as String,
       experience: (json['experience'] as num).toInt(),
       consultationFee: (json['consultationFee'] as num).toDouble(),
-      rating: (json['rating'] as num).toDouble(),
-      reviewCount: (json['reviewCount'] as num).toInt(),
-      isVerified: json['isVerified'] as bool,
+      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
+      isVerified: json['isVerified'] as bool? ?? false,
       verifiedAt: json['verifiedAt'] == null
           ? null
           : DateTime.parse(json['verifiedAt'] as String),
@@ -24,11 +24,13 @@ _$DoctorImpl _$$DoctorImplFromJson(Map<String, dynamic> json) => _$DoctorImpl(
       bio: json['bio'] as String?,
       photoUrl: json['photoUrl'] as String?,
       documents: (json['documents'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
-      availableSlots: (json['availableSlots'] as List<dynamic>)
-          .map((e) => TimeSlot.fromJson(e as Map<String, dynamic>))
-          .toList(),
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
+      availableSlots: (json['availableSlots'] as List<dynamic>?)
+              ?.map((e) => TimeSlot.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
       createdAt: json['createdAt'] == null
           ? null
           : DateTime.parse(json['createdAt'] as String),
@@ -36,7 +38,7 @@ _$DoctorImpl _$$DoctorImplFromJson(Map<String, dynamic> json) => _$DoctorImpl(
 
 Map<String, dynamic> _$$DoctorImplToJson(_$DoctorImpl instance) =>
     <String, dynamic>{
-      'id': instance.id,
+      '_id': instance.id,
       'userId': instance.userId,
       'doctorId': instance.doctorId,
       'specialization': instance.specialization,
@@ -53,6 +55,22 @@ Map<String, dynamic> _$$DoctorImplToJson(_$DoctorImpl instance) =>
       'documents': instance.documents,
       'availableSlots': instance.availableSlots,
       'createdAt': instance.createdAt?.toIso8601String(),
+    };
+
+_$DoctorUserImpl _$$DoctorUserImplFromJson(Map<String, dynamic> json) =>
+    _$DoctorUserImpl(
+      id: json['_id'] as String,
+      name: json['name'] as String?,
+      phone: json['phone'] as String?,
+      avatar: json['avatar'] as String?,
+    );
+
+Map<String, dynamic> _$$DoctorUserImplToJson(_$DoctorUserImpl instance) =>
+    <String, dynamic>{
+      '_id': instance.id,
+      'name': instance.name,
+      'phone': instance.phone,
+      'avatar': instance.avatar,
     };
 
 _$TimeSlotImpl _$$TimeSlotImplFromJson(Map<String, dynamic> json) =>

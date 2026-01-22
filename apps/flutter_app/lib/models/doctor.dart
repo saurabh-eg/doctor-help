@@ -6,26 +6,40 @@ part 'doctor.g.dart';
 @freezed
 class Doctor with _$Doctor {
   const factory Doctor({
-    required String id,
-    required String userId,
+    @JsonKey(name: '_id') required String id,
+    required DoctorUser userId,
     String? doctorId,
     required String specialization,
     required String qualification,
     required int experience,
     required double consultationFee,
-    required double rating,
-    required int reviewCount,
-    required bool isVerified,
+    @Default(0.0) double rating,
+    @Default(0) int reviewCount,
+    @Default(false) bool isVerified,
     DateTime? verifiedAt,
     String? rejectionReason,
     String? bio,
     String? photoUrl,
-    List<String>? documents,
-    required List<TimeSlot> availableSlots,
+    @Default([]) List<String> documents,
+    @Default([]) List<TimeSlot> availableSlots,
     DateTime? createdAt,
   }) = _Doctor;
 
   factory Doctor.fromJson(Map<String, dynamic> json) => _$DoctorFromJson(json);
+}
+
+/// Nested user info from populated userId
+@freezed
+class DoctorUser with _$DoctorUser {
+  const factory DoctorUser({
+    @JsonKey(name: '_id') required String id,
+    String? name,
+    String? phone,
+    String? avatar,
+  }) = _DoctorUser;
+
+  factory DoctorUser.fromJson(Map<String, dynamic> json) =>
+      _$DoctorUserFromJson(json);
 }
 
 @freezed

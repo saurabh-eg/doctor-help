@@ -29,15 +29,14 @@ class DoctorService {
       final queryString =
           params.entries.map((e) => '${e.key}=${e.value}').join('&');
 
-      final response = await _apiService.get(
+      final response = await _apiService.get<List<Doctor>>(
         '${ApiEndpoints.listDoctors}?$queryString',
         fromJson: (json) {
-          if (json is List) {
-            return (json as List)
-                .map((item) => Doctor.fromJson(item as Map<String, dynamic>))
-                .toList();
-          }
-          return <Doctor>[];
+          // Handle the wrapper format from API service
+          final list = json['data'] as List? ?? [];
+          return list
+              .map((item) => Doctor.fromJson(item as Map<String, dynamic>))
+              .toList();
         },
       );
       return response.data ?? <Doctor>[];
@@ -54,12 +53,11 @@ class DoctorService {
     return _apiService.get(
       '${ApiEndpoints.searchDoctors}?q=$query&limit=$limit',
       fromJson: (json) {
-        if (json is List) {
-          return (json as List)
-              .map((item) => Doctor.fromJson(item as Map<String, dynamic>))
-              .toList();
-        }
-        return [];
+        // Handle the wrapper format from API service
+        final list = json['data'] as List? ?? [];
+        return list
+            .map((item) => Doctor.fromJson(item as Map<String, dynamic>))
+            .toList();
       },
     );
   }

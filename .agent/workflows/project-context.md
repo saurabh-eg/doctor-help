@@ -1,71 +1,132 @@
 ---
-description: Project overview and context for Doctor Help monorepo
+description: Project architecture and technical context for Doctor Help
 ---
 
-# Doctor Help Project Context
+# Project Context - Doctor Help
 
-## Architecture
+## 🏗️ Architecture Overview
+
+**Type:** Healthcare Platform (Doctor-Patient Appointments)  
+**Mobile:** Flutter (Dart)  
+**Backend:** Express.js (Node.js)  
+**Database:** MongoDB  
+**Admin:** Vite + React
+
+## 📁 Project Structure
+
 ```
 doctor-help/
 ├── apps/
-│   ├── mobile-patient/    # Expo React Native app for patients
-│   └── web-admin/         # Vite React app (mobile UI mockup)
+│   ├── flutter_app/         # Flutter mobile app
+│   │   └── lib/
+│   │       ├── config/      # API config, constants
+│   │       ├── models/      # Freezed models
+│   │       ├── services/    # API services
+│   │       ├── providers/   # Riverpod state
+│   │       ├── screens/     # UI screens
+│   │       ├── widgets/     # Reusable widgets
+│   │       └── navigation/  # GoRouter
+│   └── admin-dashboard/     # Admin panel (Vite + React)
 ├── services/
-│   └── api-gateway/       # Elysia backend API
-└── packages/
-    └── ui/                # Shared UI components (planned)
+│   └── api/                 # Express.js backend
+│       ├── src/
+│       │   ├── modules/     # Auth, Users, Doctors, Appointments
+│       │   ├── middleware/  # Auth, validation, errors
+│       │   └── models/      # MongoDB schemas
+│       └── scripts/         # Seed scripts
+└── packages/                # Shared packages (admin only)
 ```
 
-## Tech Stack
+## 🔧 Tech Stack
 
-### Mobile Patient App
-- **Framework**: Expo SDK 52
-- **UI**: React Native + NativeWind (TailwindCSS)
-- **Navigation**: Expo Router (file-based)
-- **Icons**: @expo/vector-icons (Ionicons)
+### Flutter App
+- **State Management:** Riverpod
+- **Navigation:** GoRouter
+- **Models:** Freezed + json_serializable
+- **HTTP:** http package with custom ApiService
+- **Storage:** SharedPreferences
 
-### Web Admin (UI Prototype)
-- **Framework**: Vite + React 19
-- **UI**: TailwindCSS v4
-- **Navigation**: React Router DOM
-- **Icons**: Material Symbols
-- **AI**: Google Gemini SDK (for AI Assistant)
+### Backend API
+- **Framework:** Express.js
+- **Database:** MongoDB with Mongoose
+- **Auth:** JWT with jose
+- **Validation:** Zod
+- **Security:** Helmet, express-rate-limit
+- **Upload:** Cloudinary
 
-### API Gateway
-- **Runtime**: Bun
-- **Framework**: Elysia
-- **Database**: MongoDB (planned)
+## 🔌 API Base URLs
 
-## Design System
+| Environment | URL |
+|-------------|-----|
+| Android Emulator | `http://10.0.2.2:3001/api` |
+| iOS Simulator | `http://localhost:3001/api` |
+| Physical Device | `http://<your-ip>:3001/api` |
+| Production | TBD |
 
-### Colors
-- Primary: `#197fe6` (blue)
-- Secondary: `#34d399` (emerald)
-- Accent: `#f9f506` (yellow)
-- Background Light: `#F8FAFC`
-- Background Dark: `#0F172A`
+## 📱 App Screens
 
-### Typography
-- Display: Lexend, Spline Sans
-- Body: Inter
+### Auth Flow
+1. Login (phone input)
+2. Verify OTP
+3. Role Selection (Patient/Doctor)
+4. Profile Setup
 
-## Current State
+### Patient Screens
+- Home (doctor list, specializations)
+- Search (filter doctors)
+- Doctor Profile (details, booking)
+- Book Appointment
+- My Bookings
+- Profile
 
-### Mobile App
-- Auth flow complete (login + OTP)
-- Tab navigation scaffolded
-- Screens need content (currently placeholders)
+### Doctor Screens
+- Dashboard (stats, today's appointments)
+- Appointments (manage, filter)
+- Patients (from appointments)
+- Earnings
+- Profile
 
-### Web Admin
-- Complete UI prototype with 22+ screens
-- Use as reference for mobile implementation
+## 🔐 Authentication Flow
 
-### API
-- Basic health endpoint only
-- Needs full implementation
+1. User enters phone number
+2. Backend sends OTP (console in dev)
+3. User enters OTP
+4. Backend returns JWT + user data
+5. If new user → Role selection → Profile setup
+6. If existing → Navigate to role-based home
 
-## Key Files to Know
-- `apps/mobile-patient/app/_layout.tsx` - Root navigation
-- `apps/mobile-patient/app/(tabs)/_layout.tsx` - Tab config
-- `apps/web-admin/src/App.tsx` - All routes defined
-- `apps/web-admin/src/index.css` - Design tokens
+## 📊 Key Models
+
+### User
+- id, phone, name, email, role, isPhoneVerified, isProfileComplete
+
+### Doctor
+- id, userId, specialization, qualification, experience, consultationFee, rating, availability
+
+### Appointment
+- id, patientId, doctorId, date, timeSlot, status, type
+
+## 🎨 Design System
+
+| Token | Value |
+|-------|-------|
+| Primary | #2563eb |
+| Secondary | #34d399 |
+| Accent | #f9f506 |
+| Fonts | Inter, Lexend |
+
+## 🚀 Quick Commands
+
+```bash
+# Backend
+cd services/api && npm run dev
+
+# Flutter
+cd apps/flutter_app && flutter run
+
+# Seed data
+cd services/api && npm run seed:doctors
+
+# Analyze Flutter
+cd apps/flutter_app && flutter analyze
+```
