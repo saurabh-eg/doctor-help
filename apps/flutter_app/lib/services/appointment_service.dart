@@ -24,7 +24,8 @@ class AppointmentService {
       body: {
         'patientId': patientId,
         'doctorId': doctorId,
-        'date': date.toIso8601String(),
+        'date':
+            '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
         'timeSlot': {
           'start': startTime,
           'end': endTime,
@@ -111,31 +112,25 @@ class AppointmentService {
     );
   }
 
-  /// Book appointment (simplified method for patient booking)
-  /// Book appointment with error details
+  /// Book appointment (delegates to createAppointment)
   Future<ApiResponse<Appointment>> bookAppointment({
     required String doctorId,
     required String patientId,
     required DateTime date,
     required String time,
+    required String endTime,
     required String reason,
+    String type = 'clinic',
     String? notes,
   }) async {
-    return _apiService.post(
-      ApiEndpoints.createAppointment,
-      body: {
-        'patientId': patientId,
-        'doctorId': doctorId,
-        'date': date.toIso8601String(),
-        'timeSlot': {
-          'start': time,
-          'end': time,
-        },
-        'type': 'clinic',
-        'symptoms': reason,
-        if (notes != null) 'notes': notes,
-      },
-      fromJson: (json) => Appointment.fromJson(json),
+    return createAppointment(
+      patientId: patientId,
+      doctorId: doctorId,
+      date: date,
+      startTime: time,
+      endTime: endTime,
+      type: type,
+      symptoms: reason,
     );
   }
 

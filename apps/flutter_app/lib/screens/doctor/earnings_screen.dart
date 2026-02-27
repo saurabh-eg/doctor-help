@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../config/constants.dart';
+import '../../models/appointment.dart';
 import '../../widgets/doctor_bottom_nav.dart';
 import '../../providers/doctor_provider.dart';
 
@@ -169,15 +170,7 @@ class _DoctorEarningsScreenState extends ConsumerState<DoctorEarningsScreen> {
                           UIConstants.radiusMedium,
                         ),
                       ),
-                      child: Center(
-                        child: Text(
-                          'Chart Placeholder\n(Implement with charts package)',
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ),
+                      child: _buildEarningsChart(theme, doctorState),
                     ),
                   ],
                 ),
@@ -223,10 +216,11 @@ class _DoctorEarningsScreenState extends ConsumerState<DoctorEarningsScreen> {
                         ),
                       )
                     else
-                      ...doctorState.appointments
-                          .where((a) =>
-                              a.paymentStatus == AppConstants.paymentPaid)
-                          .take(5)
+                      ..._filterByPeriod(doctorState.appointments
+                              .where((a) =>
+                                  a.paymentStatus == AppConstants.paymentPaid)
+                              .toList())
+                          .take(10)
                           .map(
                             (transaction) => Padding(
                               padding: const EdgeInsets.only(
@@ -288,6 +282,111 @@ class _DoctorEarningsScreenState extends ConsumerState<DoctorEarningsScreen> {
       bottomNavigationBar: const DoctorBottomNav(
         currentRoute: '/doctor/earnings',
       ),
+    );
+  }
+
+  /// Filter appointments by the selected period
+  List<DoctorAppointment> _filterByPeriod(List<DoctorAppointment> paid) {
+    final now = DateTime.now();
+    DateTime cutoff;
+    switch (_selectedPeriod) {
+      case 'day':
+        cutoff = DateTime(now.year, now.month, now.day);
+        break;
+      case 'week':
+        cutoff = now.subtract(const Duration(days: 7));
+        break;
+      case 'year':
+        cutoff = DateTime(now.year, 1, 1);
+        break;
+      case 'month':
+      default:
+        cutoff = DateTime(now.year, now.month, 1);
+    }
+    return paid.where((a) => a.date.isAfter(cutoff)).toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
+  }
+
+  /// Build a simple bar chart from appointment earnings data
+  Widget _buildEarningsChart(ThemeData theme, DoctorState doctorState) {
+    final paid = doctorState.appointments
+        .where((a) => a.paymentStatus == AppConstants.paymentPaid)
+        .toList();
+
+    if (paid.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.bar_chart, size: 48, color: Colors.grey[400]),
+            const SizedBox(height: 8),
+            Text(
+              'No earnings data yet',
+              style:
+                  theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Group by month (last 6 months)
+    final now = DateTime.now();
+    final months = List.generate(6, (i) {
+      final m = DateTime(now.year, now.month - (5 - i), 1);
+      return m;
+    });
+
+    final Map<String, double> monthlyEarnings = {};
+    for (final m in months) {
+      final key = DateFormat('MMM').format(m);
+      monthlyEarnings[key] = 0;
+    }
+    for (final a in paid) {
+      final key = DateFormat('MMM').format(a.date);
+      if (monthlyEarnings.containsKey(key)) {
+        monthlyEarnings[key] = monthlyEarnings[key]! + a.amount;
+      }
+    }
+
+    final maxVal =
+        monthlyEarnings.values.fold<double>(0, (a, b) => a > b ? a : b);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: monthlyEarnings.entries.map((e) {
+        final fraction = maxVal > 0 ? e.value / maxVal : 0.0;
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  '₹${e.value.toInt()}',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: Colors.grey[600],
+                    fontSize: 9,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  height: (120 * fraction).clamp(4, 120),
+                  decoration: BoxDecoration(
+                    color: theme.primaryColor.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  e.key,
+                  style: theme.textTheme.labelSmall?.copyWith(fontSize: 10),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }

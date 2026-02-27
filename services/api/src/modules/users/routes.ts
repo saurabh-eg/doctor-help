@@ -11,7 +11,7 @@ const updateUserSchema = z.object({
         name: z.string().optional(),
         email: z.string().email().optional(),
         avatar: z.string().optional(),
-        role: z.enum(['patient', 'doctor']).optional()
+        address: z.string().optional()
     })
 });
 

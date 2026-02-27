@@ -9,7 +9,7 @@ export interface IAppointment extends Document {
         end: string;
     };
     type: 'video' | 'clinic' | 'home';
-    status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
+    status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'no-show';
     symptoms?: string;
     notes?: string;
     prescription?: string;
@@ -31,7 +31,7 @@ const AppointmentSchema = new Schema<IAppointment>({
     type: { type: String, enum: ['video', 'clinic', 'home'], required: true },
     status: {
         type: String,
-        enum: ['pending', 'confirmed', 'in-progress', 'completed', 'cancelled'],
+        enum: ['pending', 'confirmed', 'in-progress', 'completed', 'cancelled', 'no-show'],
         default: 'pending'
     },
     symptoms: { type: String },
@@ -54,5 +54,14 @@ AppointmentSchema.index({ status: 1, createdAt: -1 }); // Admin panel: filter by
 AppointmentSchema.index({ type: 1, status: 1 }); // Admin panel: filter by type
 AppointmentSchema.index({ paymentStatus: 1, createdAt: -1 }); // Revenue stats
 AppointmentSchema.index({ createdAt: -1 }); // Dashboard recent appointments
+
+// Prevent double-booking: unique compound index on doctor + date + slot start (excluding cancelled/no-show)
+AppointmentSchema.index(
+    { doctorId: 1, date: 1, 'timeSlot.start': 1 },
+    {
+        unique: true,
+        partialFilterExpression: { status: { $nin: ['cancelled', 'no-show'] } }
+    }
+);
 
 export const Appointment = mongoose.model<IAppointment>('Appointment', AppointmentSchema);

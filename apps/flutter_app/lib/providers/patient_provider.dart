@@ -22,12 +22,15 @@ class PatientState {
     this.stats = const PatientStats(),
   });
 
+  // Sentinel object to distinguish "not provided" from "set to null"
+  static const _sentinel = Object();
+
   PatientState copyWith({
     List<Appointment>? appointments,
     List<Appointment>? upcomingAppointments,
     List<Appointment>? pastAppointments,
     bool? isLoading,
-    String? error,
+    Object? error = _sentinel,
     PatientStats? stats,
   }) {
     return PatientState(
@@ -35,7 +38,7 @@ class PatientState {
       upcomingAppointments: upcomingAppointments ?? this.upcomingAppointments,
       pastAppointments: pastAppointments ?? this.pastAppointments,
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
+      error: identical(error, _sentinel) ? this.error : error as String?,
       stats: stats ?? this.stats,
     );
   }

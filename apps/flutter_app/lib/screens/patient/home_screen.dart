@@ -6,6 +6,7 @@ import '../../navigation/app_router.dart';
 import '../../config/constants.dart';
 import '../../widgets/doctor_card.dart';
 import '../../widgets/patient_bottom_nav.dart';
+import '../../widgets/app_logo.dart';
 import '../../models/doctor.dart';
 
 class PatientHomeScreen extends ConsumerStatefulWidget {
@@ -18,149 +19,71 @@ class PatientHomeScreen extends ConsumerStatefulWidget {
 class _PatientHomeScreenState extends ConsumerState<PatientHomeScreen> {
   String selectedSpecialization = 'All';
   List<String> availableSpecializations = [];
+  Future<List<Doctor>>? _doctorsFuture;
 
-  @override
-  void initState() {
-    super.initState();
-    // Fetch doctors on init
-    Future.microtask(() {
-      ref.read(doctorServiceProvider).listDoctors();
-    });
+  Future<List<Doctor>> _getDoctorsFuture() {
+    _doctorsFuture ??= ref.read(doctorServiceProvider).listDoctors();
+    return _doctorsFuture!;
   }
 
   @override
   Widget build(BuildContext context) {
-    final doctorService = ref.read(doctorServiceProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header with greeting and search
-              Container(
-                padding: const EdgeInsets.all(UIConstants.spacingLarge),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      theme.primaryColor,
-                      theme.primaryColor.withOpacity(0.8),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+        child: RefreshIndicator(
+          onRefresh: () async {
+            setState(() {
+              _doctorsFuture = null; // Reset cache to force re-fetch
+              availableSpecializations = [];
+            });
+            await _getDoctorsFuture();
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with greeting and search
+                Container(
+                  padding: const EdgeInsets.all(UIConstants.spacingLarge),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.primaryColor,
+                        theme.primaryColor.withOpacity(0.8),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                   ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Welcome Back',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: UIConstants.spacingSmall),
-                    Text(
-                      'Find and book your doctor',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.white70,
-                      ),
-                    ),
-                    const SizedBox(height: UIConstants.spacingLarge),
-                    // Search Bar
-                    GestureDetector(
-                      onTap: () => context.push(AppRoutes.patientSearch),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: UIConstants.spacingMedium,
-                          vertical: UIConstants.spacingSmall,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(
-                            UIConstants.radiusMedium,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.search,
-                              color: Colors.grey,
-                            ),
-                            const SizedBox(width: UIConstants.spacingMedium),
-                            Text(
-                              'Search doctors, specialization...',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Specializations - Dynamic from API
-              FutureBuilder<List<Doctor>>(
-                future: doctorService.listDoctors(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    final doctors = snapshot.data ?? [];
-                    // Extract unique specializations
-                    final specs = doctors
-                        .map((d) => d.specialization)
-                        .toSet()
-                        .toList()
-                      ..sort();
-
-                    if (availableSpecializations.isEmpty && specs.isNotEmpty) {
-                      // Update available specializations on first load
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        setState(() {
-                          availableSpecializations = specs;
-                        });
-                      });
-                    }
-
-                    return Padding(
-                      padding: const EdgeInsets.all(UIConstants.spacingLarge),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Text(
-                            'Specializations',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                          const AppLogo(
+                            size: 40,
+                            showText: false,
                           ),
-                          const SizedBox(height: UIConstants.spacingMedium),
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
+                          const SizedBox(width: UIConstants.spacingMedium),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _SpecializationChip(
-                                  label: 'All',
-                                  isSelected: selectedSpecialization == 'All',
-                                  onTap: () {
-                                    setState(() {
-                                      selectedSpecialization = 'All';
-                                    });
-                                  },
+                                Text(
+                                  'Welcome Back',
+                                  style:
+                                      theme.textTheme.headlineSmall?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                                ...specs.map(
-                                  (spec) => _SpecializationChip(
-                                    label: spec,
-                                    isSelected: selectedSpecialization == spec,
-                                    onTap: () {
-                                      setState(() {
-                                        selectedSpecialization = spec;
-                                      });
-                                    },
+                                Text(
+                                  'Find and book your doctor',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: Colors.white70,
                                   ),
                                 ),
                               ],
@@ -168,103 +91,208 @@ class _PatientHomeScreenState extends ConsumerState<PatientHomeScreen> {
                           ),
                         ],
                       ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
-
-              // Featured/Top Rated Doctors
-              Padding(
-                padding: const EdgeInsets.all(UIConstants.spacingLarge),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Top Rated Doctors',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
+                      const SizedBox(height: UIConstants.spacingSmall),
+                      const SizedBox(height: UIConstants.spacingLarge),
+                      // Search Bar
+                      GestureDetector(
+                        onTap: () => context.push(AppRoutes.patientSearch),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: UIConstants.spacingMedium,
+                            vertical: UIConstants.spacingSmall,
                           ),
-                        ),
-                        GestureDetector(
-                          onTap: () => context.push(AppRoutes.patientSearch),
-                          child: Text(
-                            'View All',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.primaryColor,
-                              fontWeight: FontWeight.w600,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(
+                              UIConstants.radiusMedium,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: UIConstants.spacingMedium),
-                    FutureBuilder<List<Doctor>>(
-                      future: doctorService.listDoctors(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-
-                        if (snapshot.hasError) {
-                          return Center(
-                            child: Text(
-                              'Error loading doctors',
-                              style: theme.textTheme.bodyMedium,
-                            ),
-                          );
-                        }
-
-                        final doctors = snapshot.data ?? <Doctor>[];
-                        if (doctors.isEmpty) {
-                          return Center(
-                            child: Text(
-                              'No doctors found',
-                              style: theme.textTheme.bodyMedium?.copyWith(
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.search,
                                 color: Colors.grey,
                               ),
-                            ),
-                          );
-                        }
-
-                        // Filter by specialization if selected
-                        final filteredDoctors = selectedSpecialization == 'All'
-                            ? doctors
-                            : doctors
-                                .where((d) =>
-                                    d.specialization == selectedSpecialization)
-                                .toList();
-
-                        return ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: filteredDoctors.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: UIConstants.spacingMedium),
-                          itemBuilder: (context, index) {
-                            final doctor = filteredDoctors[index];
-                            return DoctorCard(
-                              doctor: doctor,
-                              onTap: () {
-                                context.push(
-                                  '${AppRoutes.doctorViewProfile}?id=${doctor.id}',
-                                );
-                              },
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ],
+                              const SizedBox(width: UIConstants.spacingMedium),
+                              Text(
+                                'Search doctors, specialization...',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+
+                // Specializations - Dynamic from API
+                FutureBuilder<List<Doctor>>(
+                  future: _getDoctorsFuture(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      final doctors = snapshot.data ?? [];
+                      // Extract unique specializations
+                      final specs = doctors
+                          .map((d) => d.specialization)
+                          .toSet()
+                          .toList()
+                        ..sort();
+
+                      if (availableSpecializations.isEmpty &&
+                          specs.isNotEmpty) {
+                        // Update available specializations on first load
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          setState(() {
+                            availableSpecializations = specs;
+                          });
+                        });
+                      }
+
+                      return Padding(
+                        padding: const EdgeInsets.all(UIConstants.spacingLarge),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Specializations',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: UIConstants.spacingMedium),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  _SpecializationChip(
+                                    label: 'All',
+                                    isSelected: selectedSpecialization == 'All',
+                                    onTap: () {
+                                      setState(() {
+                                        selectedSpecialization = 'All';
+                                      });
+                                    },
+                                  ),
+                                  ...specs.map(
+                                    (spec) => _SpecializationChip(
+                                      label: spec,
+                                      isSelected:
+                                          selectedSpecialization == spec,
+                                      onTap: () {
+                                        setState(() {
+                                          selectedSpecialization = spec;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+
+                // Featured/Top Rated Doctors
+                Padding(
+                  padding: const EdgeInsets.all(UIConstants.spacingLarge),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Top Rated Doctors',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => context.push(AppRoutes.patientSearch),
+                            child: Text(
+                              'View All',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.primaryColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: UIConstants.spacingMedium),
+                      FutureBuilder<List<Doctor>>(
+                        future: _getDoctorsFuture(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+
+                          if (snapshot.hasError) {
+                            return Center(
+                              child: Text(
+                                'Error loading doctors',
+                                style: theme.textTheme.bodyMedium,
+                              ),
+                            );
+                          }
+
+                          final doctors = snapshot.data ?? <Doctor>[];
+                          if (doctors.isEmpty) {
+                            return Center(
+                              child: Text(
+                                'No doctors found',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            );
+                          }
+
+                          // Filter by specialization if selected
+                          final filteredDoctors =
+                              selectedSpecialization == 'All'
+                                  ? doctors
+                                  : doctors
+                                      .where((d) =>
+                                          d.specialization ==
+                                          selectedSpecialization)
+                                      .toList();
+
+                          return ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: filteredDoctors.length,
+                            separatorBuilder: (_, __) => const SizedBox(
+                                height: UIConstants.spacingMedium),
+                            itemBuilder: (context, index) {
+                              final doctor = filteredDoctors[index];
+                              return DoctorCard(
+                                doctor: doctor,
+                                onTap: () {
+                                  context.push(
+                                    '${AppRoutes.doctorViewProfile}?id=${doctor.id}',
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -210,9 +210,11 @@ class _DoctorAppointmentsScreenState
           ),
         );
       } else {
+        final errorMsg =
+            ref.read(doctorProvider).error ?? 'Failed to update appointment';
         messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Failed to update appointment'),
+          SnackBar(
+            content: Text(errorMsg),
             backgroundColor: Colors.red,
           ),
         );

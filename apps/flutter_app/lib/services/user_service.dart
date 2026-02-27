@@ -64,4 +64,14 @@ class UserService {
       fromJson: (json) => User.fromJson(json),
     );
   }
+
+  /// Upload avatar photo and return the Cloudinary URL
+  Future<ApiResponse<String>> uploadAvatar(String filePath) {
+    return _apiService.uploadFile(
+      ApiEndpoints.uploadAvatar,
+      filePath: filePath,
+      fieldName: 'photo',
+      fromJson: (json) => json['url']?.toString() ?? '',
+    );
+  }
 }

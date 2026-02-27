@@ -7,6 +7,7 @@ export interface IDoctor extends Document {
     qualification: string;
     experience: number;
     consultationFee: number;
+    licenseNumber?: string;
     rating: number;
     reviewCount: number;
     isVerified: boolean;
@@ -31,6 +32,7 @@ const DoctorSchema = new Schema<IDoctor>({
     qualification: { type: String, required: true },
     experience: { type: Number, required: true },
     consultationFee: { type: Number, required: true },
+    licenseNumber: { type: String },
     rating: { type: Number, default: 0 },
     reviewCount: { type: Number, default: 0 },
     isVerified: { type: Boolean, default: false },

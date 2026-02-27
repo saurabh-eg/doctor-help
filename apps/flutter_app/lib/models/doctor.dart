@@ -4,16 +4,21 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'doctor.freezed.dart';
 part 'doctor.g.dart';
 
+// Helpers to coerce ids to string regardless of backend type
+String? _stringFromAny(dynamic value) => value?.toString();
+dynamic _stringToAny(String? value) => value;
+
 @freezed
 class Doctor with _$Doctor {
   const factory Doctor({
     @JsonKey(name: '_id') required String id,
     required DoctorUser userId,
-    String? doctorId,
+    @JsonKey(fromJson: _stringFromAny, toJson: _stringToAny) String? doctorId,
     required String specialization,
     required String qualification,
     required int experience,
     required double consultationFee,
+    String? licenseNumber,
     @Default(0.0) double rating,
     @Default(0) int reviewCount,
     @Default(false) bool isVerified,

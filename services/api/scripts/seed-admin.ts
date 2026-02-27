@@ -8,7 +8,7 @@ import { User } from '../src/models/user.model';
 
 dotenv.config();
 
-const ADMIN_PHONE = process.env.ADMIN_PHONE || '9999999999';
+const ADMIN_PHONE = process.env.ADMIN_PHONE || '8603342657';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'Super Admin';
 
 async function seedAdmin() {

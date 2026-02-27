@@ -24,12 +24,15 @@ class DoctorState {
     this.stats = const DoctorStats(),
   });
 
+  // Sentinel object to distinguish "not provided" from "set to null"
+  static const _sentinel = Object();
+
   DoctorState copyWith({
     Doctor? profile,
     List<DoctorAppointment>? appointments,
     List<DoctorAppointment>? todayAppointments,
     bool? isLoading,
-    String? error,
+    Object? error = _sentinel,
     DoctorStats? stats,
   }) {
     return DoctorState(
@@ -37,7 +40,7 @@ class DoctorState {
       appointments: appointments ?? this.appointments,
       todayAppointments: todayAppointments ?? this.todayAppointments,
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
+      error: identical(error, _sentinel) ? this.error : error as String?,
       stats: stats ?? this.stats,
     );
   }
@@ -48,6 +51,7 @@ class DoctorStats {
   final int totalPatients;
   final int todayAppointments;
   final int pendingAppointments;
+  final int upcomingAppointments;
   final double totalEarnings;
   final double thisMonthEarnings;
   final int completedAppointments;
@@ -56,6 +60,7 @@ class DoctorStats {
     this.totalPatients = 0,
     this.todayAppointments = 0,
     this.pendingAppointments = 0,
+    this.upcomingAppointments = 0,
     this.totalEarnings = 0,
     this.thisMonthEarnings = 0,
     this.completedAppointments = 0,
@@ -65,6 +70,7 @@ class DoctorStats {
     int? totalPatients,
     int? todayAppointments,
     int? pendingAppointments,
+    int? upcomingAppointments,
     double? totalEarnings,
     double? thisMonthEarnings,
     int? completedAppointments,
@@ -73,6 +79,7 @@ class DoctorStats {
       totalPatients: totalPatients ?? this.totalPatients,
       todayAppointments: todayAppointments ?? this.todayAppointments,
       pendingAppointments: pendingAppointments ?? this.pendingAppointments,
+      upcomingAppointments: upcomingAppointments ?? this.upcomingAppointments,
       totalEarnings: totalEarnings ?? this.totalEarnings,
       thisMonthEarnings: thisMonthEarnings ?? this.thisMonthEarnings,
       completedAppointments:
@@ -145,9 +152,13 @@ class DoctorStateNotifier extends StateNotifier<DoctorState> {
 
         final pendingCount = appointments
                 .where((a) => a.status == AppConstants.appointmentPending)
-                .length +
-            appointments
-                .where((a) => a.status == AppConstants.appointmentConfirmed)
+                .length;
+
+        final upcomingCount = appointments
+                .where((a) =>
+                    a.status == AppConstants.appointmentPending ||
+                    a.status == AppConstants.appointmentConfirmed ||
+                    a.status == AppConstants.appointmentInProgress)
                 .length;
 
         final completed = appointments
@@ -167,6 +178,7 @@ class DoctorStateNotifier extends StateNotifier<DoctorState> {
           totalPatients: uniquePatients.length,
           todayAppointments: todayAppointments.length,
           pendingAppointments: pendingCount,
+          upcomingAppointments: upcomingCount,
           totalEarnings: totalEarnings,
           thisMonthEarnings: thisMonthEarnings,
           completedAppointments: completed,

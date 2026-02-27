@@ -11,6 +11,21 @@ export const errorHandler = (err: any, req: Request, res: Response, next: NextFu
         });
     }
 
+    if (err.name === 'CastError') {
+        return res.status(400).json({
+            success: false,
+            error: 'Invalid ID format'
+        });
+    }
+
+    // MongoDB duplicate key error
+    if (err.code === 11000) {
+        return res.status(409).json({
+            success: false,
+            error: 'Duplicate entry'
+        });
+    }
+
     if (err.status) {
         return res.status(err.status).json({
             success: false,

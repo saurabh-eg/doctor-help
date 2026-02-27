@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/providers.dart';
@@ -18,17 +19,31 @@ class PatientSearchScreen extends ConsumerStatefulWidget {
 
 class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
   final _searchController = TextEditingController();
+  Timer? _debounceTimer;
   String? selectedSpecialization;
   String? selectedSortBy = 'rating';
   double? minFee;
   double? maxFee;
   double minRating = 0;
   List<String> availableSpecializations = [];
+  Future<List<Doctor>>? _doctorsFuture;
 
   @override
   void initState() {
     super.initState();
     _loadSpecializations();
+    _refreshDoctors();
+  }
+
+  void _refreshDoctors() {
+    final doctorService = ref.read(doctorServiceProvider);
+    final query = _searchController.text.trim();
+    if (query.length >= 2) {
+      _doctorsFuture =
+          doctorService.searchDoctors(query).then((r) => r.data ?? <Doctor>[]);
+    } else {
+      _doctorsFuture = doctorService.listDoctors();
+    }
   }
 
   Future<void> _loadSpecializations() async {
@@ -53,23 +68,14 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final doctorService = ref.read(doctorServiceProvider);
     final theme = Theme.of(context);
-
-    Future<List<Doctor>> loadDoctors() async {
-      final query = _searchController.text.trim();
-      if (query.length >= 2) {
-        final response = await doctorService.searchDoctors(query);
-        return response.data ?? <Doctor>[];
-      }
-      return doctorService.listDoctors();
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -87,7 +93,15 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
                   // Search Bar
                   TextField(
                     controller: _searchController,
-                    onChanged: (_) => setState(() {}),
+                    onChanged: (_) {
+                      _debounceTimer?.cancel();
+                      _debounceTimer =
+                          Timer(const Duration(milliseconds: 400), () {
+                        setState(() {
+                          _refreshDoctors();
+                        });
+                      });
+                    },
                     decoration: InputDecoration(
                       hintText: 'Search by name, specialization...',
                       prefixIcon: const Icon(Icons.search),
@@ -96,7 +110,9 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
                               icon: const Icon(Icons.clear),
                               onPressed: () {
                                 _searchController.clear();
-                                setState(() {});
+                                setState(() {
+                                  _refreshDoctors();
+                                });
                               },
                             )
                           : null,
@@ -179,7 +195,7 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
             // Doctors List
             Expanded(
               child: FutureBuilder<List<Doctor>>(
-                future: loadDoctors(),
+                future: _doctorsFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
@@ -209,16 +225,16 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
 
                   List<Doctor> doctors = snapshot.data ?? [];
 
-                    // Apply client-side search by name or specialization
-                    if (_searchController.text.isNotEmpty) {
+                  // Apply client-side search by name or specialization
+                  if (_searchController.text.isNotEmpty) {
                     final query = _searchController.text.toLowerCase();
                     doctors = doctors
-                      .where((d) =>
-                        (d.userId.name?.toLowerCase().contains(query) ??
-                          false) ||
-                        d.specialization.toLowerCase().contains(query))
-                      .toList();
-                    }
+                        .where((d) =>
+                            (d.userId.name?.toLowerCase().contains(query) ??
+                                false) ||
+                            d.specialization.toLowerCase().contains(query))
+                        .toList();
+                  }
 
                   // Apply specialization filter
                   if (selectedSpecialization != null) {

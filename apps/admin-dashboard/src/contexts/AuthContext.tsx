@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi } from '../api/client';
+import { api, authApi } from '../api/client';
 import { User } from '../types';
 
 interface AuthContextType {
@@ -20,27 +20,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Check for stored auth
-        const storedToken = localStorage.getItem('admin_token');
-        const storedUser = localStorage.getItem('admin_user');
-        
-        if (storedToken && storedUser) {
+        const verifyAuth = async () => {
+            const storedToken = localStorage.getItem('admin_token');
+            if (!storedToken) {
+                setIsLoading(false);
+                return;
+            }
+
             try {
-                const parsedUser = JSON.parse(storedUser);
-                if (parsedUser.role === 'admin') {
-                    setToken(storedToken);
-                    setUser(parsedUser);
-                } else {
-                    // Not an admin, clear storage
+                // Re-verify token with backend instead of trusting localStorage
+                const response = await api.get('/auth/me', {
+                    headers: { Authorization: `Bearer ${storedToken}` }
+                });
+                const freshUser = response.data.data;
+
+                if (freshUser.role !== 'admin') {
                     localStorage.removeItem('admin_token');
                     localStorage.removeItem('admin_user');
+                    setIsLoading(false);
+                    return;
                 }
+
+                setToken(storedToken);
+                setUser(freshUser);
+                // Update localStorage with fresh data
+                localStorage.setItem('admin_user', JSON.stringify(freshUser));
             } catch {
+                // Token invalid or expired — clear stored auth
                 localStorage.removeItem('admin_token');
                 localStorage.removeItem('admin_user');
             }
-        }
-        setIsLoading(false);
+            setIsLoading(false);
+        };
+
+        verifyAuth();
     }, []);
 
     const sendOtp = async (phone: string) => {

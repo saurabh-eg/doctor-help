@@ -22,18 +22,21 @@ class AuthState {
     this.isNewUser = false,
   });
 
+  // Sentinel object to distinguish "not provided" from "set to null"
+  static const _sentinel = Object();
+
   AuthState copyWith({
     User? user,
     bool? isLoading,
     bool? isAuthenticated,
-    String? error,
+    Object? error = _sentinel,
     bool? isNewUser,
   }) {
     return AuthState(
       user: user ?? this.user,
       isLoading: isLoading ?? this.isLoading,
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
-      error: error ?? this.error,
+      error: identical(error, _sentinel) ? this.error : error as String?,
       isNewUser: isNewUser ?? this.isNewUser,
     );
   }
@@ -52,7 +55,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
 
   /// Check if user is already logged in
   Future<void> _checkStoredAuth() async {
-    final token = StorageService.getString(AppConstants.storageKeyToken);
+    final token = await StorageService.getSecure(AppConstants.storageKeyToken);
     if (token != null) {
       await _apiService.setToken(token);
       try {
@@ -105,9 +108,8 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
         final token = response.data!.token;
         final user = response.data!.user;
 
-        // Save token
+        // Save token securely (apiService.setToken already writes to secure storage)
         await _apiService.setToken(token);
-        await StorageService.saveString(AppConstants.storageKeyToken, token);
 
         final isNewUser = user.isNewUser ?? false;
 
@@ -206,6 +208,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
   /// Logout
   Future<void> logout() async {
     await _apiService.clearToken();
+    await StorageService.clearSecure();
     await StorageService.clear();
     state = AuthState();
   }
@@ -213,5 +216,25 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
   /// Update user
   void updateUser(User user) {
     state = state.copyWith(user: user);
+  }
+
+  /// Refresh user data from backend
+  Future<bool> refreshUser() async {
+    if (state.user == null) return false;
+
+    try {
+      final response = await _authService.getMe();
+      if (response.success && response.data != null) {
+        state = state.copyWith(
+          user: response.data,
+          error: null,
+        );
+        return true;
+      }
+      return false;
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+      return false;
+    }
   }
 }

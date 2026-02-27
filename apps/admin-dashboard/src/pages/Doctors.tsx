@@ -101,6 +101,7 @@ export default function DoctorsPage() {
                         <div className="flex items-center gap-2">
                             <Filter size={16} className="text-slate-400" />
                             <select
+                                aria-label="Filter by status"
                                 value={statusFilter}
                                 onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
                                 className="h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"

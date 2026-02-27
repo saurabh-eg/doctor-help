@@ -39,7 +39,7 @@ export const appointmentFiltersSchema = z.object({
     query: z.object({
         page: z.string().optional().transform(val => parseInt(val || '1')),
         limit: z.string().optional().transform(val => parseInt(val || '20')),
-        status: z.enum(['pending', 'confirmed', 'in-progress', 'completed', 'cancelled', 'all']).optional().default('all'),
+        status: z.enum(['pending', 'confirmed', 'in-progress', 'completed', 'cancelled', 'no-show', 'all']).optional().default('all'),
         type: z.enum(['video', 'clinic', 'home', 'all']).optional().default('all'),
         dateFrom: z.string().optional(),
         dateTo: z.string().optional(),

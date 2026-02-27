@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// API Configuration
 class ApiConfig {
   // Base URL - Change based on environment
@@ -9,8 +11,8 @@ class ApiConfig {
   static const Duration timeout = Duration(seconds: 30);
   static const Duration connectTimeout = Duration(seconds: 15);
 
-  // Development mode - Shows debug info
-  static const bool debugMode = true;
+  // Development mode - Only true in debug builds
+  static const bool debugMode = kDebugMode;
 
   /// Get API URL from environment or use default
   static String getBaseUrl() {
@@ -60,8 +62,10 @@ class ApiEndpoints {
   static const String getDoctor = '/doctors/:id';
   static const String getDoctorByUserId = '/doctors/user/:userId';
   static const String registerDoctor = '/doctors/register';
+  static const String updateDoctorProfile = '/doctors/:id/profile';
   static const String updateAvailability = '/doctors/:id/availability';
-  static const String uploadProfile = '/doctors/upload-profile';
+  static const String uploadProfile = '/doctors/upload-photo';
+  static const String uploadAvatar = '/users/upload-avatar';
 
   // Appointments
   static const String createAppointment = '/appointments';
@@ -69,7 +73,8 @@ class ApiEndpoints {
       '/appointments/patient/:patientId';
   static const String getDoctorAppointments = '/appointments/doctor/:doctorId';
   static const String updateAppointmentStatus = '/appointments/:id/status';
-  static const String updateAppointmentTimeSlot = '/appointments/:id/time-slot';
+  static const String updateAppointmentTimeSlot =
+      '/appointments/:id/reschedule';
   // Cancel appointment (POST)
   static const String cancelAppointment = '/appointments/:id/cancel';
 

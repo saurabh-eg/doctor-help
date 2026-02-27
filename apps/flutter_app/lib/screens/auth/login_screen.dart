@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_text_field.dart';
+import '../../widgets/app_logo.dart';
 import '../../providers/providers.dart';
 import '../../utils/validators.dart';
 import '../../navigation/app_router.dart';
@@ -70,21 +71,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Center(
                 child: Column(
                   children: [
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withOpacity(0.1),
-                        borderRadius:
-                            BorderRadius.circular(UIConstants.radiusXLarge),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.local_hospital,
-                          size: 60,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      ),
+                    const AppLogo(
+                      size: 120,
+                      showText: false,
                     ),
                     const SizedBox(height: UIConstants.spacing2XLarge),
                     Text(
@@ -142,14 +131,83 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onPressed: _handleSendOtp,
               ),
               const SizedBox(height: UIConstants.spacingMedium),
-              // Terms
+              // Terms - Interactive Legal Links
               Center(
-                child: Text(
-                  'By continuing, you agree to our Terms & Privacy Policy',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  children: [
+                    Text(
+                      'By continuing, you agree to our ',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                    ),
+                    GestureDetector(
+                      onTap: () => context.push(AppRoutes.termsOfService),
+                      child: Text(
+                        'Terms',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).primaryColor,
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
+                            ),
                       ),
-                  textAlign: TextAlign.center,
+                    ),
+                    Text(
+                      ' & ',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                    ),
+                    GestureDetector(
+                      onTap: () => context.push(AppRoutes.privacyPolicy),
+                      child: Text(
+                        'Privacy Policy',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).primaryColor,
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: UIConstants.spacingMedium),
+              // Additional Legal Links
+              Center(
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  children: [
+                    GestureDetector(
+                      onTap: () => context.push(AppRoutes.refundPolicy),
+                      child: Text(
+                        'Refund Policy',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).primaryColor,
+                              fontWeight: FontWeight.w500,
+                              decoration: TextDecoration.underline,
+                            ),
+                      ),
+                    ),
+                    Text(
+                      ' • ',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                    ),
+                    GestureDetector(
+                      onTap: () => context.push(AppRoutes.contactUs),
+                      child: Text(
+                        'Contact Us',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).primaryColor,
+                              fontWeight: FontWeight.w500,
+                              decoration: TextDecoration.underline,
+                            ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

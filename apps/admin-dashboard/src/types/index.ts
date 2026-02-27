@@ -50,7 +50,7 @@ export interface Appointment {
         end: string;
     };
     type: 'video' | 'clinic' | 'home';
-    status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
+    status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled' | 'no-show';
     symptoms?: string;
     notes?: string;
     prescription?: string;

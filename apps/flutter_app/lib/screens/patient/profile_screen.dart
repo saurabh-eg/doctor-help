@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../providers/providers.dart';
 import '../../navigation/app_router.dart';
 import '../../config/constants.dart';
@@ -23,6 +24,7 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
   late TextEditingController _addressController;
   bool _isEditing = false;
   bool _isSaving = false;
+  bool _isUploadingAvatar = false;
 
   @override
   void initState() {
@@ -41,6 +43,78 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
     _phoneController.dispose();
     _addressController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    final picker = ImagePicker();
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Camera'),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Gallery'),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
+    final picked =
+        await picker.pickImage(source: source, maxWidth: 800, imageQuality: 85);
+    if (picked == null) return;
+
+    setState(() => _isUploadingAvatar = true);
+
+    try {
+      final userService = ref.read(userServiceProvider);
+      final response = await userService.uploadAvatar(picked.path);
+
+      if (!mounted) return;
+
+      if (response.success &&
+          response.data != null &&
+          response.data!.isNotEmpty) {
+        // Refresh user to get updated avatar
+        await ref.read(authStateProvider.notifier).refreshUser();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile photo updated'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response.error ?? 'Failed to upload photo'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingAvatar = false);
+      }
+    }
   }
 
   Future<void> _saveProfile() async {
@@ -176,19 +250,72 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
               Center(
                 child: Column(
                   children: [
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: theme.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(
-                          UIConstants.radiusLarge,
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.person,
-                        size: 60,
-                        color: theme.primaryColor,
+                    GestureDetector(
+                      onTap: _isUploadingAvatar ? null : _pickAndUploadAvatar,
+                      child: Stack(
+                        children: [
+                          Container(
+                            width: 120,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              color: theme.primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(
+                                UIConstants.radiusLarge,
+                              ),
+                              image: user?.avatar != null &&
+                                      user!.avatar!.isNotEmpty
+                                  ? DecorationImage(
+                                      image: NetworkImage(user.avatar!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
+                            ),
+                            child:
+                                user?.avatar != null && user!.avatar!.isNotEmpty
+                                    ? null
+                                    : Icon(
+                                        Icons.person,
+                                        size: 60,
+                                        color: theme.primaryColor,
+                                      ),
+                          ),
+                          if (_isUploadingAvatar)
+                            Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.4),
+                                borderRadius: BorderRadius.circular(
+                                  UIConstants.radiusLarge,
+                                ),
+                              ),
+                              child: const Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 3,
+                                ),
+                              ),
+                            )
+                          else
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: theme.primaryColor,
+                                  shape: BoxShape.circle,
+                                  border:
+                                      Border.all(color: Colors.white, width: 2),
+                                ),
+                                child: const Icon(
+                                  Icons.camera_alt,
+                                  size: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: UIConstants.spacingMedium),

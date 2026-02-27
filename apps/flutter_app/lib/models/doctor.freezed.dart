@@ -23,11 +23,13 @@ mixin _$Doctor {
   @JsonKey(name: '_id')
   String get id => throw _privateConstructorUsedError;
   DoctorUser get userId => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: _stringFromAny, toJson: _stringToAny)
   String? get doctorId => throw _privateConstructorUsedError;
   String get specialization => throw _privateConstructorUsedError;
   String get qualification => throw _privateConstructorUsedError;
   int get experience => throw _privateConstructorUsedError;
   double get consultationFee => throw _privateConstructorUsedError;
+  String? get licenseNumber => throw _privateConstructorUsedError;
   double get rating => throw _privateConstructorUsedError;
   int get reviewCount => throw _privateConstructorUsedError;
   bool get isVerified => throw _privateConstructorUsedError;
@@ -56,11 +58,12 @@ abstract class $DoctorCopyWith<$Res> {
   $Res call(
       {@JsonKey(name: '_id') String id,
       DoctorUser userId,
-      String? doctorId,
+      @JsonKey(fromJson: _stringFromAny, toJson: _stringToAny) String? doctorId,
       String specialization,
       String qualification,
       int experience,
       double consultationFee,
+      String? licenseNumber,
       double rating,
       int reviewCount,
       bool isVerified,
@@ -97,6 +100,7 @@ class _$DoctorCopyWithImpl<$Res, $Val extends Doctor>
     Object? qualification = null,
     Object? experience = null,
     Object? consultationFee = null,
+    Object? licenseNumber = freezed,
     Object? rating = null,
     Object? reviewCount = null,
     Object? isVerified = null,
@@ -137,6 +141,10 @@ class _$DoctorCopyWithImpl<$Res, $Val extends Doctor>
           ? _value.consultationFee
           : consultationFee // ignore: cast_nullable_to_non_nullable
               as double,
+      licenseNumber: freezed == licenseNumber
+          ? _value.licenseNumber
+          : licenseNumber // ignore: cast_nullable_to_non_nullable
+              as String?,
       rating: null == rating
           ? _value.rating
           : rating // ignore: cast_nullable_to_non_nullable
@@ -201,11 +209,12 @@ abstract class _$$DoctorImplCopyWith<$Res> implements $DoctorCopyWith<$Res> {
   $Res call(
       {@JsonKey(name: '_id') String id,
       DoctorUser userId,
-      String? doctorId,
+      @JsonKey(fromJson: _stringFromAny, toJson: _stringToAny) String? doctorId,
       String specialization,
       String qualification,
       int experience,
       double consultationFee,
+      String? licenseNumber,
       double rating,
       int reviewCount,
       bool isVerified,
@@ -241,6 +250,7 @@ class __$$DoctorImplCopyWithImpl<$Res>
     Object? qualification = null,
     Object? experience = null,
     Object? consultationFee = null,
+    Object? licenseNumber = freezed,
     Object? rating = null,
     Object? reviewCount = null,
     Object? isVerified = null,
@@ -281,6 +291,10 @@ class __$$DoctorImplCopyWithImpl<$Res>
           ? _value.consultationFee
           : consultationFee // ignore: cast_nullable_to_non_nullable
               as double,
+      licenseNumber: freezed == licenseNumber
+          ? _value.licenseNumber
+          : licenseNumber // ignore: cast_nullable_to_non_nullable
+              as String?,
       rating: null == rating
           ? _value.rating
           : rating // ignore: cast_nullable_to_non_nullable
@@ -331,11 +345,12 @@ class _$DoctorImpl implements _Doctor {
   const _$DoctorImpl(
       {@JsonKey(name: '_id') required this.id,
       required this.userId,
-      this.doctorId,
+      @JsonKey(fromJson: _stringFromAny, toJson: _stringToAny) this.doctorId,
       required this.specialization,
       required this.qualification,
       required this.experience,
       required this.consultationFee,
+      this.licenseNumber,
       this.rating = 0.0,
       this.reviewCount = 0,
       this.isVerified = false,
@@ -358,6 +373,7 @@ class _$DoctorImpl implements _Doctor {
   @override
   final DoctorUser userId;
   @override
+  @JsonKey(fromJson: _stringFromAny, toJson: _stringToAny)
   final String? doctorId;
   @override
   final String specialization;
@@ -367,6 +383,8 @@ class _$DoctorImpl implements _Doctor {
   final int experience;
   @override
   final double consultationFee;
+  @override
+  final String? licenseNumber;
   @override
   @JsonKey()
   final double rating;
@@ -407,7 +425,7 @@ class _$DoctorImpl implements _Doctor {
 
   @override
   String toString() {
-    return 'Doctor(id: $id, userId: $userId, doctorId: $doctorId, specialization: $specialization, qualification: $qualification, experience: $experience, consultationFee: $consultationFee, rating: $rating, reviewCount: $reviewCount, isVerified: $isVerified, verifiedAt: $verifiedAt, rejectionReason: $rejectionReason, bio: $bio, photoUrl: $photoUrl, documents: $documents, availableSlots: $availableSlots, createdAt: $createdAt)';
+    return 'Doctor(id: $id, userId: $userId, doctorId: $doctorId, specialization: $specialization, qualification: $qualification, experience: $experience, consultationFee: $consultationFee, licenseNumber: $licenseNumber, rating: $rating, reviewCount: $reviewCount, isVerified: $isVerified, verifiedAt: $verifiedAt, rejectionReason: $rejectionReason, bio: $bio, photoUrl: $photoUrl, documents: $documents, availableSlots: $availableSlots, createdAt: $createdAt)';
   }
 
   @override
@@ -427,6 +445,8 @@ class _$DoctorImpl implements _Doctor {
                 other.experience == experience) &&
             (identical(other.consultationFee, consultationFee) ||
                 other.consultationFee == consultationFee) &&
+            (identical(other.licenseNumber, licenseNumber) ||
+                other.licenseNumber == licenseNumber) &&
             (identical(other.rating, rating) || other.rating == rating) &&
             (identical(other.reviewCount, reviewCount) ||
                 other.reviewCount == reviewCount) &&
@@ -458,6 +478,7 @@ class _$DoctorImpl implements _Doctor {
       qualification,
       experience,
       consultationFee,
+      licenseNumber,
       rating,
       reviewCount,
       isVerified,
@@ -489,11 +510,13 @@ abstract class _Doctor implements Doctor {
   const factory _Doctor(
       {@JsonKey(name: '_id') required final String id,
       required final DoctorUser userId,
+      @JsonKey(fromJson: _stringFromAny, toJson: _stringToAny)
       final String? doctorId,
       required final String specialization,
       required final String qualification,
       required final int experience,
       required final double consultationFee,
+      final String? licenseNumber,
       final double rating,
       final int reviewCount,
       final bool isVerified,
@@ -513,6 +536,7 @@ abstract class _Doctor implements Doctor {
   @override
   DoctorUser get userId;
   @override
+  @JsonKey(fromJson: _stringFromAny, toJson: _stringToAny)
   String? get doctorId;
   @override
   String get specialization;
@@ -522,6 +546,8 @@ abstract class _Doctor implements Doctor {
   int get experience;
   @override
   double get consultationFee;
+  @override
+  String? get licenseNumber;
   @override
   double get rating;
   @override

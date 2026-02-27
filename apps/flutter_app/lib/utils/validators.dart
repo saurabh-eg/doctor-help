@@ -56,17 +56,6 @@ class Validators {
     return null;
   }
 
-  /// Validate password
-  static String? validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Password is required';
-    }
-    if (value.length < 8) {
-      return 'Password must be at least 8 characters';
-    }
-    return null;
-  }
-
   /// Validate field is not empty
   static String? validateRequired(String? value, String fieldName) {
     if (value == null || value.trim().isEmpty) {

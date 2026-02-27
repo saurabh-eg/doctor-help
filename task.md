@@ -10,6 +10,7 @@
 ## ✅ Completed Features
 
 ### Authentication
+
 - [x] OTP Login with phone number
 - [x] OTP Verification screen
 - [x] Role Selection (Patient/Doctor)
@@ -18,6 +19,7 @@
 - [x] Logout functionality
 
 ### Patient Features
+
 - [x] Home Screen with doctor list
 - [x] Search Doctors by specialization
 - [x] Doctor Profile view
@@ -27,6 +29,7 @@
 - [x] Cancel Appointment
 
 ### Doctor Features
+
 - [x] Dashboard with stats
 - [x] Appointments list with filters
 - [x] Patients list (from appointments)
@@ -34,6 +37,7 @@
 - [x] Doctor Profile view
 
 ### Backend API
+
 - [x] Auth endpoints (OTP send/verify)
 - [x] User management endpoints
 - [x] Doctor CRUD endpoints
@@ -43,6 +47,7 @@
 - [x] Security (Helmet, Rate Limiting, JWT)
 
 ### Infrastructure
+
 - [x] Flutter app with Riverpod state management
 - [x] Freezed models with JSON serialization
 - [x] GoRouter navigation
@@ -54,11 +59,13 @@
 ## 🔄 In Progress
 
 ### Doctor Verification Flow
+
 - [ ] Document upload screen
 - [ ] Verification status tracking
 - [ ] Admin verification approval
 
 ### API Integration Polish
+
 - [ ] Verify all list endpoints return data correctly
 - [ ] Test complete booking flow end-to-end
 - [ ] Add proper error messages on UI
@@ -68,18 +75,21 @@
 ## 📋 Planned Features
 
 ### High Priority
+
 - [ ] Doctor Availability/Schedule management
 - [ ] Payment Integration (Razorpay/Stripe)
 - [ ] Production SMS for OTP (currently console-logged)
 - [ ] Push Notifications (FCM)
 
 ### Medium Priority
+
 - [ ] Medical Records upload (Patient)
 - [ ] Video/Audio Consultation
 - [ ] Chat messaging
 - [ ] Email notifications
 
 ### Low Priority
+
 - [ ] Ratings & Reviews after appointment
 - [ ] Favorite doctors
 - [ ] Prescription management
@@ -98,6 +108,7 @@
 ## 🧪 Testing Checklist
 
 ### Before Production
+
 - [ ] Test OTP flow on real device
 - [ ] Test complete patient booking flow
 - [ ] Test doctor appointment management
@@ -111,6 +122,7 @@
 ## 📁 Deleted (React Native Migration)
 
 The following folders were removed after migrating to Flutter:
+
 - `apps/mobile/` - Old React Native/Expo app
 - `apps/web-admin/` - Old prototype admin
 - `packages/api-client/` - Old RN API client

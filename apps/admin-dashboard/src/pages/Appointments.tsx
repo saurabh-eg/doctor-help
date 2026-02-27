@@ -106,6 +106,7 @@ export default function AppointmentsPage() {
                         </div>
                         
                         <select
+                            aria-label="Filter by status"
                             value={statusFilter}
                             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
                             className="h-10 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
@@ -119,6 +120,7 @@ export default function AppointmentsPage() {
                         </select>
                         
                         <select
+                            aria-label="Filter by type"
                             value={typeFilter}
                             onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
                             className="h-10 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"

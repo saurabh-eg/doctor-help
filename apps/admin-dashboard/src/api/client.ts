@@ -33,8 +33,8 @@ api.interceptors.response.use(
 
 // Auth API
 export const authApi = {
-    sendOtp: (phone: string) => api.post('/auth/send-otp', { phone }),
-    verifyOtp: (phone: string, otp: string) => api.post('/auth/verify-otp', { phone, otp }),
+    sendOtp: (phone: string) => api.post('/auth/send-otp', { mobile: phone }),
+    verifyOtp: (phone: string, otp: string) => api.post('/auth/verify-otp', { mobile: phone, otp }),
 };
 
 // Admin API

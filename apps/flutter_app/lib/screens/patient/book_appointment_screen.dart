@@ -21,6 +21,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
   late Future<Doctor?> _doctorFuture;
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
+  String? selectedEndTime;
   String? selectedReason;
   String? selectedNotes;
 
@@ -42,26 +43,55 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
   }
 
   Future<void> _selectDate(BuildContext context, Doctor doctor) async {
-    // Calculate available dates based on doctor's slots
-    final firstAvailableDate = DateTime.now().add(const Duration(days: 1));
+    // Allow booking from today (past time slots are filtered in _selectTime)
+    final now = DateTime.now();
+    final firstDate = DateTime(now.year, now.month, now.day);
     final lastDate = DateTime.now().add(const Duration(days: 30));
+
+    // Predicate: only days when doctor has available (and for today, still-future) slots
+    bool isSelectable(DateTime date) {
+      final dayOfWeek = date.weekday % 7;
+      final matchingSlots =
+          doctor.availableSlots.where((slot) => slot.day == dayOfWeek);
+      if (matchingSlots.isEmpty) return false;
+
+      final isToday = date.year == now.year &&
+          date.month == now.month &&
+          date.day == now.day;
+      if (isToday) {
+        return matchingSlots.any((slot) {
+          final parts = slot.startTime.split(':');
+          final h = int.parse(parts[0]);
+          final m = int.parse(parts[1]);
+          return h > now.hour || (h == now.hour && m > now.minute);
+        });
+      }
+      return true;
+    }
+
+    // Find the first selectable date so initialDate always satisfies the predicate
+    DateTime initialDate = firstDate;
+    for (var i = 0; i <= 30; i++) {
+      final candidate = firstDate.add(Duration(days: i));
+      if (isSelectable(candidate)) {
+        initialDate = candidate;
+        break;
+      }
+    }
 
     final pickedDate = await showDatePicker(
       context: context,
-      initialDate: firstAvailableDate,
-      firstDate: firstAvailableDate,
+      initialDate: initialDate,
+      firstDate: firstDate,
       lastDate: lastDate,
-      selectableDayPredicate: (date) {
-        // Only allow days when doctor is available
-        return doctor.availableSlots
-            .any((slot) => slot.day == date.weekday % 7);
-      },
+      selectableDayPredicate: isSelectable,
     );
 
     if (pickedDate != null) {
       setState(() {
         selectedDate = pickedDate;
         selectedTime = null; // Reset time when date changes
+        selectedEndTime = null;
       });
     }
   }
@@ -76,8 +106,25 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
 
     // Get available slots for selected day
     final dayOfWeek = selectedDate!.weekday % 7;
-    final availableSlots =
-        doctor.availableSlots.where((slot) => slot.day == dayOfWeek).toList();
+    final now = DateTime.now();
+    final isToday = selectedDate!.year == now.year &&
+        selectedDate!.month == now.month &&
+        selectedDate!.day == now.day;
+
+    final availableSlots = doctor.availableSlots.where((slot) {
+      if (slot.day != dayOfWeek) return false;
+      // If booking for today, hide slots whose start time has already passed
+      if (isToday) {
+        final parts = slot.startTime.split(':');
+        final slotHour = int.parse(parts[0]);
+        final slotMin = int.parse(parts[1]);
+        if (slotHour < now.hour ||
+            (slotHour == now.hour && slotMin <= now.minute)) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
 
     if (availableSlots.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -122,6 +169,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
                           hour: int.parse(timeParts[0]),
                           minute: int.parse(timeParts[1]),
                         );
+                        selectedEndTime = slot.endTime;
                       });
                       Navigator.pop(context);
                     },
@@ -159,6 +207,8 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
         patientId: authState.user?.id ?? '',
         date: selectedDate!,
         time:
+            '${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}',
+        endTime: selectedEndTime ??
             '${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}',
         reason: reasonController.text,
         notes: notesController.text.isNotEmpty ? notesController.text : null,
@@ -299,7 +349,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Dr. ${doctor.specialization}',
+                                'Dr. ${doctor.userId.name ?? doctor.specialization}',
                                 style: theme.textTheme.titleSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -499,7 +549,8 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
                           const SizedBox(height: UIConstants.spacingSmall),
                           _SummaryRow(
                             label: 'Doctor',
-                            value: 'Dr. ${doctor.specialization}',
+                            value:
+                                'Dr. ${doctor.userId.name ?? doctor.specialization}',
                           ),
                           _SummaryRow(
                             label: 'Date',

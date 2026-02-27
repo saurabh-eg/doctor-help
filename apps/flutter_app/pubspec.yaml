@@ -22,6 +22,7 @@ dependencies:
 
   # Local Storage
   shared_preferences: ^2.2.0
+  flutter_secure_storage: ^10.0.0
 
   # Navigation
   go_router: ^12.0.0
@@ -45,12 +46,18 @@ dependencies:
   # Image Caching
   cached_network_image: ^3.3.0
 
-  # File & Image Picker - Temporarily commented out (requires Android SDK 35)
-  # file_picker: ^6.0.0
-  # image_picker: ^1.0.0
+  # File & Image Picker
+  file_picker: ^6.0.0
+  image_picker: ^1.0.0
 
   # Logging
   logger: ^2.0.0
+
+  # Open document links
+  url_launcher: ^6.2.6
+
+  # In-app PDF viewer
+  syncfusion_flutter_pdfviewer: ^24.2.9
 
 dev_dependencies:
   flutter_test:

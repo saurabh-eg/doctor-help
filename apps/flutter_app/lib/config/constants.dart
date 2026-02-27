@@ -23,6 +23,8 @@ class AppConstants {
   static const String paymentRefunded = 'refunded';
 
   // Medical Specialties
+  // IMPORTANT: Keep in sync with VALID_SPECIALIZATIONS in
+  // services/api/src/modules/doctors/routes.ts
   static const List<String> specialties = [
     'General Physician',
     'Cardiologist',

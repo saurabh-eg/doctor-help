@@ -65,7 +65,7 @@ class RoleSelectScreen extends ConsumerWidget {
                             AppConstants.roleDoctor,
                           );
                   if (success && context.mounted) {
-                    context.go(AppRoutes.profileSetup);
+                    context.go(AppRoutes.doctorVerification);
                   }
                 },
               ),

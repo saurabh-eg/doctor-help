@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { User } from '../../models/user.model';
 import { Doctor } from '../../models/doctor.model';
 import { Appointment } from '../../models/appointment.model';
+import { escapeRegex } from '../../utils/regex';
 
 /**
  * GET /api/admin/dashboard
@@ -11,7 +12,7 @@ import { Appointment } from '../../models/appointment.model';
 export const getDashboardStats = async (req: Request, res: Response) => {
     try {
         const now = new Date();
-        const startOfToday = new Date(now.setHours(0, 0, 0, 0));
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
@@ -116,7 +117,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
  */
 export const getUsers = async (req: Request, res: Response) => {
     try {
-        const { page = 1, limit = 20, search, role, isVerified } = req.query;
+        const { page = 1, limit = 20, search, role } = req.query;
         const skip = (Number(page) - 1) * Number(limit);
 
         const query: any = {};
@@ -126,10 +127,11 @@ export const getUsers = async (req: Request, res: Response) => {
         }
         
         if (search) {
+            const safe = escapeRegex(String(search));
             query.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { phone: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } },
+                { name: { $regex: safe, $options: 'i' } },
+                { phone: { $regex: safe, $options: 'i' } },
+                { email: { $regex: safe, $options: 'i' } },
             ];
         }
 
@@ -275,7 +277,7 @@ export const getDoctors = async (req: Request, res: Response) => {
 
         // Add search filter if provided (searches in user name and specialization)
         if (search) {
-            const searchRegex = new RegExp(String(search), 'i');
+            const searchRegex = new RegExp(escapeRegex(String(search)), 'i');
             pipeline.push({
                 $match: {
                     $or: [
@@ -331,15 +333,29 @@ export const getDoctors = async (req: Request, res: Response) => {
  */
 export const getPendingDoctors = async (req: Request, res: Response) => {
     try {
-        const doctors = await Doctor.find({ isVerified: false })
-            .sort({ createdAt: -1 })
-            .populate('userId', 'name phone email')
-            .lean();
+        const { page = 1, limit = 20 } = req.query;
+        const skip = (Number(page) - 1) * Number(limit);
+
+        const filter = { isVerified: false };
+        const [doctors, total] = await Promise.all([
+            Doctor.find(filter)
+                .sort({ createdAt: -1 })
+                .populate('userId', 'name phone email')
+                .skip(skip)
+                .limit(Number(limit))
+                .lean(),
+            Doctor.countDocuments(filter)
+        ]);
 
         res.json({
             success: true,
             data: doctors,
-            count: doctors.length,
+            pagination: {
+                page: Number(page),
+                limit: Number(limit),
+                total,
+                pages: Math.ceil(total / Number(limit)),
+            }
         });
     } catch (error) {
         console.error('Get pending doctors error:', error);
@@ -537,14 +553,31 @@ export const processRefund = async (req: Request, res: Response) => {
             return res.status(400).json({ success: false, error: 'Appointment already refunded' });
         }
 
+        // Validate payment was actually made
+        if (appointment.paymentStatus !== 'paid') {
+            return res.status(400).json({ success: false, error: 'Cannot refund an unpaid appointment' });
+        }
+
+        // Validate refund amount does not exceed appointment amount
+        const refundAmount = Number(amount);
+        if (!refundAmount || refundAmount <= 0) {
+            return res.status(400).json({ success: false, error: 'Invalid refund amount' });
+        }
+        if (refundAmount > appointment.amount) {
+            return res.status(400).json({
+                success: false,
+                error: `Refund amount (₹${refundAmount}) exceeds appointment amount (₹${appointment.amount})`
+            });
+        }
+
         appointment.paymentStatus = 'refunded';
-        appointment.notes = `${appointment.notes || ''}\nRefund: ₹${amount} - ${reason}`;
+        appointment.notes = `${appointment.notes || ''}\nRefund: ₹${refundAmount} - ${reason || 'No reason provided'}`;
         await appointment.save();
 
         res.json({
             success: true,
             data: appointment,
-            message: `Refund of ₹${amount} processed successfully`,
+            message: `Refund of ₹${refundAmount} processed successfully`,
         });
     } catch (error) {
         console.error('Process refund error:', error);

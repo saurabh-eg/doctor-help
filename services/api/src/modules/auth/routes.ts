@@ -18,19 +18,19 @@ const otpRateLimiter = rateLimit({
 
 const sendOTPSchema = z.object({
     body: z.object({
-        phone: z.string().min(10).max(15)
+        mobile: z.string().regex(/^\d{10}$/, 'Mobile must be exactly 10 digits')
     })
 });
 
 const verifyOTPSchema = z.object({
     body: z.object({
-        phone: z.string().min(10).max(15),
+        mobile: z.string().regex(/^\d{10}$/, 'Mobile must be exactly 10 digits'),
         otp: z.string().length(6)
     })
 });
 
-router.post('/send-otp', otpRateLimiter, validate(sendOTPSchema), authController.sendOTP);
-router.post('/verify-otp', otpRateLimiter, validate(verifyOTPSchema), authController.verifyOTP);
+router.post('/send-otp', otpRateLimiter, validate(sendOTPSchema), authController.sendOtpController);
+router.post('/verify-otp', otpRateLimiter, validate(verifyOTPSchema), authController.verifyOtpController);
 router.post('/refresh', auth, authController.refresh);
 router.get('/me', auth, authController.getMe);
 

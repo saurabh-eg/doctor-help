@@ -122,7 +122,7 @@ class _PatientBookingsScreenState extends ConsumerState<PatientBookingsScreen>
   }
 }
 
-class _AppointmentsList extends ConsumerWidget {
+class _AppointmentsList extends ConsumerStatefulWidget {
   final String patientId;
   final bool isUpcoming;
   final Function(String)? onCancel;
@@ -134,15 +134,38 @@ class _AppointmentsList extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_AppointmentsList> createState() => _AppointmentsListState();
+}
+
+class _AppointmentsListState extends ConsumerState<_AppointmentsList> {
+  late Future _appointmentsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAppointments();
+  }
+
+  void _loadAppointments() {
+    _appointmentsFuture =
+        ref.read(appointmentServiceProvider).getPatientAppointments(
+              widget.patientId,
+              upcoming: widget.isUpcoming,
+            );
+  }
+
+  void _retry() {
+    setState(() {
+      _loadAppointments();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final appointmentService = ref.read(appointmentServiceProvider);
 
     return FutureBuilder(
-      future: appointmentService.getPatientAppointments(
-        patientId,
-        upcoming: isUpcoming,
-      ),
+      future: _appointmentsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -165,10 +188,7 @@ class _AppointmentsList extends ConsumerWidget {
                 ),
                 const SizedBox(height: UIConstants.spacingSmall),
                 TextButton(
-                  onPressed: () {
-                    // Trigger rebuild
-                    (context as Element).markNeedsBuild();
-                  },
+                  onPressed: _retry,
                   child: const Text('Retry'),
                 ),
               ],
@@ -194,7 +214,7 @@ class _AppointmentsList extends ConsumerWidget {
           final isUpcomingAppointment = dt.isAfter(now);
           final isCancelled = apt.status.toLowerCase() == 'cancelled';
 
-          if (isUpcoming) {
+          if (widget.isUpcoming) {
             // Upcoming: future + not cancelled
             return isUpcomingAppointment && !isCancelled;
           } else {
@@ -209,7 +229,7 @@ class _AppointmentsList extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  isUpcoming
+                  widget.isUpcoming
                       ? Icons.calendar_today_outlined
                       : Icons.history_outlined,
                   size: 64,
@@ -217,7 +237,7 @@ class _AppointmentsList extends ConsumerWidget {
                 ),
                 const SizedBox(height: UIConstants.spacingMedium),
                 Text(
-                  isUpcoming
+                  widget.isUpcoming
                       ? 'No upcoming appointments'
                       : 'No past appointments',
                   style: theme.textTheme.titleMedium?.copyWith(
@@ -225,7 +245,7 @@ class _AppointmentsList extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: UIConstants.spacingSmall),
-                if (isUpcoming)
+                if (widget.isUpcoming)
                   TextButton(
                     onPressed: () => context.go(AppRoutes.patientHome),
                     child: const Text('Book an Appointment'),
@@ -237,8 +257,7 @@ class _AppointmentsList extends ConsumerWidget {
 
         return RefreshIndicator(
           onRefresh: () async {
-            // Trigger rebuild
-            (context as Element).markNeedsBuild();
+            _retry();
           },
           child: ListView.separated(
             padding: const EdgeInsets.all(UIConstants.spacingLarge),
@@ -249,8 +268,8 @@ class _AppointmentsList extends ConsumerWidget {
               final appointment = filteredAppointments[index];
               return _AppointmentCard(
                 appointment: appointment,
-                isUpcoming: isUpcoming,
-                onCancel: onCancel,
+                isUpcoming: widget.isUpcoming,
+                onCancel: widget.onCancel,
               );
             },
           ),

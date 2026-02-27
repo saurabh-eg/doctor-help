@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { adminApi } from '../api/client';
+import './Dashboard.css';
 import { 
     PageLoader, 
     StatusBadge,
@@ -319,8 +320,8 @@ export default function DashboardPage() {
                                     <div key={index} className="flex items-center justify-between text-sm">
                                         <div className="flex items-center gap-2">
                                             <div 
-                                                className="w-3 h-3 rounded-full" 
-                                                style={{ backgroundColor: entry.color }}
+                                                className="w-3 h-3 rounded-full status-indicator" 
+                                                data-color={entry.color}
                                             />
                                             <span className="text-slate-600">{entry.name}</span>
                                         </div>

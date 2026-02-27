@@ -44,7 +44,22 @@ class _DoctorPatientsScreenState extends ConsumerState<DoctorPatientsScreen> {
       );
     }).where((p) {
       final q = _searchController.text.trim().toLowerCase();
-      return q.isEmpty || (p.info.name?.toLowerCase().contains(q) ?? false);
+      final matchesSearch =
+          q.isEmpty || (p.info.name?.toLowerCase().contains(q) ?? false);
+      if (!matchesSearch) return false;
+      // Apply active/inactive filter
+      if (_selectedFilter == 'active') {
+        // Active: visited within last 90 days
+        return p.lastVisit != null &&
+            p.lastVisit!
+                .isAfter(DateTime.now().subtract(const Duration(days: 90)));
+      } else if (_selectedFilter == 'inactive') {
+        // Inactive: no visit within last 90 days
+        return p.lastVisit == null ||
+            p.lastVisit!
+                .isBefore(DateTime.now().subtract(const Duration(days: 90)));
+      }
+      return true; // 'all'
     }).toList();
 
     return Scaffold(

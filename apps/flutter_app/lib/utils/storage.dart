@@ -1,13 +1,39 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// Local Storage Service
 class StorageService {
   static late SharedPreferences _prefs;
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
   /// Initialize storage
   static Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
   }
+
+  // ── Secure storage (use for tokens & sensitive data) ──
+
+  /// Save a value securely (Keychain on iOS, EncryptedSharedPreferences on Android)
+  static Future<void> saveSecure(String key, String value) async {
+    await _secureStorage.write(key: key, value: value);
+  }
+
+  /// Read a value from secure storage
+  static Future<String?> getSecure(String key) async {
+    return await _secureStorage.read(key: key);
+  }
+
+  /// Delete a value from secure storage
+  static Future<void> removeSecure(String key) async {
+    await _secureStorage.delete(key: key);
+  }
+
+  /// Clear all secure storage
+  static Future<void> clearSecure() async {
+    await _secureStorage.deleteAll();
+  }
+
+  // ── SharedPreferences (use for non-sensitive preferences) ──
 
   /// Save string
   static Future<bool> saveString(String key, String value) async {

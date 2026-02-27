@@ -1,9 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { jwtVerify } from 'jose';
-
-const JWT_SECRET = new TextEncoder().encode(
-    process.env.JWT_SECRET || 'super-secret-key-change-in-production'
-);
+import { getJwtSecret } from '../utils/jwt';
 
 export interface AuthenticatedRequest extends Request {
     user?: {
@@ -22,7 +19,7 @@ export const auth = async (req: AuthenticatedRequest, res: Response, next: NextF
         }
 
         const token = authHeader.substring(7);
-        const { payload } = await jwtVerify(token, JWT_SECRET);
+        const { payload } = await jwtVerify(token, getJwtSecret());
 
         req.user = payload as any;
         next();

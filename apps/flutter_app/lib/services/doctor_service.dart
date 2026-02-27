@@ -9,6 +9,17 @@ class DoctorService {
 
   DoctorService(this._apiService);
 
+  Map<String, dynamic> _normalizeDoctorJson(Map<String, dynamic> json) {
+    final normalized = Map<String, dynamic>.from(json);
+    final userIdValue = normalized['userId'];
+
+    if (userIdValue is String) {
+      normalized['userId'] = {'_id': userIdValue};
+    }
+
+    return normalized;
+  }
+
   /// List all verified doctors with filters
   Future<List<Doctor>> listDoctors({
     String? specialization,
@@ -35,7 +46,9 @@ class DoctorService {
           // Handle the wrapper format from API service
           final list = json['data'] as List? ?? [];
           return list
-              .map((item) => Doctor.fromJson(item as Map<String, dynamic>))
+              .map((item) => Doctor.fromJson(
+                    _normalizeDoctorJson(item as Map<String, dynamic>),
+                  ))
               .toList();
         },
       );
@@ -56,7 +69,9 @@ class DoctorService {
         // Handle the wrapper format from API service
         final list = json['data'] as List? ?? [];
         return list
-            .map((item) => Doctor.fromJson(item as Map<String, dynamic>))
+            .map((item) => Doctor.fromJson(
+                  _normalizeDoctorJson(item as Map<String, dynamic>),
+                ))
             .toList();
       },
     );
@@ -67,7 +82,7 @@ class DoctorService {
     try {
       final response = await _apiService.get(
         ApiEndpoints.getDoctor.replaceFirst(':id', doctorId),
-        fromJson: (json) => Doctor.fromJson(json),
+        fromJson: (json) => Doctor.fromJson(_normalizeDoctorJson(json)),
       );
       return response.data;
     } catch (e) {
@@ -79,7 +94,7 @@ class DoctorService {
   Future<ApiResponse<Doctor>> getDoctorByUserId(String userId) {
     return _apiService.get(
       ApiEndpoints.getDoctorByUserId.replaceFirst(':userId', userId),
-      fromJson: (json) => Doctor.fromJson(json),
+      fromJson: (json) => Doctor.fromJson(_normalizeDoctorJson(json)),
     );
   }
 
@@ -90,6 +105,7 @@ class DoctorService {
     required String qualification,
     required int experience,
     required double consultationFee,
+    String? licenseNumber,
     String? bio,
     String? photoUrl,
     List<String>? documents,
@@ -102,11 +118,38 @@ class DoctorService {
         'qualification': qualification,
         'experience': experience,
         'consultationFee': consultationFee,
-        if (bio != null) 'bio': bio,
+        if (licenseNumber != null && licenseNumber.isNotEmpty)
+          'licenseNumber': licenseNumber,
+        if (bio != null && bio.isNotEmpty) 'bio': bio,
         if (photoUrl != null) 'photoUrl': photoUrl,
-        if (documents != null) 'documents': documents,
+        if (documents != null && documents.isNotEmpty) 'documents': documents,
       },
-      fromJson: (json) => Doctor.fromJson(json),
+      fromJson: (json) {
+        // The API service extracts the 'data' field, so json is already the Doctor object
+        return Doctor.fromJson(_normalizeDoctorJson(json));
+      },
+    );
+  }
+
+  /// Update doctor profile (professional fields)
+  Future<ApiResponse<Doctor>> updateDoctorProfile(
+    String doctorId, {
+    String? specialization,
+    String? qualification,
+    int? experience,
+    double? consultationFee,
+    String? bio,
+  }) {
+    return _apiService.patch(
+      ApiEndpoints.updateDoctorProfile.replaceFirst(':id', doctorId),
+      body: {
+        if (specialization != null) 'specialization': specialization,
+        if (qualification != null) 'qualification': qualification,
+        if (experience != null) 'experience': experience,
+        if (consultationFee != null) 'consultationFee': consultationFee,
+        if (bio != null) 'bio': bio,
+      },
+      fromJson: (json) => Doctor.fromJson(_normalizeDoctorJson(json)),
     );
   }
 
@@ -120,7 +163,27 @@ class DoctorService {
       body: {
         'slots': slots.map((s) => s.toJson()).toList(),
       },
-      fromJson: (json) => Doctor.fromJson(json),
+      fromJson: (json) => Doctor.fromJson(_normalizeDoctorJson(json)),
+    );
+  }
+
+  /// Upload document and return the Cloudinary URL
+  Future<ApiResponse<String>> uploadDocument(String filePath) {
+    return _apiService.uploadFile(
+      '/doctors/upload-document',
+      filePath: filePath,
+      fieldName: 'document',
+      fromJson: (json) => json['url']?.toString() ?? '',
+    );
+  }
+
+  /// Upload profile photo and return the Cloudinary URL
+  Future<ApiResponse<String>> uploadPhoto(String filePath) {
+    return _apiService.uploadFile(
+      ApiEndpoints.uploadProfile,
+      filePath: filePath,
+      fieldName: 'photo',
+      fromJson: (json) => json['url']?.toString() ?? '',
     );
   }
 }

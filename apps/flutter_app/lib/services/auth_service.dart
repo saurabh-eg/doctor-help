@@ -13,7 +13,7 @@ class AuthService {
   Future<ApiResponse<Map<String, dynamic>>> sendOtp(String phone) {
     return _apiService.post(
       ApiEndpoints.sendOtp,
-      body: {'phone': phone},
+      body: {'mobile': phone},
     );
   }
 
@@ -21,7 +21,7 @@ class AuthService {
   Future<ApiResponse<VerifyOtpResponse>> verifyOtp(String phone, String otp) {
     return _apiService.post(
       ApiEndpoints.verifyOtp,
-      body: {'phone': phone, 'otp': otp},
+      body: {'mobile': phone, 'otp': otp},
       fromJson: (json) => VerifyOtpResponse.fromJson(json),
     );
   }

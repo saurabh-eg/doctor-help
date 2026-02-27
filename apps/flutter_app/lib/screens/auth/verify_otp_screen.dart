@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -21,10 +22,84 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
   final _otpController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  static const int _resendCooldown = 60;
+  int _secondsRemaining = _resendCooldown;
+  Timer? _timer;
+  bool _canResend = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startCooldownTimer();
+  }
+
   @override
   void dispose() {
+    _timer?.cancel();
     _otpController.dispose();
     super.dispose();
+  }
+
+  void _startCooldownTimer() {
+    setState(() {
+      _secondsRemaining = _resendCooldown;
+      _canResend = false;
+    });
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_secondsRemaining <= 1) {
+        timer.cancel();
+        if (mounted) {
+          setState(() {
+            _secondsRemaining = 0;
+            _canResend = true;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _secondsRemaining--;
+          });
+        }
+      }
+    });
+  }
+
+  Future<void> _handleResendOtp() async {
+    if (!_canResend) return;
+
+    final authNotifier = ref.read(authStateProvider.notifier);
+    final success = await authNotifier.sendOtp(widget.phone);
+
+    if (!mounted) return;
+
+    if (success) {
+      _startCooldownTimer();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('OTP resent successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      final error = ref.read(authStateProvider).error;
+      // Check if it's a cooldown error from backend
+      if (error != null && error.contains('wait')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error ?? 'Failed to resend OTP'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _handleVerifyOtp() async {
@@ -123,15 +198,38 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                 isLoading: authState.isLoading,
                 onPressed: _handleVerifyOtp,
               ),
-              const SizedBox(height: UIConstants.spacingMedium),
-              // Resend OTP
+              const SizedBox(height: UIConstants.spacingLarge),
+              // Resend OTP with cooldown
               Center(
-                child: Text(
-                  'Resend OTP in 60s',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
+                child: _canResend
+                    ? TextButton(
+                        onPressed: _handleResendOtp,
+                        child: Text(
+                          'Resend OTP',
+                          style: TextStyle(
+                            color: Theme.of(context).primaryColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      )
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.timer_outlined,
+                            size: 16,
+                            color: Colors.grey[500],
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Resend OTP in ${_secondsRemaining}s',
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Colors.grey[500],
+                                    ),
+                          ),
+                        ],
                       ),
-                ),
               ),
             ],
           ),

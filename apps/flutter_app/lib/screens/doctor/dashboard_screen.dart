@@ -105,7 +105,7 @@ class _DoctorDashboardScreenState extends ConsumerState<DoctorDashboardScreen> {
                                 child: _StatCard(
                                   icon: Icons.calendar_today,
                                   label: 'Appointments',
-                                  value: '${stats.todayAppointments}',
+                                  value: '${stats.upcomingAppointments}',
                                   color: Colors.blue,
                                 ),
                               ),
