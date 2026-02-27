@@ -23,6 +23,7 @@ import '../screens/legal/refund_policy_screen.dart';
 import '../screens/legal/contact_us_screen.dart';
 import '../screens/doctor/notification_settings_screen.dart';
 import '../screens/doctor/change_password_screen.dart';
+import '../screens/patient/write_review_screen.dart';
 import '../providers/providers.dart';
 
 /// Bridges Riverpod auth state changes to GoRouter's [refreshListenable]
@@ -59,6 +60,9 @@ class AppRoutes {
   static const String doctorNotificationSettings =
       '/doctor/notification-settings';
   static const String doctorChangePassword = '/doctor/change-password';
+
+  // Review route
+  static const String writeReview = '/write-review';
 
   // Legal routes
   static const String privacyPolicy = '/privacy-policy';
@@ -199,6 +203,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.doctorChangePassword,
         builder: (context, state) => const ChangePasswordScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.writeReview,
+        builder: (context, state) {
+          final appointmentId = state.uri.queryParameters['appointmentId'] ?? '';
+          final doctorName = state.uri.queryParameters['doctorName'] ?? 'Doctor';
+          return WriteReviewScreen(
+            appointmentId: appointmentId,
+            doctorName: doctorName,
+          );
+        },
       ),
       // Legal routes
       GoRoute(

@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import '../services/user_service.dart';
 import '../services/doctor_service.dart';
 import '../services/appointment_service.dart';
+import '../services/review_service.dart';
 import '../utils/storage.dart';
 import '../config/constants.dart';
 import 'auth_provider.dart';
@@ -44,6 +45,12 @@ final doctorServiceProvider = Provider((ref) {
 final appointmentServiceProvider = Provider((ref) {
   final apiService = ref.watch(apiServiceProvider);
   return AppointmentService(apiService);
+});
+
+// Review Service provider
+final reviewServiceProvider = Provider((ref) {
+  final apiService = ref.watch(apiServiceProvider);
+  return ReviewService(apiService);
 });
 
 // Auth state provider

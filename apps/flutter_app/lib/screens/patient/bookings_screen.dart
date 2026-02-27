@@ -450,7 +450,7 @@ class _AppointmentCard extends StatelessWidget {
                   ),
                 ],
 
-                // Action Buttons
+                // Action Buttons for upcoming
                 if (isUpcoming &&
                     appointment.status.toLowerCase() != 'cancelled')
                   Padding(
@@ -516,6 +516,32 @@ class _AppointmentCard extends StatelessWidget {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+
+                // Write Review button for completed appointments
+                if (!isUpcoming &&
+                    appointment.status.toLowerCase() == 'completed')
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(top: UIConstants.spacingMedium),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          final doctorName =
+                              appointment.doctorId.userId?.name ?? 'Doctor';
+                          context.push(
+                            '${AppRoutes.writeReview}?appointmentId=${appointment.id}&doctorName=$doctorName',
+                          );
+                        },
+                        icon: const Icon(Icons.rate_review_outlined, size: 18),
+                        label: const Text('Write a Review'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.amber[800],
+                          side: BorderSide(color: Colors.amber[800]!),
+                        ),
+                      ),
                     ),
                   ),
               ],

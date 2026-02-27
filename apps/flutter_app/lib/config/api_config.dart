@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 class ApiConfig {
   // Base URL - Change based on environment
   // Development: Use 10.0.2.2 for Android emulator (maps to host localhost)
-  // Example: https://abc123.ngrok.io/api
-  static const String baseUrl = 'http://10.0.2.2:3001/api';
+  // Production: Render.com deployment
+  static const String baseUrl = 'https://doctor-help-api.onrender.com/api';
 
   // API Timeouts
   static const Duration timeout = Duration(seconds: 30);
@@ -83,4 +83,9 @@ class ApiEndpoints {
   static const String getUsers = '/admin/users';
   static const String getPendingDoctors = '/admin/doctors/pending';
   static const String verifyDoctor = '/admin/doctors/:id/verify';
+
+  // Reviews
+  static const String createReview = '/reviews';
+  static const String getDoctorReviews = '/reviews/doctor/:doctorId';
+  static const String checkReviewExists = '/reviews/check/:appointmentId';
 }

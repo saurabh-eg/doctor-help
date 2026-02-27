@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/doctor.dart';
+import '../../models/review.dart';
 import '../../providers/providers.dart';
 import '../../navigation/app_router.dart';
 import '../../config/constants.dart';
@@ -325,6 +326,10 @@ class _DoctorProfileScreenState extends ConsumerState<DoctorProfileScreen> {
                           ),
                         const SizedBox(height: UIConstants.spacing2XLarge),
 
+                        // Reviews Section
+                        _ReviewsSection(doctorId: doctor.id),
+                        const SizedBox(height: UIConstants.spacing2XLarge),
+
                         // Book Appointment Button
                         AppButton(
                           label: 'Book Appointment',
@@ -391,5 +396,183 @@ class _StatCard extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _ReviewsSection extends ConsumerStatefulWidget {
+  final String doctorId;
+  const _ReviewsSection({required this.doctorId});
+
+  @override
+  ConsumerState<_ReviewsSection> createState() => _ReviewsSectionState();
+}
+
+class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
+  List<Review>? _reviews;
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReviews();
+  }
+
+  Future<void> _loadReviews() async {
+    try {
+      final reviews = await ref
+          .read(reviewServiceProvider)
+          .getDoctorReviews(widget.doctorId, limit: 5);
+      if (mounted) {
+        setState(() {
+          _reviews = reviews;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Patient Reviews',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: UIConstants.spacingMedium),
+        if (_isLoading)
+          const Center(child: CircularProgressIndicator())
+        else if (_error != null)
+          Text('Could not load reviews',
+              style: TextStyle(color: Colors.grey[500]))
+        else if (_reviews == null || _reviews!.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(UIConstants.spacingLarge),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(UIConstants.radiusMedium),
+            ),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(Icons.rate_review_outlined,
+                      size: 40, color: Colors.grey[400]),
+                  const SizedBox(height: 8),
+                  Text('No reviews yet',
+                      style: TextStyle(color: Colors.grey[500])),
+                ],
+              ),
+            ),
+          )
+        else
+          Column(
+            children: _reviews!
+                .map((review) => _ReviewCard(review: review))
+                .toList(),
+          ),
+      ],
+    );
+  }
+}
+
+class _ReviewCard extends StatelessWidget {
+  final Review review;
+  const _ReviewCard({required this.review});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: UIConstants.spacingSmall),
+      padding: const EdgeInsets.all(UIConstants.spacingMedium),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[200]!),
+        borderRadius: BorderRadius.circular(UIConstants.radiusMedium),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: theme.primaryColor.withOpacity(0.1),
+                backgroundImage: review.patientId.avatar != null
+                    ? NetworkImage(review.patientId.avatar!)
+                    : null,
+                child: review.patientId.avatar == null
+                    ? Icon(Icons.person,
+                        size: 18, color: theme.primaryColor)
+                    : null,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  review.patientId.name ?? 'Patient',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              // Stars
+              Row(
+                children: List.generate(5, (i) {
+                  return Icon(
+                    i < review.rating
+                        ? Icons.star_rounded
+                        : Icons.star_outline_rounded,
+                    size: 16,
+                    color: i < review.rating ? Colors.amber : Colors.grey[300],
+                  );
+                }),
+              ),
+            ],
+          ),
+          if (review.comment != null && review.comment!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              review.comment!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: Colors.grey[700],
+                height: 1.4,
+              ),
+            ),
+          ],
+          if (review.createdAt != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              _formatDate(review.createdAt!),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: Colors.grey[400],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final diff = now.difference(date);
+    if (diff.inDays == 0) return 'Today';
+    if (diff.inDays == 1) return 'Yesterday';
+    if (diff.inDays < 7) return '${diff.inDays} days ago';
+    if (diff.inDays < 30) return '${(diff.inDays / 7).floor()} weeks ago';
+    return '${date.day}/${date.month}/${date.year}';
   }
 }

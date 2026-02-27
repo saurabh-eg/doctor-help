@@ -22,6 +22,7 @@ import { appointmentsRouter } from './modules/appointments/routes';
 import { doctorUploadRouter } from './modules/doctors/upload';
 import { userUploadRouter } from './modules/users/upload';
 import { adminRouter } from './modules/admin/routes';
+import { reviewsRouter } from './modules/reviews/routes';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
@@ -98,6 +99,7 @@ app.use('/api/appointments', appointmentsRouter);
 app.use('/api/doctors', doctorUploadRouter);
 app.use('/api/users', userUploadRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/reviews', reviewsRouter);
 
 // Error Handling
 app.use(errorHandler);
