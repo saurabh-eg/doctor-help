@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "634511292919",
+    "project_id": "doctor-help-511a7",
+    "storage_bucket": "doctor-help-511a7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:634511292919:android:9b72e169bb6cc9f91cd6f2",
+        "android_client_info": {
+          "package_name": "com.example.flutter_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBapnXbceaDvmtaamk-c_2kEXZucfJXXUE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

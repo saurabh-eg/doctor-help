@@ -21,6 +21,5 @@ const ReviewSchema = new Schema<IReview>({
 // Indexes
 ReviewSchema.index({ doctorId: 1, createdAt: -1 });
 ReviewSchema.index({ patientId: 1 });
-ReviewSchema.index({ appointmentId: 1 }, { unique: true }); // One review per appointment
 
 export const Review = mongoose.model<IReview>('Review', ReviewSchema);
