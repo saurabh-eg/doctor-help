@@ -6,6 +6,8 @@ import { Doctor } from '../../models/doctor.model';
 import { Appointment } from '../../models/appointment.model';
 import { LabOrder } from '../../models/lab-order.model';
 import { Lab } from '../../models/lab.model';
+import { LabTest } from '../../models/lab-test.model';
+import { LabPackage } from '../../models/lab-package.model';
 import { AdminAuditLog } from '../../models/admin-audit-log.model';
 import { LabRegistrationRequest } from '../../models/lab-registration-request.model';
 import { Counter } from '../../models/counter.model';
@@ -311,6 +313,35 @@ export const suspendUser = async (req: Request, res: Response) => {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
 
+        if (isSuspended) {
+            if (user.role === 'doctor') {
+                await Doctor.deleteMany({ userId: user._id });
+            }
+
+            if (user.role === 'lab') {
+                const normalizedPhone = String(user.phone || '').replace(/\D/g, '');
+                const phoneCandidates = normalizedPhone
+                    ? [normalizedPhone, `+91${normalizedPhone}`, `91${normalizedPhone}`]
+                    : [];
+
+                const labs = await Lab.find({
+                    $or: [
+                        { createdBy: user._id },
+                        ...(phoneCandidates.length > 0 ? [{ phone: { $in: phoneCandidates } }] : []),
+                    ],
+                }).select('_id').lean();
+
+                const labIds = labs.map((l: any) => l._id);
+                if (labIds.length > 0) {
+                    await Promise.all([
+                        LabTest.deleteMany({ labId: { $in: labIds } }),
+                        LabPackage.deleteMany({ labId: { $in: labIds } }),
+                        Lab.deleteMany({ _id: { $in: labIds } }),
+                    ]);
+                }
+            }
+        }
+
         res.json({
             success: true,
             data: user,
@@ -354,10 +385,11 @@ export const getDoctors = async (req: Request, res: Response) => {
                     localField: 'userId',
                     foreignField: '_id',
                     as: 'userId',
-                    pipeline: [{ $project: { name: 1, phone: 1, email: 1 } }]
+                    pipeline: [{ $project: { name: 1, phone: 1, email: 1, isSuspended: 1 } }]
                 }
             },
             { $unwind: { path: '$userId', preserveNullAndEmptyArrays: true } },
+            { $match: { 'userId.isSuspended': { $ne: true } } },
         ];
 
         // Add search filter if provided (searches in user name and specialization)
@@ -421,7 +453,15 @@ export const getPendingDoctors = async (req: Request, res: Response) => {
         const { page = 1, limit = 20 } = req.query;
         const skip = (Number(page) - 1) * Number(limit);
 
-        const filter = { isVerified: false };
+        const activeDoctorUserIds = await User.find({
+            role: 'doctor',
+            isSuspended: { $ne: true },
+        }).select('_id').lean();
+
+        const filter = {
+            isVerified: false,
+            userId: { $in: activeDoctorUserIds.map((u: any) => u._id) },
+        };
         const [doctors, total] = await Promise.all([
             Doctor.find(filter)
                 .sort({ createdAt: -1 })

@@ -244,7 +244,8 @@ class _LabRegistrationRequestScreenState
                   padding: const EdgeInsets.all(UIConstants.spacingSmall),
                   decoration: BoxDecoration(
                     color: Colors.blue.withOpacity(0.06),
-                    borderRadius: BorderRadius.circular(UIConstants.radiusSmall),
+                    borderRadius:
+                        BorderRadius.circular(UIConstants.radiusSmall),
                     border: Border.all(color: Colors.blue.withOpacity(0.2)),
                   ),
                   child: Text(
@@ -264,49 +265,54 @@ class _LabRegistrationRequestScreenState
                           BorderRadius.circular(UIConstants.radiusSmall),
                       onTap: () => _copyVerifiedPhone(verifiedPhone),
                       child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(UIConstants.spacingSmall),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.08),
-                        borderRadius:
-                            BorderRadius.circular(UIConstants.radiusSmall),
-                        border: Border.all(color: Colors.grey.withOpacity(0.2)),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Verified account phone: ${_maskPhone(verifiedPhone)}',
-                              style:
-                                  Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: Colors.black87,
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(UIConstants.spacingSmall),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.08),
+                          borderRadius:
+                              BorderRadius.circular(UIConstants.radiusSmall),
+                          border:
+                              Border.all(color: Colors.grey.withOpacity(0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Verified account phone: ${_maskPhone(verifiedPhone)}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: Colors.black87,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ),
+                            const SizedBox(width: UIConstants.spacingSmall),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.copy_rounded,
+                                  size: 14,
+                                  color: Colors.grey[700],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Copy',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: Colors.grey[700],
                                         fontWeight: FontWeight.w600,
                                       ),
+                                ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(width: UIConstants.spacingSmall),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.copy_rounded,
-                                size: 14,
-                                color: Colors.grey[700],
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Copy',
-                                style:
-                                    Theme.of(context).textTheme.bodySmall?.copyWith(
-                                          color: Colors.grey[700],
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                              ),
-                            ],
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
                     ),
                   ),
                 const SizedBox(height: UIConstants.spacingXLarge),

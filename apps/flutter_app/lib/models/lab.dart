@@ -77,7 +77,7 @@ class LabSummary {
     return LabSummary(
       id: (json['_id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
-        contactName: (json['contactName'] ?? '').toString().isEmpty
+      contactName: (json['contactName'] ?? '').toString().isEmpty
           ? null
           : (json['contactName'] ?? '').toString(),
       phone: (json['phone'] ?? '').toString(),
@@ -344,9 +344,9 @@ class LabOrder {
           DateTime.tryParse((json['reportUploadedAt'] ?? '').toString()),
       sampleCollectedAt:
           DateTime.tryParse((json['sampleCollectedAt'] ?? '').toString()),
-        adminOverride: json['adminOverride'] is Map<String, dynamic>
+      adminOverride: json['adminOverride'] is Map<String, dynamic>
           ? LabOrderAdminOverride.fromJson(
-            json['adminOverride'] as Map<String, dynamic>)
+              json['adminOverride'] as Map<String, dynamic>)
           : null,
       collector: json['collector'] is Map<String, dynamic>
           ? LabOrderCollector.fromJson(

@@ -151,9 +151,8 @@ class _LabCatalogScreenState extends ConsumerState<LabCatalogScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: isSubmitting
-                  ? null
-                  : () => Navigator.of(dialogContext).pop(),
+              onPressed:
+                  isSubmitting ? null : () => Navigator.of(dialogContext).pop(),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
@@ -163,7 +162,8 @@ class _LabCatalogScreenState extends ConsumerState<LabCatalogScreen> {
                       final messenger = ScaffoldMessenger.of(this.context);
                       final code = codeController.text.trim();
                       final name = nameController.text.trim();
-                      final price = double.tryParse(priceController.text.trim());
+                      final price =
+                          double.tryParse(priceController.text.trim());
                       final discounted = discountedPriceController.text.trim();
                       final discountedPrice = discounted.isEmpty
                           ? null
@@ -178,7 +178,8 @@ class _LabCatalogScreenState extends ConsumerState<LabCatalogScreen> {
                       if (code.isEmpty || name.isEmpty || price == null) {
                         messenger.showSnackBar(
                           const SnackBar(
-                            content: Text('Code, name and valid price are required'),
+                            content:
+                                Text('Code, name and valid price are required'),
                             backgroundColor: Colors.red,
                           ),
                         );
@@ -188,7 +189,8 @@ class _LabCatalogScreenState extends ConsumerState<LabCatalogScreen> {
                       if (code.length < 2) {
                         messenger.showSnackBar(
                           const SnackBar(
-                            content: Text('Test code must be at least 2 characters'),
+                            content:
+                                Text('Test code must be at least 2 characters'),
                             backgroundColor: Colors.red,
                           ),
                         );
@@ -198,8 +200,8 @@ class _LabCatalogScreenState extends ConsumerState<LabCatalogScreen> {
                       if (discountedPrice != null && discountedPrice > price) {
                         messenger.showSnackBar(
                           const SnackBar(
-                            content:
-                                Text('Discounted price cannot be greater than price'),
+                            content: Text(
+                                'Discounted price cannot be greater than price'),
                             backgroundColor: Colors.red,
                           ),
                         );
@@ -352,8 +354,7 @@ class _LabCatalogScreenState extends ConsumerState<LabCatalogScreen> {
                   TextField(
                     controller: descriptionController,
                     maxLines: 2,
-                    decoration:
-                        const InputDecoration(labelText: 'Description'),
+                    decoration: const InputDecoration(labelText: 'Description'),
                   ),
                   TextField(
                     controller: priceController,
@@ -392,7 +393,8 @@ class _LabCatalogScreenState extends ConsumerState<LabCatalogScreen> {
                         controlAffinity: ListTileControlAffinity.leading,
                         contentPadding: EdgeInsets.zero,
                         value: selectedTestIds.contains(test.id),
-                        title: Text('${test.name} (₹${test.effectivePrice.toStringAsFixed(0)})'),
+                        title: Text(
+                            '${test.name} (₹${test.effectivePrice.toStringAsFixed(0)})'),
                         subtitle: Text(test.code),
                         onChanged: (checked) => setDialogState(() {
                           if (checked == true) {
@@ -419,9 +421,8 @@ class _LabCatalogScreenState extends ConsumerState<LabCatalogScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: isSubmitting
-                  ? null
-                  : () => Navigator.of(dialogContext).pop(),
+              onPressed:
+                  isSubmitting ? null : () => Navigator.of(dialogContext).pop(),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
@@ -431,7 +432,8 @@ class _LabCatalogScreenState extends ConsumerState<LabCatalogScreen> {
                       final messenger = ScaffoldMessenger.of(this.context);
                       final code = codeController.text.trim();
                       final name = nameController.text.trim();
-                      final price = double.tryParse(priceController.text.trim());
+                      final price =
+                          double.tryParse(priceController.text.trim());
                       final discounted = discountedPriceController.text.trim();
                       final discountedPrice = discounted.isEmpty
                           ? null
@@ -451,8 +453,8 @@ class _LabCatalogScreenState extends ConsumerState<LabCatalogScreen> {
                       if (code.length < 2) {
                         messenger.showSnackBar(
                           const SnackBar(
-                            content:
-                                Text('Package code must be at least 2 characters'),
+                            content: Text(
+                                'Package code must be at least 2 characters'),
                             backgroundColor: Colors.red,
                           ),
                         );
@@ -472,8 +474,8 @@ class _LabCatalogScreenState extends ConsumerState<LabCatalogScreen> {
                       if (discountedPrice != null && discountedPrice > price) {
                         messenger.showSnackBar(
                           const SnackBar(
-                            content:
-                                Text('Discounted price cannot be greater than price'),
+                            content: Text(
+                                'Discounted price cannot be greater than price'),
                             backgroundColor: Colors.red,
                           ),
                         );
@@ -573,7 +575,8 @@ class _LabCatalogScreenState extends ConsumerState<LabCatalogScreen> {
     return ListView.separated(
       padding: const EdgeInsets.all(UIConstants.spacingLarge),
       itemCount: catalog.tests.length,
-      separatorBuilder: (_, __) => const SizedBox(height: UIConstants.spacingSmall),
+      separatorBuilder: (_, __) =>
+          const SizedBox(height: UIConstants.spacingSmall),
       itemBuilder: (context, index) {
         final test = catalog.tests[index];
         return Card(
@@ -592,7 +595,8 @@ class _LabCatalogScreenState extends ConsumerState<LabCatalogScreen> {
                   ),
                 IconButton(
                   icon: const Icon(Icons.edit_outlined),
-                  onPressed: () => _showTestDialog(catalog: catalog, existing: test),
+                  onPressed: () =>
+                      _showTestDialog(catalog: catalog, existing: test),
                 ),
               ],
             ),
@@ -610,7 +614,8 @@ class _LabCatalogScreenState extends ConsumerState<LabCatalogScreen> {
     return ListView.separated(
       padding: const EdgeInsets.all(UIConstants.spacingLarge),
       itemCount: catalog.packages.length,
-      separatorBuilder: (_, __) => const SizedBox(height: UIConstants.spacingSmall),
+      separatorBuilder: (_, __) =>
+          const SizedBox(height: UIConstants.spacingSmall),
       itemBuilder: (context, index) {
         final pkg = catalog.packages[index];
         return Card(

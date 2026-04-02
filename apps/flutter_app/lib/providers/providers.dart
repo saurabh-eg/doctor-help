@@ -131,9 +131,8 @@ final notificationInitializationProvider = FutureProvider((ref) async {
   final authState = ref.watch(authStateProvider);
   final pushService = ref.watch(pushNotificationServiceProvider);
   final hasName = (authState.user?.name ?? '').trim().isNotEmpty;
-  final onboardingComplete = authState.isAuthenticated &&
-      (authState.isNewUser == false) &&
-      hasName;
+  final onboardingComplete =
+      authState.isAuthenticated && (authState.isNewUser == false) && hasName;
 
   // Initialize notifications only after onboarding is complete.
   if (onboardingComplete) {

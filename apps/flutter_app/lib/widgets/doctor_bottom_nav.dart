@@ -20,14 +20,14 @@ class DoctorBottomNav extends ConsumerWidget {
   Widget _buildNotificationIcon(WidgetRef ref, ThemeData theme, bool isActive) {
     final unreadCount = ref.watch(unreadCountProvider);
     final isNotificationActive = _isActive(AppRoutes.notifications);
-    
+
     return Stack(
       children: [
         Icon(
-          isNotificationActive ? Icons.notifications : Icons.notifications_outlined,
-          color: isNotificationActive
-              ? theme.primaryColor
-              : Colors.grey[600],
+          isNotificationActive
+              ? Icons.notifications
+              : Icons.notifications_outlined,
+          color: isNotificationActive ? theme.primaryColor : Colors.grey[600],
         ),
         if (unreadCount > 0)
           Positioned(
@@ -131,7 +131,8 @@ class DoctorBottomNav extends ConsumerWidget {
           label: 'Earnings',
         ),
         BottomNavigationBarItem(
-          icon: _buildNotificationIcon(ref, theme, _isActive(AppRoutes.notifications)),
+          icon: _buildNotificationIcon(
+              ref, theme, _isActive(AppRoutes.notifications)),
           label: 'Notifications',
         ),
         BottomNavigationBarItem(

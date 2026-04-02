@@ -112,7 +112,8 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
                       });
                     },
                     decoration: InputDecoration(
-                      hintText: 'Search by name, specialization, city, pincode...',
+                      hintText:
+                          'Search by name, specialization, city, pincode...',
                       prefixIcon: const Icon(Icons.search),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
@@ -234,9 +235,9 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
 
                   List<Doctor> doctors = snapshot.data ?? [];
 
-                    // For 2+ chars, backend search already applies matching logic.
-                    // Keep local filtering only for single-character input while listing.
-                    if (_searchController.text.isNotEmpty &&
+                  // For 2+ chars, backend search already applies matching logic.
+                  // Keep local filtering only for single-character input while listing.
+                  if (_searchController.text.isNotEmpty &&
                       _searchController.text.trim().length < 2) {
                     final query = _searchController.text.toLowerCase();
                     doctors = doctors

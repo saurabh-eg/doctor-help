@@ -102,103 +102,104 @@ class AppointmentDetailsScreen extends StatelessWidget {
             },
           ),
         ),
-      body: ListView(
-        padding: const EdgeInsets.all(UIConstants.spacingLarge),
-        children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(UIConstants.spacingLarge),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Dr. $doctorName',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+        body: ListView(
+          padding: const EdgeInsets.all(UIConstants.spacingLarge),
+          children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(UIConstants.spacingLarge),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Dr. $doctorName',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: UIConstants.spacingSmall),
-                  Text('Type: ${appointment.type}'),
-                  const SizedBox(height: UIConstants.spacingSmall),
-                  Text('Date: ${_formatDate(appointment.date)}'),
-                  const SizedBox(height: UIConstants.spacingSmall),
-                  Text('Time: ${appointment.timeSlot.start}'),
-                  const SizedBox(height: UIConstants.spacingSmall),
-                  Text('Fee: ₹${appointment.amount.toStringAsFixed(0)}'),
-                  const SizedBox(height: UIConstants.spacingSmall),
-                  Row(
-                    children: [
-                      const Text('Payment: '),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: paymentColor.withOpacity(0.12),
-                          borderRadius:
-                              BorderRadius.circular(UIConstants.radiusRound),
-                        ),
-                        child: Text(
-                          paymentLabel,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: paymentColor,
-                            fontWeight: FontWeight.w700,
+                    const SizedBox(height: UIConstants.spacingSmall),
+                    Text('Type: ${appointment.type}'),
+                    const SizedBox(height: UIConstants.spacingSmall),
+                    Text('Date: ${_formatDate(appointment.date)}'),
+                    const SizedBox(height: UIConstants.spacingSmall),
+                    Text('Time: ${appointment.timeSlot.start}'),
+                    const SizedBox(height: UIConstants.spacingSmall),
+                    Text('Fee: ₹${appointment.amount.toStringAsFixed(0)}'),
+                    const SizedBox(height: UIConstants.spacingSmall),
+                    Row(
+                      children: [
+                        const Text('Payment: '),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: paymentColor.withOpacity(0.12),
+                            borderRadius:
+                                BorderRadius.circular(UIConstants.radiusRound),
+                          ),
+                          child: Text(
+                            paymentLabel,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: paymentColor,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: UIConstants.spacingSmall),
-                  Text('Status: ${appointment.status}'),
-                  if ((appointment.symptoms ?? '').isNotEmpty) ...[
+                      ],
+                    ),
                     const SizedBox(height: UIConstants.spacingSmall),
-                    Text('Reason: ${appointment.symptoms}'),
+                    Text('Status: ${appointment.status}'),
+                    if ((appointment.symptoms ?? '').isNotEmpty) ...[
+                      const SizedBox(height: UIConstants.spacingSmall),
+                      Text('Reason: ${appointment.symptoms}'),
+                    ],
                   ],
-                ],
-              ),
-            ),
-          ),
-          if (_canRetryPayment()) ...[
-            const SizedBox(height: UIConstants.spacingLarge),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  context.push(
-                    '${AppRoutes.patientPayment}?appointmentId=${appointment.id}&amount=${appointment.amount}&doctorName=${Uri.encodeComponent(doctorName)}',
-                  );
-                },
-                icon: const Icon(Icons.payment_outlined, size: 18),
-                label: const Text('Retry Payment'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.orange[800],
-                  side: BorderSide(color: Colors.orange[700]!),
                 ),
               ),
             ),
-          ],
-          if (!isUpcoming && appointment.status.toLowerCase() == 'completed') ...[
-            const SizedBox(height: UIConstants.spacingSmall),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  context.push(
-                    '${AppRoutes.writeReview}?appointmentId=${appointment.id}&doctorName=${Uri.encodeComponent(doctorName)}',
-                  );
-                },
-                icon: const Icon(Icons.rate_review_outlined, size: 18),
-                label: const Text('Write a Review'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.amber[800],
-                  side: BorderSide(color: Colors.amber[800]!),
+            if (_canRetryPayment()) ...[
+              const SizedBox(height: UIConstants.spacingLarge),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    context.push(
+                      '${AppRoutes.patientPayment}?appointmentId=${appointment.id}&amount=${appointment.amount}&doctorName=${Uri.encodeComponent(doctorName)}',
+                    );
+                  },
+                  icon: const Icon(Icons.payment_outlined, size: 18),
+                  label: const Text('Retry Payment'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.orange[800],
+                    side: BorderSide(color: Colors.orange[700]!),
+                  ),
                 ),
               ),
-            ),
+            ],
+            if (!isUpcoming &&
+                appointment.status.toLowerCase() == 'completed') ...[
+              const SizedBox(height: UIConstants.spacingSmall),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    context.push(
+                      '${AppRoutes.writeReview}?appointmentId=${appointment.id}&doctorName=${Uri.encodeComponent(doctorName)}',
+                    );
+                  },
+                  icon: const Icon(Icons.rate_review_outlined, size: 18),
+                  label: const Text('Write a Review'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.amber[800],
+                    side: BorderSide(color: Colors.amber[800]!),
+                  ),
+                ),
+              ),
+            ],
           ],
-        ],
-      ),
+        ),
       ),
     );
   }

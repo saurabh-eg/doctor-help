@@ -32,6 +32,12 @@ export const listDoctors = async (req: Request, res: Response) => {
         const limitNum = Math.min(parseInt(limit as string) || PAGINATION.DEFAULT_LIMIT, PAGINATION.MAX_LIMIT);
         const skip = (pageNum - 1) * limitNum;
 
+        const activeDoctorUsers = await User.find({
+            role: 'doctor',
+            isSuspended: { $ne: true },
+        }).select('_id').lean();
+        filter.userId = { $in: activeDoctorUsers.map((u: any) => u._id) };
+
         const [doctors, total] = await Promise.all([
             Doctor.find(filter)
                 .populate('userId', 'name phone avatar')
@@ -74,12 +80,22 @@ export const searchDoctors = async (req: Request, res: Response) => {
 
         const regex = new RegExp(escapeRegex(q as string), 'i');
 
+        const activeDoctorUsers = await User.find({
+            role: 'doctor',
+            isSuspended: { $ne: true },
+        }).select('_id').lean();
+        const activeDoctorUserIds = activeDoctorUsers.map((u: any) => u._id);
+
         // Find users whose name matches to include doctor matches by user
-        const matchedUsers = await User.find({ name: { $regex: regex } }).select('_id');
+        const matchedUsers = await User.find({
+            _id: { $in: activeDoctorUserIds },
+            name: { $regex: regex },
+        }).select('_id');
         const matchedUserIds = matchedUsers.map(u => u._id);
 
         const searchFilter = {
             isVerified: true,
+            userId: { $in: activeDoctorUserIds },
             $or: [
                 { specialization: { $regex: regex } },
                 { 'address.city': { $regex: regex } },
@@ -120,11 +136,15 @@ export const searchDoctors = async (req: Request, res: Response) => {
 export const getDoctor = async (req: Request, res: Response) => {
     try {
         const doctor = await Doctor.findById(req.params.id)
-            .populate('userId', 'name phone avatar')
+            .populate({
+                path: 'userId',
+                select: 'name phone avatar',
+                match: { isSuspended: { $ne: true } },
+            })
             .select('-__v')
             .lean();
 
-        if (!doctor) {
+        if (!doctor || !doctor.userId) {
             return res.status(404).json({ success: false, error: 'Doctor not found' });
         }
 

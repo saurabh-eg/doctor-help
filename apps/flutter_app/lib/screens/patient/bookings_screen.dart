@@ -248,8 +248,8 @@ class _AppointmentsListState extends ConsumerState<_AppointmentsList> {
       if (date == null) return null;
 
       final raw = order.slotTime.trim();
-      final match = RegExp(r'^(\d{1,2}):(\d{2})(?:\s*([AaPp][Mm]))?$')
-          .firstMatch(raw);
+      final match =
+          RegExp(r'^(\d{1,2}):(\d{2})(?:\s*([AaPp][Mm]))?$').firstMatch(raw);
 
       if (match == null) {
         // Fallback to end of day if slot format is unexpected.
@@ -380,8 +380,9 @@ class _AppointmentsListState extends ConsumerState<_AppointmentsList> {
           final dt = appointmentDateTime(apt);
           final isUpcomingAppointment = dt.isAfter(now);
           final status = apt.status.toLowerCase();
-          final isActiveStatus =
-              status == 'pending' || status == 'confirmed' || status == 'in-progress';
+          final isActiveStatus = status == 'pending' ||
+              status == 'confirmed' ||
+              status == 'in-progress';
           final isCancelled = status == 'cancelled';
 
           if (widget.isUpcoming) {
@@ -475,7 +476,8 @@ class _AppointmentsListState extends ConsumerState<_AppointmentsList> {
                 ...labOrders.map((order) => Padding(
                       padding: const EdgeInsets.only(
                           bottom: UIConstants.spacingMedium),
-                      child: _LabOrderCard(key: ValueKey(order.id), order: order),
+                      child:
+                          _LabOrderCard(key: ValueKey(order.id), order: order),
                     )),
               ],
             ],
@@ -551,14 +553,13 @@ class _LabOrderCardState extends ConsumerState<_LabOrderCard> {
       final labService = ref.read(labServiceProvider);
       // Fetch fresh order details
       final ordersResponse = await labService.getMyLabOrders();
-      
+
       if (ordersResponse.isNotEmpty && mounted) {
         // Find this specific order in the fresh list
-        final updatedOrder =
-            ordersResponse.firstWhere(
-              (o) => o.id == _currentOrder.id,
-              orElse: () => _currentOrder,
-            );
+        final updatedOrder = ordersResponse.firstWhere(
+          (o) => o.id == _currentOrder.id,
+          orElse: () => _currentOrder,
+        );
 
         // Only rebuild if status actually changed
         if (updatedOrder.status != _currentOrder.status) {
@@ -725,8 +726,10 @@ class _LabOrderCardState extends ConsumerState<_LabOrderCard> {
                         ),
                         const SizedBox(height: 8),
                         Row(
-                          children:
-                              _LabOrderCard._previewTimelineStatuses.asMap().entries.map(
+                          children: _LabOrderCard._previewTimelineStatuses
+                              .asMap()
+                              .entries
+                              .map(
                             (entry) {
                               final index = entry.key;
                               final completed =
@@ -746,7 +749,9 @@ class _LabOrderCardState extends ConsumerState<_LabOrderCard> {
                                       ),
                                     ),
                                     if (index <
-                                        _LabOrderCard._previewTimelineStatuses.length - 1)
+                                        _LabOrderCard._previewTimelineStatuses
+                                                .length -
+                                            1)
                                       Expanded(
                                         child: Container(
                                           margin: const EdgeInsets.symmetric(
@@ -939,12 +944,11 @@ class _AppointmentCard extends StatelessWidget {
     final statusIcon = _getStatusIcon(appointment.status);
     final paymentColor = _getPaymentStatusColor(appointment.paymentStatus);
     final paymentLabel = _getPaymentStatusLabel(appointment.paymentStatus);
-    final canRetryPayment =
-      isUpcoming &&
-      appointment.status.toLowerCase() != 'cancelled' &&
-      (appointment.paymentStatus.toLowerCase() == 'pending' ||
-        appointment.paymentStatus.toLowerCase() == 'failed') &&
-      appointment.amount > 0;
+    final canRetryPayment = isUpcoming &&
+        appointment.status.toLowerCase() != 'cancelled' &&
+        (appointment.paymentStatus.toLowerCase() == 'pending' ||
+            appointment.paymentStatus.toLowerCase() == 'failed') &&
+        appointment.amount > 0;
 
     return InkWell(
       borderRadius: BorderRadius.circular(UIConstants.radiusMedium),
@@ -972,239 +976,242 @@ class _AppointmentCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-          // Status Banner
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: UIConstants.spacingMedium,
-              vertical: UIConstants.spacingSmall,
-            ),
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(UIConstants.radiusMedium),
-                topRight: Radius.circular(UIConstants.radiusMedium),
+            // Status Banner
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: UIConstants.spacingMedium,
+                vertical: UIConstants.spacingSmall,
               ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  statusIcon,
-                  size: 16,
-                  color: statusColor,
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.1),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(UIConstants.radiusMedium),
+                  topRight: Radius.circular(UIConstants.radiusMedium),
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  appointment.status.toUpperCase(),
-                  style: theme.textTheme.bodySmall?.copyWith(
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    statusIcon,
+                    size: 16,
                     color: statusColor,
-                    fontWeight: FontWeight.bold,
                   ),
-                ),
-                const Spacer(),
-                Text(
-                  'ID: ${appointment.id.substring(0, 8)}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
+                  const SizedBox(width: 6),
+                  Text(
+                    appointment.status.toUpperCase(),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: statusColor,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.all(UIConstants.spacingMedium),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Doctor Info
-                Row(
-                  children: [
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: theme.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(
-                          UIConstants.radiusMedium,
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.person,
-                        color: theme.primaryColor,
-                      ),
-                    ),
-                    const SizedBox(width: UIConstants.spacingMedium),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Dr. ${appointment.doctorId.userId?.name ?? 'Doctor'}',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            appointment.type,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: UIConstants.spacingMedium),
-
-                // Appointment Details
-                _DetailRow(
-                  icon: Icons.calendar_today,
-                  label: 'Date',
-                  value: _formatDate(appointment.date),
-                ),
-                const SizedBox(height: UIConstants.spacingSmall),
-                _DetailRow(
-                  icon: Icons.access_time,
-                  label: 'Time',
-                  value: appointment.timeSlot.start,
-                ),
-                const SizedBox(height: UIConstants.spacingSmall),
-                _DetailRow(
-                  icon: Icons.currency_rupee,
-                  label: 'Fee',
-                  value: '₹${appointment.amount.toStringAsFixed(0)}',
-                ),
-                const SizedBox(height: UIConstants.spacingSmall),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.receipt_long_outlined,
-                      size: 18,
+                  const Spacer(),
+                  Text(
+                    'ID: ${appointment.id.substring(0, 8)}',
+                    style: theme.textTheme.bodySmall?.copyWith(
                       color: Colors.grey[600],
                     ),
-                    const SizedBox(width: UIConstants.spacingSmall),
-                    Text(
-                      'Payment: ',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: paymentColor.withOpacity(0.12),
-                        borderRadius:
-                            BorderRadius.circular(UIConstants.radiusRound),
-                      ),
-                      child: Text(
-                        paymentLabel,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: paymentColor,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                if (appointment.symptoms != null) ...[
-                  const SizedBox(height: UIConstants.spacingSmall),
-                  _DetailRow(
-                    icon: Icons.note_outlined,
-                    label: 'Reason',
-                    value: appointment.symptoms ?? '',
                   ),
                 ],
+              ),
+            ),
 
-                // Action Buttons for upcoming
-                if (isUpcoming &&
-                    appointment.status.toLowerCase() != 'cancelled')
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(top: UIConstants.spacingMedium),
-                    child: Column(
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                          onPressed: !isCancelling && onCancel != null
-                                ? () => onCancel!(appointment.id)
-                                : null,
-                          icon: isCancelling
-                            ? const SizedBox(
-                              width: 14,
-                              height: 14,
-                              child:
-                                CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.cancel_outlined, size: 18),
-                          label: Text(isCancelling ? 'Cancelling...' : 'Cancel'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.red,
-                              side: const BorderSide(color: Colors.red),
-                            ),
+            Padding(
+              padding: const EdgeInsets.all(UIConstants.spacingMedium),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Doctor Info
+                  Row(
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: theme.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(
+                            UIConstants.radiusMedium,
                           ),
                         ),
-                        if (canRetryPayment) ...[
-                          const SizedBox(height: UIConstants.spacingSmall),
+                        child: Icon(
+                          Icons.person,
+                          color: theme.primaryColor,
+                        ),
+                      ),
+                      const SizedBox(width: UIConstants.spacingMedium),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Dr. ${appointment.doctorId.userId?.name ?? 'Doctor'}',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              appointment.type,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: UIConstants.spacingMedium),
+
+                  // Appointment Details
+                  _DetailRow(
+                    icon: Icons.calendar_today,
+                    label: 'Date',
+                    value: _formatDate(appointment.date),
+                  ),
+                  const SizedBox(height: UIConstants.spacingSmall),
+                  _DetailRow(
+                    icon: Icons.access_time,
+                    label: 'Time',
+                    value: appointment.timeSlot.start,
+                  ),
+                  const SizedBox(height: UIConstants.spacingSmall),
+                  _DetailRow(
+                    icon: Icons.currency_rupee,
+                    label: 'Fee',
+                    value: '₹${appointment.amount.toStringAsFixed(0)}',
+                  ),
+                  const SizedBox(height: UIConstants.spacingSmall),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.receipt_long_outlined,
+                        size: 18,
+                        color: Colors.grey[600],
+                      ),
+                      const SizedBox(width: UIConstants.spacingSmall),
+                      Text(
+                        'Payment: ',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: paymentColor.withOpacity(0.12),
+                          borderRadius:
+                              BorderRadius.circular(UIConstants.radiusRound),
+                        ),
+                        child: Text(
+                          paymentLabel,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: paymentColor,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (appointment.symptoms != null) ...[
+                    const SizedBox(height: UIConstants.spacingSmall),
+                    _DetailRow(
+                      icon: Icons.note_outlined,
+                      label: 'Reason',
+                      value: appointment.symptoms ?? '',
+                    ),
+                  ],
+
+                  // Action Buttons for upcoming
+                  if (isUpcoming &&
+                      appointment.status.toLowerCase() != 'cancelled')
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(top: UIConstants.spacingMedium),
+                      child: Column(
+                        children: [
                           SizedBox(
                             width: double.infinity,
                             child: OutlinedButton.icon(
-                              onPressed: () {
-                                final doctorName =
-                                    appointment.doctorId.userId?.name ??
-                                        'Doctor';
-                                context.push(
-                                  '${AppRoutes.patientPayment}?appointmentId=${appointment.id}&amount=${appointment.amount}&doctorName=${Uri.encodeComponent(doctorName)}',
-                                );
-                              },
-                              icon: const Icon(Icons.payment_outlined, size: 18),
-                              label: const Text('Retry Payment'),
+                              onPressed: !isCancelling && onCancel != null
+                                  ? () => onCancel!(appointment.id)
+                                  : null,
+                              icon: isCancelling
+                                  ? const SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2),
+                                    )
+                                  : const Icon(Icons.cancel_outlined, size: 18),
+                              label: Text(
+                                  isCancelling ? 'Cancelling...' : 'Cancel'),
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.orange[800],
-                                side: BorderSide(color: Colors.orange[700]!),
+                                foregroundColor: Colors.red,
+                                side: const BorderSide(color: Colors.red),
                               ),
                             ),
                           ),
+                          if (canRetryPayment) ...[
+                            const SizedBox(height: UIConstants.spacingSmall),
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  final doctorName =
+                                      appointment.doctorId.userId?.name ??
+                                          'Doctor';
+                                  context.push(
+                                    '${AppRoutes.patientPayment}?appointmentId=${appointment.id}&amount=${appointment.amount}&doctorName=${Uri.encodeComponent(doctorName)}',
+                                  );
+                                },
+                                icon: const Icon(Icons.payment_outlined,
+                                    size: 18),
+                                label: const Text('Retry Payment'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.orange[800],
+                                  side: BorderSide(color: Colors.orange[700]!),
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  ),
 
-                // Write Review button for completed appointments
-                if (!isUpcoming &&
-                    appointment.status.toLowerCase() == 'completed')
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(top: UIConstants.spacingMedium),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          final doctorName =
-                              appointment.doctorId.userId?.name ?? 'Doctor';
-                          context.push(
-                            '${AppRoutes.writeReview}?appointmentId=${appointment.id}&doctorName=$doctorName',
-                          );
-                        },
-                        icon: const Icon(Icons.rate_review_outlined, size: 18),
-                        label: const Text('Write a Review'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.amber[800],
-                          side: BorderSide(color: Colors.amber[800]!),
+                  // Write Review button for completed appointments
+                  if (!isUpcoming &&
+                      appointment.status.toLowerCase() == 'completed')
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(top: UIConstants.spacingMedium),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            final doctorName =
+                                appointment.doctorId.userId?.name ?? 'Doctor';
+                            context.push(
+                              '${AppRoutes.writeReview}?appointmentId=${appointment.id}&doctorName=$doctorName',
+                            );
+                          },
+                          icon:
+                              const Icon(Icons.rate_review_outlined, size: 18),
+                          label: const Text('Write a Review'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.amber[800],
+                            side: BorderSide(color: Colors.amber[800]!),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
           ],
         ),
       ),

@@ -220,7 +220,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     padding: const EdgeInsets.all(UIConstants.spacingMedium),
                     decoration: BoxDecoration(
                       color: theme.primaryColor.withOpacity(0.06),
-                      borderRadius: BorderRadius.circular(UIConstants.radiusLarge),
+                      borderRadius:
+                          BorderRadius.circular(UIConstants.radiusLarge),
                       border: Border.all(
                         color: theme.primaryColor.withOpacity(0.15),
                       ),

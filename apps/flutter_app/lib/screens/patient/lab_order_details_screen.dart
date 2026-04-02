@@ -499,7 +499,8 @@ class _LabOrderDetailsScreenState extends ConsumerState<LabOrderDetailsScreen> {
                         ),
                       ),
                       const SizedBox(height: UIConstants.spacingSmall),
-                      if (order.reportUrl != null && order.reportUrl!.isNotEmpty)
+                      if (order.reportUrl != null &&
+                          order.reportUrl!.isNotEmpty)
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -521,7 +522,8 @@ class _LabOrderDetailsScreenState extends ConsumerState<LabOrderDetailsScreen> {
                         )
                       else
                         Text(
-                          order.status == 'report_ready' || order.status == 'completed'
+                          order.status == 'report_ready' ||
+                                  order.status == 'completed'
                               ? 'Report should be available soon.'
                               : 'Report is not ready yet.',
                           style: theme.textTheme.bodyMedium?.copyWith(

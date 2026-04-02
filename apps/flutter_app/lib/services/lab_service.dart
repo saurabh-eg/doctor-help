@@ -276,7 +276,8 @@ class LabService {
     bool clearTurnaroundHours = false,
     bool? isActive,
   }) async {
-    final endpoint = ApiEndpoints.updateLabProviderTest.replaceAll(':id', testId);
+    final endpoint =
+        ApiEndpoints.updateLabProviderTest.replaceAll(':id', testId);
     final body = <String, dynamic>{
       if (code != null) 'code': code.trim(),
       if (name != null) 'name': name.trim(),

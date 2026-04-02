@@ -195,9 +195,8 @@ class _LabOrderDetailsScreenState extends ConsumerState<LabOrderDetailsScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: isSubmitting
-                  ? null
-                  : () => Navigator.of(dialogContext).pop(),
+              onPressed:
+                  isSubmitting ? null : () => Navigator.of(dialogContext).pop(),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
@@ -208,8 +207,7 @@ class _LabOrderDetailsScreenState extends ConsumerState<LabOrderDetailsScreen> {
                       if (text.length < 5) {
                         ScaffoldMessenger.of(this.context).showSnackBar(
                           const SnackBar(
-                            content:
-                                Text('Please enter at least 5 characters'),
+                            content: Text('Please enter at least 5 characters'),
                             backgroundColor: Colors.red,
                           ),
                         );
@@ -425,8 +423,8 @@ class _LabOrderDetailsScreenState extends ConsumerState<LabOrderDetailsScreen> {
                           if (isEscalated)
                             Container(
                               width: double.infinity,
-                              padding:
-                                  const EdgeInsets.all(UIConstants.spacingSmall),
+                              padding: const EdgeInsets.all(
+                                  UIConstants.spacingSmall),
                               decoration: BoxDecoration(
                                 color: Colors.orange.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(

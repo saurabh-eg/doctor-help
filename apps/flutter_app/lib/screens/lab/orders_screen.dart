@@ -161,20 +161,21 @@ class _LabOrdersScreenState extends ConsumerState<LabOrdersScreen> {
                                 top: 0,
                                 right: 0,
                                 child: Tooltip(
-                                  message: order.adminOverride?.escalationReason ??
-                                      'Order escalated to admin',
+                                  message:
+                                      order.adminOverride?.escalationReason ??
+                                          'Order escalated to admin',
                                   child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 4,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.orange,
+                                      borderRadius: BorderRadius.only(
+                                        topRight: Radius.circular(4),
+                                        bottomLeft: Radius.circular(8),
                                       ),
-                                      decoration: const BoxDecoration(
-                                        color: Colors.orange,
-                                        borderRadius: BorderRadius.only(
-                                          topRight: Radius.circular(4),
-                                          bottomLeft: Radius.circular(8),
-                                        ),
-                                      ),
+                                    ),
                                     child: const Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [

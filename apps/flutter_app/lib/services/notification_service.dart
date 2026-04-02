@@ -185,69 +185,70 @@ class NotificationService {
     }
   }
 
-      Future<ApiResponse<bool>> registerPushDevice({
-        required String token,
-        required String platform,
-        String? appVersion,
-      }) async {
-        try {
-          final response = await _apiService.post<Map<String, dynamic>>(
-            ApiEndpoints.notificationsRegisterDevice,
-            body: {
-              'token': token,
-              'platform': platform,
-              if (appVersion != null && appVersion.trim().isNotEmpty)
-                'appVersion': appVersion.trim(),
-            },
-            fromJson: (json) => json,
-          );
+  Future<ApiResponse<bool>> registerPushDevice({
+    required String token,
+    required String platform,
+    String? appVersion,
+  }) async {
+    try {
+      final response = await _apiService.post<Map<String, dynamic>>(
+        ApiEndpoints.notificationsRegisterDevice,
+        body: {
+          'token': token,
+          'platform': platform,
+          if (appVersion != null && appVersion.trim().isNotEmpty)
+            'appVersion': appVersion.trim(),
+        },
+        fromJson: (json) => json,
+      );
 
-          return ApiResponse<bool>(
-            success: response.success,
-            data: response.success,
-            error: response.error,
-          );
-        } catch (e) {
-          debugPrint('Error registering push device: $e');
-          return ApiResponse<bool>(success: false, error: e.toString());
-        }
+      return ApiResponse<bool>(
+        success: response.success,
+        data: response.success,
+        error: response.error,
+      );
+    } catch (e) {
+      debugPrint('Error registering push device: $e');
+      return ApiResponse<bool>(success: false, error: e.toString());
+    }
+  }
+
+  Future<ApiResponse<bool>> unregisterPushDevice({
+    required String token,
+  }) async {
+    try {
+      // Logout can clear auth token before cleanup runs; skip remote unregister
+      // in that case to avoid noisy 401 logs.
+      final authToken = _apiService.getToken();
+      if (authToken == null || authToken.isEmpty) {
+        return const ApiResponse<bool>(success: true, data: true);
       }
 
-      Future<ApiResponse<bool>> unregisterPushDevice({
-        required String token,
-      }) async {
-        try {
-          // Logout can clear auth token before cleanup runs; skip remote unregister
-          // in that case to avoid noisy 401 logs.
-          final authToken = _apiService.getToken();
-          if (authToken == null || authToken.isEmpty) {
-            return const ApiResponse<bool>(success: true, data: true);
-          }
+      final response = await _apiService.post<Map<String, dynamic>>(
+        ApiEndpoints.notificationsUnregisterDevice,
+        body: {'token': token},
+        fromJson: (json) => json,
+      );
 
-          final response = await _apiService.post<Map<String, dynamic>>(
-            ApiEndpoints.notificationsUnregisterDevice,
-            body: {'token': token},
-            fromJson: (json) => json,
-          );
-
-          // Even if unregister fails (e.g., 401, endpoint not found), treat as success
-          // to avoid clearing main auth token. This is a cleanup endpoint.
-          if (!response.success) {
-            debugPrint('Push device unregister failed (non-critical): ${response.error}');
-            return const ApiResponse<bool>(success: true, data: true);
-          }
-
-          return ApiResponse<bool>(
-            success: response.success,
-            data: response.success,
-            error: response.error,
-          );
-        } catch (e) {
-          debugPrint('Error unregistering push device: $e');
-          // Treat errors as non-critical - don't cascade
-          return const ApiResponse<bool>(success: true, data: true);
-        }
+      // Even if unregister fails (e.g., 401, endpoint not found), treat as success
+      // to avoid clearing main auth token. This is a cleanup endpoint.
+      if (!response.success) {
+        debugPrint(
+            'Push device unregister failed (non-critical): ${response.error}');
+        return const ApiResponse<bool>(success: true, data: true);
       }
+
+      return ApiResponse<bool>(
+        success: response.success,
+        data: response.success,
+        error: response.error,
+      );
+    } catch (e) {
+      debugPrint('Error unregistering push device: $e');
+      // Treat errors as non-critical - don't cascade
+      return const ApiResponse<bool>(success: true, data: true);
+    }
+  }
 
   /// Get paginated notifications
   Future<ApiResponse<PaginatedResponse<Notification>>> getNotifications({

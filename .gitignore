@@ -53,6 +53,11 @@ Thumbs.db
 !README.md
 !**/README.md
 
+# Local security/audit docs - keep out of commits
+DOCUMENTATION_INDEX.md
+OTP_INTEGRATION_AUDIT.md
+OTP_STATUS_REPORT.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -368,7 +368,8 @@ class ApiService {
     try {
       final trimmedBody = response.body.trim();
       final decoded = trimmedBody.isNotEmpty ? jsonDecode(trimmedBody) : null;
-      final json = decoded is Map<String, dynamic> ? decoded : <String, dynamic>{};
+      final json =
+          decoded is Map<String, dynamic> ? decoded : <String, dynamic>{};
       final plainTextBody = trimmedBody.isNotEmpty ? trimmedBody : null;
 
       if (response.statusCode >= 200 && response.statusCode < 300) {

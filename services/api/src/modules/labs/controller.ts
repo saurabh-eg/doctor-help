@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import { Lab, LabTest, LabPackage } from '../../models';
+import { Lab, LabTest, LabPackage, User } from '../../models';
 import { PAGINATION } from '../../utils/pagination';
 import { escapeRegex } from '../../utils/regex';
 
@@ -52,6 +52,19 @@ export const listLabs = async (req: Request, res: Response) => {
         }
         if (state) {
             filter['address.state'] = { $regex: escapeRegex(String(state)), $options: 'i' };
+        }
+
+        const suspendedLabUsers = await User.find({
+            role: 'lab',
+            isSuspended: true,
+        }).select('_id').lean();
+        const suspendedLabUserIds = suspendedLabUsers.map((u: any) => u._id);
+        if (suspendedLabUserIds.length > 0) {
+            filter.$or = [
+                { createdBy: { $exists: false } },
+                { createdBy: null },
+                { createdBy: { $nin: suspendedLabUserIds } },
+            ];
         }
 
         const [labs, total] = await Promise.all([
@@ -111,6 +124,13 @@ export const getLabById = async (req: Request, res: Response) => {
             return res.status(404).json({ success: false, error: 'Lab not found' });
         }
 
+        if (lab.createdBy) {
+            const suspendedOwner = await User.exists({ _id: lab.createdBy, isSuspended: true });
+            if (suspendedOwner) {
+                return res.status(404).json({ success: false, error: 'Lab not found' });
+            }
+        }
+
         return res.json({
             success: true,
             data: {
@@ -143,6 +163,13 @@ export const getLabCatalog = async (req: Request, res: Response) => {
             return res.status(404).json({ success: false, error: 'Lab not found' });
         }
 
+        if (lab.createdBy) {
+            const suspendedOwner = await User.exists({ _id: lab.createdBy, isSuspended: true });
+            if (suspendedOwner) {
+                return res.status(404).json({ success: false, error: 'Lab not found' });
+            }
+        }
+
         return res.json({
             success: true,
             data: {
@@ -163,6 +190,12 @@ export const compareTestPrices = async (req: Request, res: Response) => {
         const { testName } = req.params;
         const { lat, lng } = req.query;
 
+        const suspendedLabUsers = await User.find({
+            role: 'lab',
+            isSuspended: true,
+        }).select('_id').lean();
+        const suspendedOwnerIds = new Set(suspendedLabUsers.map((u: any) => String(u._id)));
+
         const tests = await LabTest.find({
             isActive: true,
             name: new RegExp(String(testName), 'i'),
@@ -174,6 +207,9 @@ export const compareTestPrices = async (req: Request, res: Response) => {
             .map((test: any) => {
                 const lab = test.labId;
                 if (!lab || !lab.isActive) {
+                    return null;
+                }
+                if (lab.createdBy && suspendedOwnerIds.has(String(lab.createdBy))) {
                     return null;
                 }
 

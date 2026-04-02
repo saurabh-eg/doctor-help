@@ -52,7 +52,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
   Future<void> _onNotificationTap(notif_model.Notification notification) async {
     if (!notification.isRead) {
-      await ref.read(notificationListProvider.notifier).markAsRead(notification.id);
+      await ref
+          .read(notificationListProvider.notifier)
+          .markAsRead(notification.id);
     }
 
     if (!mounted) return;
@@ -65,8 +67,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
     final isAppointment =
         relatedModel == 'appointment' || type.contains('appointment');
-    final isLabOrder =
-        relatedModel == 'laborder' || type.contains('lab_order') || type.contains('lab');
+    final isLabOrder = relatedModel == 'laborder' ||
+        type.contains('lab_order') ||
+        type.contains('lab');
     final isPayment = relatedModel == 'payment' || type.contains('payment');
 
     if (isAppointment) {
@@ -77,7 +80,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       // Patient - if we have relatedId, show specific appointment detail
       if (relatedId.isNotEmpty) {
         final encodedId = Uri.encodeComponent(relatedId);
-        context.push('${AppRoutes.patientAppointmentDetailsById}?id=$encodedId');
+        context
+            .push('${AppRoutes.patientAppointmentDetailsById}?id=$encodedId');
         return;
       }
       // Fallback to bookings list if no ID
@@ -119,7 +123,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('No linked details available for this notification.')),
+      const SnackBar(
+          content: Text('No linked details available for this notification.')),
     );
   }
 

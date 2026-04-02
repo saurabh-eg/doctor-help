@@ -29,7 +29,8 @@ class Notification with _$Notification {
     }
 
     final id = (json['id'] ?? json['_id'] ?? '').toString();
-    final title = (json['title'] ?? json['subject'] ?? 'Notification').toString();
+    final title =
+        (json['title'] ?? json['subject'] ?? 'Notification').toString();
     final message =
         (json['message'] ?? json['body'] ?? json['content'] ?? '').toString();
     final type = (json['type'] ?? 'system_message').toString();

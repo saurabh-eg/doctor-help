@@ -19,14 +19,19 @@ const OTP_EXPIRY_MINUTES = 10;
 const JWT_EXPIRATION = process.env.JWT_EXPIRATION || '45d';
 const OTP_DEV_MODE = (process.env.OTP_DEV_MODE || '').toLowerCase() === 'true';
 const OTP_DEV_FALLBACK = process.env.OTP_DEV_OTP || '123456';
+const normalizeMobile = (value: string): string => {
+    const digitsOnly = value.replace(/\D/g, '');
+    return /^91\d{10}$/.test(digitsOnly) ? digitsOnly.slice(2) : digitsOnly;
+};
 
 /** POST /api/auth/send-otp — Generate and send OTP to a mobile number. */
 export const sendOtpController = async (req: Request, res: Response) => {
     try {
         const { mobile } = req.body as { mobile: string };
+        const normalizedMobile = normalizeMobile(mobile);
 
         // Cooldown guard: prevent resend within 60 seconds
-        const existingOtp = await Otp.findOne({ mobile }).sort({ createdAt: -1 });
+        const existingOtp = await Otp.findOne({ mobile: normalizedMobile }).sort({ createdAt: -1 });
         if (existingOtp) {
             const elapsedMs = Date.now() - existingOtp.createdAt.getTime();
             const remainingSeconds = Math.ceil((OTP_COOLDOWN_SECONDS * 1000 - elapsedMs) / 1000);
@@ -42,9 +47,9 @@ export const sendOtpController = async (req: Request, res: Response) => {
         const otp = OTP_DEV_MODE ? OTP_DEV_FALLBACK : generateOTP();
         const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
-        await Otp.deleteMany({ mobile });
+        await Otp.deleteMany({ mobile: normalizedMobile });
         await Otp.create({
-            mobile,
+            mobile: normalizedMobile,
             otp: hashOTP(otp),
             expiresAt,
         });
@@ -52,12 +57,12 @@ export const sendOtpController = async (req: Request, res: Response) => {
         let smsSent = false;
         if (OTP_DEV_MODE) {
             smsSent = true;
-            console.info(`OTP_DEV_MODE enabled. Skipping SMS send for ${mobile}`);
+            console.info(`OTP_DEV_MODE enabled. Skipping SMS send for ${normalizedMobile}`);
         } else {
-            smsSent = await sendOTP(mobile, otp);
+            smsSent = await sendOTP(normalizedMobile, otp);
             if (!smsSent) {
-                console.error(`OTP SMS delivery failed for ${mobile}`);
-                await Otp.deleteMany({ mobile });
+                console.error(`OTP SMS delivery failed for ${normalizedMobile}`);
+                await Otp.deleteMany({ mobile: normalizedMobile });
                 return res.status(502).json({
                     success: false,
                     error: 'Failed to deliver OTP. Please try again in a moment.',
@@ -92,21 +97,22 @@ export const sendOtpController = async (req: Request, res: Response) => {
 export const verifyOtpController = async (req: Request, res: Response) => {
     try {
         const { mobile, otp } = req.body as { mobile: string; otp: string };
+        const normalizedMobile = normalizeMobile(mobile);
 
         const hashedOtp = hashOTP(otp);
-        const existingOtp = await Otp.findOne({ mobile, otp: hashedOtp }).sort({ createdAt: -1 });
+        const existingOtp = await Otp.findOne({ mobile: normalizedMobile, otp: hashedOtp }).sort({ createdAt: -1 });
         if (!existingOtp) {
             return res.status(400).json({ success: false, error: 'Invalid OTP' });
         }
 
         if (existingOtp.expiresAt.getTime() < Date.now()) {
-            await Otp.deleteMany({ mobile });
+            await Otp.deleteMany({ mobile: normalizedMobile });
             return res.status(400).json({ success: false, error: 'OTP expired' });
         }
 
-        await Otp.deleteMany({ mobile });
+        await Otp.deleteMany({ mobile: normalizedMobile });
 
-        let user = await User.findOne({ phone: mobile });
+        let user = await User.findOne({ phone: normalizedMobile });
         const isNewUser = !user;
 
         if (user && !user.isPhoneVerified) {
@@ -132,7 +138,7 @@ export const verifyOtpController = async (req: Request, res: Response) => {
                 onboarding: false,
             }
             : {
-                phone: mobile,
+                phone: normalizedMobile,
                 role: 'patient' as const,
                 onboarding: true,
             };
@@ -151,7 +157,7 @@ export const verifyOtpController = async (req: Request, res: Response) => {
                 user: {
                     _id: user?._id || 'me',
                     userId: user?.userId,
-                    phone: user?.phone || mobile,
+                    phone: user?.phone || normalizedMobile,
                     name: user?.name,
                     email: user?.email,
                     role: user?.role || 'patient',

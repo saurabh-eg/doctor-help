@@ -18,13 +18,13 @@ const otpRateLimiter = rateLimit({
 
 const sendOTPSchema = z.object({
     body: z.object({
-        mobile: z.string().regex(/^\d{10}$/, 'Mobile must be exactly 10 digits')
+        mobile: z.string().regex(/^(?:\+91|91)?\d{10}$/, 'Mobile must be 10 digits (optionally with +91)')
     })
 });
 
 const verifyOTPSchema = z.object({
     body: z.object({
-        mobile: z.string().regex(/^\d{10}$/, 'Mobile must be exactly 10 digits'),
+        mobile: z.string().regex(/^(?:\+91|91)?\d{10}$/, 'Mobile must be 10 digits (optionally with +91)'),
         otp: z.string().length(6)
     })
 });

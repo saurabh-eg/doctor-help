@@ -29,7 +29,8 @@ class _AppointmentDetailsLoaderScreenState
   Future<void> _loadAppointment() async {
     try {
       final appointmentService = ref.read(appointmentServiceProvider);
-      final response = await appointmentService.getAppointment(widget.appointmentId);
+      final response =
+          await appointmentService.getAppointment(widget.appointmentId);
 
       if (!mounted) return;
 
