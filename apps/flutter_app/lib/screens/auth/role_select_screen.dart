@@ -38,36 +38,109 @@ class RoleSelectScreen extends ConsumerWidget {
                     ),
               ),
               const SizedBox(height: 40),
-              // Patient Option
               _RoleCard(
                 icon: Icons.person,
                 title: 'I am a Patient',
                 description: 'Book appointments and consult with doctors',
                 onTap: () async {
-                  final success =
-                      await ref.read(authStateProvider.notifier).setRole(
-                            AppConstants.rolePatient,
-                          );
-                  if (success && context.mounted) {
+                  final success = await ref
+                      .read(authStateProvider.notifier)
+                      .setRole(AppConstants.rolePatient);
+                  if (!context.mounted) return;
+
+                  if (success) {
                     context.go(AppRoutes.profileSetup);
+                    return;
+                  }
+
+                  final error =
+                      ref.read(authStateProvider).error ?? 'Failed to set role';
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(error),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+
+                  final lower = error.toLowerCase();
+                  if (lower.contains('unauthorized') ||
+                      lower.contains('no token')) {
+                    context.go(AppRoutes.login);
                   }
                 },
               ),
               const SizedBox(height: 16),
-              // Doctor Option
               _RoleCard(
                 icon: Icons.medical_services,
                 title: 'I am a Doctor',
                 description: 'Manage consultations and build your practice',
                 onTap: () async {
-                  final success =
-                      await ref.read(authStateProvider.notifier).setRole(
-                            AppConstants.roleDoctor,
-                          );
-                  if (success && context.mounted) {
+                  final success = await ref
+                      .read(authStateProvider.notifier)
+                      .setRole(AppConstants.roleDoctor);
+                  if (!context.mounted) return;
+
+                  if (success) {
                     context.go(AppRoutes.doctorVerification);
+                    return;
+                  }
+
+                  final error =
+                      ref.read(authStateProvider).error ?? 'Failed to set role';
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(error),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+
+                  final lower = error.toLowerCase();
+                  if (lower.contains('unauthorized') ||
+                      lower.contains('no token')) {
+                    context.go(AppRoutes.login);
                   }
                 },
+              ),
+              const SizedBox(height: 16),
+              _RoleCard(
+                icon: Icons.biotech,
+                title: 'I run a Lab',
+                description:
+                    'Submit your lab details for approval and onboarding',
+                onTap: () {
+                  final isAuthenticated =
+                      ref.read(authStateProvider).isAuthenticated;
+                  if (!isAuthenticated) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Session expired. Please login again.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    context.go(AppRoutes.login);
+                    return;
+                  }
+                  context.push(AppRoutes.labRegistrationRequest);
+                },
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    await ref.read(authStateProvider.notifier).logout();
+                    if (context.mounted) {
+                      context.go(AppRoutes.login);
+                    }
+                  },
+                  icon: const Icon(Icons.phone),
+                  label: const Text('Use a Different Phone Number'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    backgroundColor: Colors.grey[300],
+                    foregroundColor: Colors.black87,
+                  ),
+                ),
               ),
             ],
           ),
@@ -100,13 +173,6 @@ class _RoleCard extends StatelessWidget {
           color: Colors.white,
           border: Border.all(color: Colors.grey[300]!),
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            )
-          ],
         ),
         child: Row(
           children: [

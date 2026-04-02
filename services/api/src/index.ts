@@ -23,6 +23,13 @@ import { doctorUploadRouter } from './modules/doctors/upload';
 import { userUploadRouter } from './modules/users/upload';
 import { adminRouter } from './modules/admin/routes';
 import { reviewsRouter } from './modules/reviews/routes';
+import { labsRouter } from './modules/labs/routes';
+import { labOrdersRouter } from './modules/lab-orders/routes';
+import { labOrderUploadRouter } from './modules/lab-orders/upload';
+import { labRegistrationRouter } from './modules/lab-registration/routes';
+import { paymentsRouter } from './modules/payments/routes';
+import { labProviderRouter } from './modules/lab-provider/routes';
+import { notificationsRouter } from './modules/notifications/routes';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
@@ -100,6 +107,13 @@ app.use('/api/doctors', doctorUploadRouter);
 app.use('/api/users', userUploadRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/reviews', reviewsRouter);
+app.use('/api/labs', labsRouter);
+app.use('/api/lab-orders', labOrdersRouter);
+app.use('/api/lab-orders', labOrderUploadRouter);
+app.use('/api/lab-registrations', labRegistrationRouter);
+app.use('/api/payments', paymentsRouter);
+app.use('/api/lab-provider', labProviderRouter);
+app.use('/api/notifications', notificationsRouter);
 
 // Error Handling
 app.use(errorHandler);

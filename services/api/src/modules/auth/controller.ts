@@ -3,7 +3,6 @@ import { SignJWT } from 'jose';
 import crypto from 'crypto';
 
 import { Otp, User } from '../../models';
-import { Counter } from '../../models/counter.model';
 import { sendOTP } from './utils/send-otp';
 import { AuthenticatedRequest } from '../../middleware/auth';
 import { getJwtSecret } from '../../utils/jwt';
@@ -18,6 +17,8 @@ const hashOTP = (otp: string): string =>
 const OTP_COOLDOWN_SECONDS = 60;
 const OTP_EXPIRY_MINUTES = 10;
 const JWT_EXPIRATION = process.env.JWT_EXPIRATION || '45d';
+const OTP_DEV_MODE = (process.env.OTP_DEV_MODE || '').toLowerCase() === 'true';
+const OTP_DEV_FALLBACK = process.env.OTP_DEV_OTP || '123456';
 
 /** POST /api/auth/send-otp — Generate and send OTP to a mobile number. */
 export const sendOtpController = async (req: Request, res: Response) => {
@@ -38,7 +39,7 @@ export const sendOtpController = async (req: Request, res: Response) => {
             }
         }
 
-        const otp = generateOTP();
+        const otp = OTP_DEV_MODE ? OTP_DEV_FALLBACK : generateOTP();
         const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
         await Otp.deleteMany({ mobile });
@@ -48,14 +49,27 @@ export const sendOtpController = async (req: Request, res: Response) => {
             expiresAt,
         });
 
-        const smsSent = await sendOTP(mobile, otp);
-        if (!smsSent) {
-            console.error(`OTP SMS delivery failed for ${mobile}`);
+        let smsSent = false;
+        if (OTP_DEV_MODE) {
+            smsSent = true;
+            console.info(`OTP_DEV_MODE enabled. Skipping SMS send for ${mobile}`);
+        } else {
+            smsSent = await sendOTP(mobile, otp);
+            if (!smsSent) {
+                console.error(`OTP SMS delivery failed for ${mobile}`);
+                await Otp.deleteMany({ mobile });
+                return res.status(502).json({
+                    success: false,
+                    error: 'Failed to deliver OTP. Please try again in a moment.',
+                });
+            }
         }
 
         res.json({
             success: true,
-            message: smsSent
+            message: OTP_DEV_MODE
+                ? 'OTP generated in development mode'
+                : smsSent
                 ? 'OTP sent successfully'
                 : 'OTP generated successfully. SMS delivery is delayed, please retry if needed.',
             data: {
@@ -63,7 +77,7 @@ export const sendOtpController = async (req: Request, res: Response) => {
                 expiresAt,
                 cooldown: OTP_COOLDOWN_SECONDS,
             },
-            debug_otp: process.env.NODE_ENV === 'development' ? otp : undefined,
+            debug_otp: (process.env.NODE_ENV === 'development' || OTP_DEV_MODE) ? otp : undefined,
         });
     } catch (error) {
         console.error('sendOtpController error:', error);
@@ -93,31 +107,15 @@ export const verifyOtpController = async (req: Request, res: Response) => {
         await Otp.deleteMany({ mobile });
 
         let user = await User.findOne({ phone: mobile });
-        let isNewUser = false;
+        const isNewUser = !user;
 
-        if (!user) {
-            const counter = await Counter.findByIdAndUpdate(
-                'user',
-                { $inc: { seq: 1 } },
-                { new: true, upsert: true }
-            );
-
-            const newUserId = counter.seq;
-            user = await User.create({
-                phone: mobile,
-                role: 'patient',
-                isPhoneVerified: true,
-                isProfileComplete: false,
-                userId: newUserId,
-            });
-            isNewUser = true;
-        } else if (!user.isPhoneVerified) {
+        if (user && !user.isPhoneVerified) {
             user.isPhoneVerified = true;
             await user.save();
         }
 
         // Block suspended users from logging in
-        if (user.isSuspended) {
+        if (user?.isSuspended) {
             return res.status(403).json({
                 success: false,
                 error: 'Your account has been suspended',
@@ -125,12 +123,21 @@ export const verifyOtpController = async (req: Request, res: Response) => {
             });
         }
 
-        const token = await new SignJWT({
-            userId: user._id.toString(),
-            phone: user.phone,
-            role: user.role,
-            numericUserId: user.userId,
-        })
+        const tokenPayload = user
+            ? {
+                userId: user._id.toString(),
+                phone: user.phone,
+                role: user.role,
+                numericUserId: user.userId,
+                onboarding: false,
+            }
+            : {
+                phone: mobile,
+                role: 'patient' as const,
+                onboarding: true,
+            };
+
+        const token = await new SignJWT(tokenPayload)
             .setProtectedHeader({ alg: 'HS256' })
             .setIssuedAt()
             .setExpirationTime(JWT_EXPIRATION)
@@ -142,15 +149,15 @@ export const verifyOtpController = async (req: Request, res: Response) => {
             data: {
                 token,
                 user: {
-                    _id: user._id,
-                    userId: user.userId,
-                    phone: user.phone,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                    avatar: user.avatar,
-                    isPhoneVerified: user.isPhoneVerified,
-                    isProfileComplete: user.isProfileComplete,
+                    _id: user?._id || 'me',
+                    userId: user?.userId,
+                    phone: user?.phone || mobile,
+                    name: user?.name,
+                    email: user?.email,
+                    role: user?.role || 'patient',
+                    avatar: user?.avatar,
+                    isPhoneVerified: true,
+                    isProfileComplete: user?.isProfileComplete ?? false,
                     isNewUser,
                 },
             },
@@ -170,11 +177,33 @@ export const refresh = async (req: Request, res: Response) => {
         const authReq = req as AuthenticatedRequest;
         const jwtUser = authReq.user;
 
-        // Re-fetch user from DB to check suspension & get fresh role
-        const dbUser = await User.findById(jwtUser?.userId);
+        // Re-fetch user from DB to check suspension & get fresh role.
+        // For onboarding tokens (no userId yet), resolve by phone.
+        const dbUser = jwtUser?.userId
+            ? await User.findById(jwtUser.userId)
+            : await User.findOne({ phone: jwtUser?.phone });
+
         if (!dbUser) {
-            return res.status(404).json({ success: false, error: 'User not found' });
+            if (!jwtUser?.phone) {
+                return res.status(404).json({ success: false, error: 'User not found' });
+            }
+
+            const onboardingToken = await new SignJWT({
+                phone: jwtUser.phone,
+                role: 'patient',
+                onboarding: true,
+            })
+                .setProtectedHeader({ alg: 'HS256' })
+                .setIssuedAt()
+                .setExpirationTime(JWT_EXPIRATION)
+                .sign(getJwtSecret());
+
+            return res.json({
+                success: true,
+                data: { token: onboardingToken }
+            });
         }
+
         if (dbUser.isSuspended) {
             return res.status(403).json({
                 success: false,
@@ -208,9 +237,32 @@ export const refresh = async (req: Request, res: Response) => {
 export const getMe = async (req: Request, res: Response) => {
     try {
         const authReq = req as AuthenticatedRequest;
-        const user = await User.findById(authReq.user?.userId);
+        const jwtUser = authReq.user;
+
+        const user = jwtUser?.userId
+            ? await User.findById(jwtUser.userId)
+            : await User.findOne({ phone: jwtUser?.phone });
+
         if (!user) {
-            return res.status(404).json({ success: false, error: 'User not found' });
+            if (!jwtUser?.phone) {
+                return res.status(404).json({ success: false, error: 'User not found' });
+            }
+
+            return res.json({
+                success: true,
+                data: {
+                    _id: 'me',
+                    phone: jwtUser.phone,
+                    name: undefined,
+                    email: undefined,
+                    role: 'patient',
+                    avatar: undefined,
+                    userId: undefined,
+                    isPhoneVerified: true,
+                    isProfileComplete: false,
+                    isNewUser: true,
+                }
+            });
         }
 
         res.json({

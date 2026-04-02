@@ -41,8 +41,7 @@ class RefundPolicyScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(UIConstants.radiusMedium),
               ),
               child: Text(
-                'Quick Summary: Cancel 24+ hours before = Full refund. Cancel within 24 hours = '
-                    'No refund. Doctor cancellation = Full refund.',
+                'Quick Summary: Eligible cancellations may receive a full refund. Once a consultation, lab sample collection, or service is completed, refunds are usually not available except where required by law or due to an error on our side.',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
                 ),
@@ -51,63 +50,65 @@ class RefundPolicyScreen extends StatelessWidget {
             const SizedBox(height: UIConstants.spacing2XLarge),
             _buildSection(
               theme,
-              '1. Cancellation by Patient',
-              'Full Refund (100%):\n'
-                  '• Cancellation made more than 24 hours before scheduled appointment\n'
-                  '• Technical issues preventing consultation (verified by support team)\n'
-                  '• Doctor unavailability or cancellation\n\n'
-                  'No Refund:\n'
-                  '• Cancellation within 24 hours of scheduled appointment\n'
-                  '• Patient no-show (missed appointment without cancellation)\n'
-                  '• Consultation already completed',
+              '1. Appointment Refunds',
+              'Patient cancellations may be eligible for a refund when the cancellation is made before the consultation begins and before the healthcare provider has started service. '
+                  'Refund eligibility depends on the booking type, timing, and whether the service was already initiated. '
+                  'Once a consultation is completed or marked as attended, refunds are normally not available.',
             ),
             _buildSection(
               theme,
-              '2. Cancellation by Doctor',
-              'If a doctor cancels an appointment for any reason:\n\n'
-                  '• 100% refund processed automatically\n'
-                  '• Option to reschedule with same or different doctor\n'
-                  '• Refund credited to original payment method within 5-7 business days',
+              '2. Lab Booking and Sample Collection Refunds',
+              'For lab-related bookings, refund eligibility is limited once a sample has been collected, a test has been initiated, or a report has been generated. '
+                  'If a lab booking is cancelled before the service starts, you may be eligible for a refund according to the case reviewed by our support team.',
             ),
             _buildSection(
               theme,
-              '3. Refund Processing Time',
-              '• Wallet/UPI: Instant to 24 hours\n'
-                  '• Credit/Debit Card: 5-7 business days\n'
-                  '• Net Banking: 5-7 business days',
+              '3. Cancellation by Doctor or Lab Provider',
+              'If a doctor or lab provider cancels a booking before service delivery, the customer will generally receive a full refund to the original payment method or may be offered a reschedule, depending on the situation.',
             ),
             _buildSection(
               theme,
-              '4. Partial Consultation',
-              'If a consultation is interrupted or incomplete due to technical issues:\n\n'
-                  '• Report within 1 hour of scheduled time\n'
-                  '• Support team reviews case\n'
-                  '• Partial or full refund based on consultation duration\n'
-                  '• Alternative: Free rescheduling',
+              '4. Payment Gateway Processing',
+              'Payments are processed by third-party payment gateways such as PhonePe or another approved provider. '
+                  'Refunds, when approved, are sent back to the original payment method subject to the gateway and banking timelines. '
+                  'Processing times usually depend on the bank, payment method, and gateway rules.',
             ),
             _buildSection(
               theme,
-              '5. How to Request Refund',
-              '1. Go to "My Appointments" in the app\n'
-                  '2. Select the appointment\n'
-                  '3. Tap "Request Refund"\n'
-                  '4. Provide reason (if required)\n'
-                  '5. Submit request',
+              '5. Refund Request Procedure',
+              'To request a refund, contact our support team with your order ID, registered phone number, booking date, and reason for the request. '
+                  'We may ask for supporting details before reviewing the request. All refund decisions are made after verification of the booking status and service progress.',
             ),
             _buildSection(
               theme,
               '6. Non-Refundable Items',
-              '• Platform service fees (if applicable)\n'
-                  '• Payment gateway charges\n'
-                  '• Promotional discounts (credited back as platform credits)',
+              'Refunds are generally not provided for:\n\n'
+                  '• Completed consultations\n'
+                  '• Services already started or fulfilled\n'
+                  '• Missed appointments or no-shows by the user\n'
+                  '• Payment gateway convenience charges, where non-refundable by the gateway\n'
+                  '• Promotional or coupon amounts, unless required by law or by the payment processor’s rules',
             ),
             _buildSection(
               theme,
-              '7. Dispute Resolution',
-              'If you have concerns about a refund:\n\n'
-                  '• Email: refunds@doctorhelp.com\n'
-                  '• Response time: Within 48 hours\n'
-                  '• Resolution time: 5-7 business days',
+              '7. Refund Timeline',
+              'Approved refunds are usually initiated within a reasonable period after review. '
+                  'Actual credit time may vary based on the payment method, bank, and payment gateway. '
+                  'If a refund is delayed, contact support with your transaction reference number.',
+            ),
+            _buildSection(
+              theme,
+              '8. Changes to This Policy',
+              'We may update this Refund Policy from time to time. The revised version will be posted in the app with a new date. '
+                  'Continued use of the app means you accept the updated policy.',
+            ),
+            _buildSection(
+              theme,
+              '9. Contact Us',
+              'For refund questions or disputes, contact us at:\n'
+                  'Email: support@doctorhelp.in\n'
+                  'Phone: +91-8603-342-657\n'
+                  'Address: Forbesganj, Bihar, India',
             ),
             const SizedBox(height: UIConstants.spacing2XLarge),
           ],

@@ -63,6 +63,71 @@ export const adminApi = {
     getAppointmentDetails: (id: string) => api.get(`/admin/appointments/${id}`),
     processRefund: (id: string, data: { amount: number; reason: string }) => 
         api.patch(`/admin/appointments/${id}/refund`, data),
+
+    // Lab Orders
+    getLabOrders: (params?: Record<string, string | number | undefined>) =>
+        api.get('/admin/lab-orders', { params }),
+    getLabOrderDetails: (id: string) => api.get(`/admin/lab-orders/${id}`),
+    updateLabOrderStatus: (id: string, data: { status: string; overrideReason: string }) =>
+        api.patch(`/admin/lab-orders/${id}/status`, data),
+    assignLabCollector: (
+        id: string,
+        data: { collectorName: string; collectorPhone: string; collectorEta?: string; overrideReason: string }
+    ) => api.patch(`/admin/lab-orders/${id}/collector`, data),
+    uploadLabReport: (id: string, file: File, overrideReason: string) => {
+        const formData = new FormData();
+        formData.append('report', file);
+        formData.append('overrideReason', overrideReason);
+        return api.post(`/admin/lab-orders/${id}/report`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+    },
+    getLabs: (params?: Record<string, string | number | undefined>) =>
+        api.get('/admin/labs', { params }),
+    updateLabStatus: (id: string, data: { isActive: boolean }) =>
+        api.patch(`/admin/labs/${id}/status`, data),
+
+    // Lab Registration Requests
+    getLabRegistrationRequests: (params?: Record<string, string | number | undefined>) =>
+        api.get('/admin/lab-registration-requests', { params }),
+    reviewLabRegistrationRequest: (
+        id: string,
+        data: { decision: 'approve' | 'reject'; rejectionReason?: string }
+    ) => api.patch(`/admin/lab-registration-requests/${id}/decision`, data),
+
+    // Demo Payments
+    initiateDemoPayment: (data: {
+        appointmentId?: string;
+        amount: number;
+        currency?: string;
+        purpose?: string;
+    }) => api.post('/payments/initiate', data),
+    getPaymentStatus: (paymentId: string) => api.get(`/payments/${paymentId}`),
+
+    // Notifications
+    getNotifications: (params?: Record<string, string | number | boolean | undefined>) =>
+        api.get('/notifications', { params }),
+    getNotificationsUnreadCount: () => api.get('/notifications/unread-count'),
+    markNotificationAsRead: (id: string) => api.put(`/notifications/${id}/read`),
+    markAllNotificationsAsRead: () => api.put('/notifications/read-all'),
+    deleteNotification: (id: string) => api.delete(`/notifications/${id}`),
+    deleteAllNotifications: () => api.delete('/notifications'),
+    getNotificationPreferences: () => api.get('/notifications/preferences'),
+    updateNotificationPreferences: (data: {
+        categories?: {
+            appointments?: boolean;
+            labOrders?: boolean;
+            payments?: boolean;
+            system?: boolean;
+        };
+        quietHours?: {
+            enabled?: boolean;
+            start?: string;
+            end?: string;
+            timezone?: string;
+        };
+        mutedTypes?: string[];
+    }) => api.put('/notifications/preferences', data),
     
     // Stats
     getAppointmentStats: (params?: Record<string, string | undefined>) => 

@@ -128,7 +128,7 @@ class ApiService {
             .timeout(ApiConfig.timeout);
       }
 
-      return _handleResponse(response, fromJson);
+      return _handleResponse(response, fromJson, endpoint);
     } catch (e) {
       logger.e('GET Error: $e');
       return ApiResponse<T>(
@@ -172,7 +172,7 @@ class ApiService {
         logger.i('Response body: ${response.body}');
       }
 
-      return _handleResponse(response, fromJson);
+      return _handleResponse(response, fromJson, endpoint);
     } catch (e) {
       logger.e('POST Error: $e');
       return ApiResponse<T>(
@@ -210,9 +210,47 @@ class ApiService {
             .timeout(ApiConfig.timeout);
       }
 
-      return _handleResponse(response, fromJson);
+      return _handleResponse(response, fromJson, endpoint);
     } catch (e) {
       logger.e('PATCH Error: $e');
+      return ApiResponse<T>(
+        success: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+  /// PUT request
+  Future<ApiResponse<T>> put<T>(
+    String endpoint, {
+    Map<String, dynamic>? body,
+    T Function(Map<String, dynamic>)? fromJson,
+  }) async {
+    try {
+      final url = Uri.parse('${ApiConfig.getBaseUrl()}$endpoint');
+      final encodedBody = body != null ? jsonEncode(body) : null;
+
+      if (ApiConfig.debugMode) {
+        logger.i('PUT: $url');
+        logger.i('Body: $encodedBody');
+      }
+
+      var response = await http
+          .put(url, headers: _buildHeaders(), body: encodedBody)
+          .timeout(ApiConfig.timeout, onTimeout: () {
+        throw Exception('Request timeout');
+      });
+
+      // Retry once on 401 with refreshed token
+      if (response.statusCode == 401 && await _attemptTokenRefresh()) {
+        response = await http
+            .put(url, headers: _buildHeaders(), body: encodedBody)
+            .timeout(ApiConfig.timeout);
+      }
+
+      return _handleResponse(response, fromJson, endpoint);
+    } catch (e) {
+      logger.e('PUT Error: $e');
       return ApiResponse<T>(
         success: false,
         error: e.toString(),
@@ -235,27 +273,43 @@ class ApiService {
         logger.i('UPLOAD: $url');
       }
 
-      final request = http.MultipartRequest('POST', url);
+      // Ensure secure token load has had a chance before first multipart call.
+      if (_token == null) {
+        await _loadSecureToken();
+      }
 
-      // Add auth header
-      if (_token != null) {
+      if (_token == null || _token!.trim().isEmpty) {
+        return ApiResponse<T>(
+          success: false,
+          error: 'Authentication token not available. Please login again.',
+        );
+      }
+
+      Future<http.Response> sendMultipartRequest() async {
+        final request = http.MultipartRequest('POST', url);
+
         request.headers['Authorization'] = 'Bearer $_token';
+
+        request.files.add(
+          await http.MultipartFile.fromPath(fieldName, filePath),
+        );
+
+        if (additionalFields != null) {
+          request.fields.addAll(additionalFields);
+        }
+
+        final streamResponse = await request.send().timeout(ApiConfig.timeout);
+        return http.Response.fromStream(streamResponse);
       }
 
-      // Add file
-      request.files.add(
-        await http.MultipartFile.fromPath(fieldName, filePath),
-      );
+      var response = await sendMultipartRequest();
 
-      // Add additional fields
-      if (additionalFields != null) {
-        request.fields.addAll(additionalFields);
+      // Retry once on 401 with refreshed token (parity with get/post/patch/delete)
+      if (response.statusCode == 401 && await _attemptTokenRefresh()) {
+        response = await sendMultipartRequest();
       }
 
-      final streamResponse = await request.send().timeout(ApiConfig.timeout);
-      final response = await http.Response.fromStream(streamResponse);
-
-      return _handleResponse(response, fromJson);
+      return _handleResponse(response, fromJson, endpoint);
     } catch (e) {
       logger.e('UPLOAD Error: $e');
       return ApiResponse<T>(
@@ -290,7 +344,7 @@ class ApiService {
             .timeout(ApiConfig.timeout);
       }
 
-      return _handleResponse(response, fromJson);
+      return _handleResponse(response, fromJson, endpoint);
     } catch (e) {
       logger.e('DELETE Error: $e');
       return ApiResponse<T>(
@@ -303,20 +357,19 @@ class ApiService {
   /// Handle API response
   ApiResponse<T> _handleResponse<T>(
     http.Response response,
-    T Function(Map<String, dynamic>)? fromJson,
-  ) {
+    T Function(Map<String, dynamic>)? fromJson, [
+    String? endpoint,
+  ]) {
     if (ApiConfig.debugMode) {
       logger.i('Status Code: ${response.statusCode}');
       logger.i('Response: ${response.body}');
     }
 
     try {
-      final decoded = jsonDecode(response.body);
-      if (decoded is! Map<String, dynamic>) {
-        throw const FormatException('Response is not a JSON object');
-      }
-
-      final json = decoded;
+      final trimmedBody = response.body.trim();
+      final decoded = trimmedBody.isNotEmpty ? jsonDecode(trimmedBody) : null;
+      final json = decoded is Map<String, dynamic> ? decoded : <String, dynamic>{};
+      final plainTextBody = trimmedBody.isNotEmpty ? trimmedBody : null;
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final data = json['data'];
@@ -341,8 +394,11 @@ class ApiService {
         // Handle List response - pass the whole json to fromJson
         if (data is List) {
           try {
-            // Create a wrapper map with the list data for the parser
-            final result = fromJson({'data': data});
+            // Preserve list and pagination fields for paginated parsers.
+            final result = fromJson({
+              'data': data,
+              'pagination': json['pagination'],
+            });
             return ApiResponse<T>(
               success: true,
               data: result,
@@ -365,16 +421,38 @@ class ApiService {
           message: json['message']?.toString(),
         );
       } else if (response.statusCode == 401) {
-        // Token cleared by retry logic in HTTP methods; fallback clear here
-        clearToken();
+        // Keep the token intact here; background requests can fail with 401
+        // during onboarding or when a token is temporarily unavailable.
+        // Refresh logic in the HTTP methods already handles recoverable auth.
         return ApiResponse<T>(
           success: false,
           error: json['error']?.toString() ?? 'Unauthorized',
         );
-      } else {
+      } else if (response.statusCode == 429) {
         return ApiResponse<T>(
           success: false,
-          error: json['error']?.toString() ?? 'An error occurred',
+          error: json['error']?.toString() ??
+              plainTextBody ??
+              'Too many requests, please try again later.',
+        );
+      } else {
+        String errorMessage =
+            json['error']?.toString() ?? plainTextBody ?? 'An error occurred';
+
+        final details = json['details'];
+        if (details is List && details.isNotEmpty) {
+          final first = details.first;
+          if (first is Map<String, dynamic>) {
+            final detailMessage = first['message']?.toString();
+            if (detailMessage != null && detailMessage.trim().isNotEmpty) {
+              errorMessage = '$errorMessage: ${detailMessage.trim()}';
+            }
+          }
+        }
+
+        return ApiResponse<T>(
+          success: false,
+          error: errorMessage,
         );
       }
     } catch (e) {

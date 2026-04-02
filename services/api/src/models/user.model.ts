@@ -7,7 +7,7 @@ export interface IUser extends Document {
     email?: string;
     avatar?: string;
     address?: string;
-    role: 'patient' | 'doctor' | 'admin';
+    role: 'patient' | 'doctor' | 'admin' | 'lab';
     isPhoneVerified: boolean;
     isProfileComplete: boolean;
     userId?: number; // Numeric user ID
@@ -25,7 +25,7 @@ const UserSchema = new Schema<IUser>({
     email: { type: String },
     avatar: { type: String },
     address: { type: String },
-    role: { type: String, enum: ['patient', 'doctor', 'admin'], default: 'patient' },
+    role: { type: String, enum: ['patient', 'doctor', 'admin', 'lab'], default: 'patient' },
     isPhoneVerified: { type: Boolean, default: false },
     isProfileComplete: { type: Boolean, default: false },
     userId: { type: Number, unique: true, sparse: true },

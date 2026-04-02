@@ -217,24 +217,20 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
       if (!mounted) return;
 
       if (response.success) {
-        // Show success dialog
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            title: const Text('Appointment Booked'),
-            content:
-                const Text('Your appointment has been booked successfully!'),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  context.go(AppRoutes.patientHome);
-                },
-                child: const Text('Go Home'),
-              ),
-            ],
-          ),
+        final appointment = response.data;
+        if (appointment == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Appointment created but missing payment details.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          return;
+        }
+
+        final doctorName = doctor.userId.name ?? doctor.specialization;
+        context.push(
+          '${AppRoutes.patientPayment}?appointmentId=${appointment.id}&amount=${doctor.consultationFee}&doctorName=${Uri.encodeComponent(doctorName)}',
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -573,7 +569,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
 
                   // Book Button
                   AppButton(
-                    label: 'Confirm & Book Appointment',
+                    label: 'Continue to Payment',
                     onPressed: () => _bookAppointment(doctor),
                   ),
                   const SizedBox(height: UIConstants.spacingLarge),

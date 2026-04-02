@@ -479,9 +479,8 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
           )
         else
           Column(
-            children: _reviews!
-                .map((review) => _ReviewCard(review: review))
-                .toList(),
+            children:
+                _reviews!.map((review) => _ReviewCard(review: review)).toList(),
           ),
       ],
     );
@@ -515,8 +514,7 @@ class _ReviewCard extends StatelessWidget {
                     ? NetworkImage(review.patientId.avatar!)
                     : null,
                 child: review.patientId.avatar == null
-                    ? Icon(Icons.person,
-                        size: 18, color: theme.primaryColor)
+                    ? Icon(Icons.person, size: 18, color: theme.primaryColor)
                     : null,
               ),
               const SizedBox(width: 8),

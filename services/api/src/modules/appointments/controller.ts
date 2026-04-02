@@ -2,6 +2,10 @@ import { Request, Response } from 'express';
 import { Appointment, Doctor } from '../../models';
 import { AuthenticatedRequest } from '../../middleware/auth';
 import { PAGINATION } from '../../utils/pagination';
+import {
+    notifyAppointmentBooked,
+    notifyAppointmentStatusChanged,
+} from '../notifications';
 
 /** POST /api/appointments — Book a new appointment (authenticated patient). */
 export const createAppointment = async (req: Request, res: Response) => {
@@ -49,6 +53,24 @@ export const createAppointment = async (req: Request, res: Response) => {
         });
 
         if (existingAppointment) {
+            // If the same patient retries booking the same slot (for example after backing out from payment),
+            // return that existing appointment so the client can continue payment flow.
+            if (existingAppointment.patientId.toString() === patientId) {
+                await existingAppointment.populate({
+                    path: 'doctorId',
+                    populate: { path: 'userId', select: 'name phone' }
+                });
+
+                const paymentPending = existingAppointment.paymentStatus !== 'paid';
+                return res.json({
+                    success: true,
+                    message: paymentPending
+                        ? 'Appointment already created for this slot. Continue payment.'
+                        : 'Appointment already booked for this slot.',
+                    data: existingAppointment,
+                });
+            }
+
             return res.status(400).json({ success: false, error: 'This slot is already booked' });
         }
 
@@ -74,6 +96,12 @@ export const createAppointment = async (req: Request, res: Response) => {
 
         // Populate doctorId so the client receives a full object (not a raw ObjectId string)
         await appointment.populate({ path: 'doctorId', populate: { path: 'userId', select: 'name phone' } });
+
+        await notifyAppointmentBooked({
+            patientUserId: patientId,
+            doctorUserId: doctor.userId?.toString(),
+            appointmentId: appointment._id.toString(),
+        });
 
         res.status(201).json({
             success: true,
@@ -102,8 +130,12 @@ export const getPatientAppointments = async (req: Request, res: Response) => {
         const limitNum = Math.min(Number(limit) || PAGINATION.DEFAULT_LIMIT, PAGINATION.MAX_LIMIT);
         const filter: any = { patientId };
         if (status) filter.status = status;
+        const now = new Date();
+        const startOfTodayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
         if (upcoming === 'true') {
-            filter.date = { $gte: new Date() };
+            filter.date = { $gte: startOfTodayUtc };
+        } else if (upcoming === 'false') {
+            filter.date = { $lt: startOfTodayUtc };
         }
 
         const [appointments, total] = await Promise.all([
@@ -191,6 +223,37 @@ export const getDoctorAppointments = async (req: Request, res: Response) => {
     }
 };
 
+/** GET /api/appointments/:id — Get appointment detail by ID (patient, doctor, or admin). */
+export const getAppointment = async (req: Request, res: Response) => {
+    try {
+        const authReq = req as AuthenticatedRequest;
+        const { id } = req.params;
+
+        const appointment = await Appointment.findById(id).populate({
+            path: 'doctorId',
+            populate: { path: 'userId', select: 'name phone avatar' }
+        });
+
+        if (!appointment) {
+            return res.status(404).json({ success: false, error: 'Appointment not found' });
+        }
+
+        // Verify permission: patient owns it, doctor owns it, or user is admin
+        const isPatient = appointment.patientId.toString() === authReq.user?.userId;
+        const isDoctor = appointment.doctorId.userId?._id?.toString() === authReq.user?.userId;
+        const isAdmin = authReq.user?.role === 'admin';
+
+        if (!isPatient && !isDoctor && !isAdmin) {
+            return res.status(403).json({ success: false, error: 'You do not have permission to view this appointment' });
+        }
+
+        res.json({ success: true, data: appointment });
+    } catch (error) {
+        console.error('getAppointment error:', error);
+        res.status(500).json({ success: false, error: 'Failed to get appointment' });
+    }
+};
+
 // Valid status transitions (state machine)
 const VALID_TRANSITIONS: Record<string, string[]> = {
     'pending':     ['confirmed', 'cancelled'],
@@ -244,6 +307,15 @@ export const updateStatus = async (req: Request, res: Response) => {
 
         appointment.status = status;
         await appointment.save();
+
+        const doctorUserId =
+            (appointment.doctorId as any)?.userId?.toString?.() || undefined;
+        await notifyAppointmentStatusChanged({
+            patientUserId: appointment.patientId.toString(),
+            doctorUserId,
+            appointmentId: appointment._id.toString(),
+            status,
+        });
 
         // Re-fetch with proper population so the response matches list endpoints
         const populated = await Appointment.findById(appointment._id)

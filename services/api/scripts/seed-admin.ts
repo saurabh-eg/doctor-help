@@ -30,7 +30,7 @@ async function seedAdmin() {
                 // Upgrade to admin
                 existingAdmin.role = 'admin';
                 existingAdmin.name = ADMIN_NAME;
-                existingAdmin.isVerified = true;
+                existingAdmin.isPhoneVerified = true;
                 await existingAdmin.save();
                 console.log('✅ Upgraded existing user to admin:');
                 console.log(`   Phone: ${ADMIN_PHONE}`);
@@ -42,7 +42,7 @@ async function seedAdmin() {
                 phone: ADMIN_PHONE,
                 name: ADMIN_NAME,
                 role: 'admin',
-                isVerified: true,
+                isPhoneVerified: true,
             });
             await admin.save();
             console.log('✅ Created new admin user:');

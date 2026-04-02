@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Search, Star, ShieldCheck, ShieldX, Eye, Stethoscope, Filter, X, MapPin, Phone, Mail } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Search, Star, ShieldCheck, ShieldX, Eye, Stethoscope, Filter, X, MapPin, Phone, Mail, UserX, UserCheck, FileText, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { adminApi } from '../api/client';
 import { Doctor, Pagination as PaginationType } from '../types';
@@ -29,6 +29,7 @@ const STATUS_BADGES = {
 const ITEMS_PER_PAGE = 15;
 
 export default function DoctorsPage() {
+    const queryClient = useQueryClient();
     const [search, setSearch] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -51,6 +52,34 @@ export default function DoctorsPage() {
         },
         staleTime: 30000,
     });
+
+    const suspendDoctorMutation = useMutation({
+        mutationFn: async ({ id, isSuspended }: { id: string; isSuspended: boolean }) => {
+            return adminApi.suspendUser(id, { isSuspended });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['doctors'] });
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+        },
+    });
+
+    const handleToggleDoctorSuspension = (doctor: Doctor) => {
+        const userId = doctor.userId?._id;
+        if (!userId) return;
+
+        const isCurrentlySuspended = doctor.userId?.isSuspended === true;
+        const actionLabel = isCurrentlySuspended ? 'activate' : 'suspend';
+        const confirmed = window.confirm(
+            `Are you sure you want to ${actionLabel} Dr. ${doctor.userId?.name || 'this doctor'}?`
+        );
+
+        if (!confirmed) return;
+
+        suspendDoctorMutation.mutate({
+            id: userId,
+            isSuspended: !isCurrentlySuspended,
+        });
+    };
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -145,18 +174,19 @@ export default function DoctorsPage() {
                             <TableHeadCell>Rating</TableHeadCell>
                             <TableHeadCell>Fee</TableHeadCell>
                             <TableHeadCell>Status</TableHeadCell>
+                            <TableHeadCell>Documents</TableHeadCell>
                             <TableHeadCell align="right">Actions</TableHeadCell>
                         </TableHeader>
                     </TableHead>
                     <TableBody>
                         {isLoading ? (
-                            <TableSkeleton columns={7} rows={10} />
+                            <TableSkeleton columns={8} rows={10} />
                         ) : !data?.doctors.length ? (
                             <TableEmpty
                                 icon={<Stethoscope size={32} />}
                                 title="No doctors found"
                                 description={hasFilters ? "Try adjusting your search or filters" : "Doctors will appear here once they register"}
-                                colSpan={7}
+                                colSpan={8}
                             />
                         ) : (
                             data.doctors.map((doctor) => {
@@ -213,14 +243,41 @@ export default function DoctorsPage() {
                                                 {doctor.isVerified ? 'Verified' : 'Pending'}
                                             </span>
                                         </TableCell>
+                                        <TableCell>
+                                            {doctor.documents && doctor.documents.length > 0 ? (
+                                                <button
+                                                    onClick={() => setSelectedDoctor(doctor)}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                                                >
+                                                    <FileText size={14} />
+                                                    View Docs ({doctor.documents.length})
+                                                </button>
+                                            ) : (
+                                                <span className="text-xs text-slate-400">No docs</span>
+                                            )}
+                                        </TableCell>
                                         <TableCell align="right">
-                                            <button
-                                                onClick={() => setSelectedDoctor(doctor)}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                                            >
-                                                <Eye size={16} />
-                                                View
-                                            </button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => handleToggleDoctorSuspension(doctor)}
+                                                    disabled={suspendDoctorMutation.isPending}
+                                                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                                                        doctor.userId?.isSuspended
+                                                            ? 'text-emerald-600 hover:bg-emerald-50'
+                                                            : 'text-red-600 hover:bg-red-50'
+                                                    }`}
+                                                >
+                                                    {doctor.userId?.isSuspended ? <UserCheck size={16} /> : <UserX size={16} />}
+                                                    {doctor.userId?.isSuspended ? 'Activate' : 'Suspend'}
+                                                </button>
+                                                <button
+                                                    onClick={() => setSelectedDoctor(doctor)}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                                                >
+                                                    <Eye size={16} />
+                                                    View
+                                                </button>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 );
@@ -341,6 +398,39 @@ export default function DoctorsPage() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Documents */}
+                        <div className="space-y-3">
+                            <h5 className="text-sm font-semibold text-slate-900">Documents</h5>
+                            {selectedDoctor.documents && selectedDoctor.documents.length > 0 ? (
+                                <div className="space-y-2">
+                                    {selectedDoctor.documents.map((docUrl, index) => (
+                                        <a
+                                            key={`${docUrl}-${index}`}
+                                            href={docUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors group"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-white rounded-lg">
+                                                    <FileText size={16} className="text-slate-500" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-slate-700">Document {index + 1}</p>
+                                                    <p className="text-xs text-slate-400">Click to view</p>
+                                                </div>
+                                            </div>
+                                            <ExternalLink size={15} className="text-slate-400 group-hover:text-primary-600" />
+                                        </a>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-6 bg-slate-50 rounded-xl">
+                                    <p className="text-slate-500 text-sm">No documents uploaded</p>
+                                </div>
+                            )}
+                        </div>
 
                         <div className="pt-4 border-t border-slate-100">
                             <Button

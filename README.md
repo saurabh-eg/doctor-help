@@ -129,8 +129,15 @@ Update `apps/flutter_app/lib/config/api_config.dart` with your computer's IP add
 | Doctor Screens | ✅ Complete |
 | API Integration | ✅ Complete |
 | Doctor Verification | 🔄 In Progress |
-| Payment Integration | 📋 Planned |
+| Payment Integration (Demo) | ✅ Complete |
+| Payment Hardening (PhonePe Live) | ⏸️ Deferred until gateway approval |
 | Push Notifications | 📋 Planned |
+
+### Payment Rollout Note
+
+- Current mode uses demo payment flow for testing and approval demos.
+- Live PhonePe hardening (webhook signature verification, idempotency, reconciliation jobs)
+    is intentionally deferred until PhonePe production access is approved.
 
 ## 📄 License
 

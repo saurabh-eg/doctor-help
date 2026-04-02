@@ -48,6 +48,7 @@ router.use(auth);
 router.post('/', validate(createAppointmentSchema), appointmentsController.createAppointment);
 router.get('/patient/:patientId', appointmentsController.getPatientAppointments);
 router.get('/doctor/:doctorId', appointmentsController.getDoctorAppointments);
+router.get('/:id', appointmentsController.getAppointment);
 router.patch('/:id/status', validate(updateStatusSchema), appointmentsController.updateStatus);
 router.patch('/:id/notes', validate(updateNotesSchema), appointmentsController.updateNotes);
 router.patch('/:id/reschedule', validate(rescheduleSchema), appointmentsController.rescheduleAppointment);

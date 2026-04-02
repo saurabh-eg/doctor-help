@@ -12,6 +12,9 @@ export const listDoctors = async (req: Request, res: Response) => {
             specialization,
             minRating,
             maxFee,
+            city,
+            district,
+            pincode,
             page = '1',
             limit = String(PAGINATION.DEFAULT_LIMIT)
         } = req.query;
@@ -21,6 +24,9 @@ export const listDoctors = async (req: Request, res: Response) => {
         if (specialization) filter.specialization = specialization;
         if (minRating) filter.rating = { $gte: parseFloat(minRating as string) };
         if (maxFee) filter.consultationFee = { $lte: parseFloat(maxFee as string) };
+        if (city) filter['address.city'] = { $regex: new RegExp(escapeRegex(city as string), 'i') };
+        if (district) filter['address.district'] = { $regex: new RegExp(escapeRegex(district as string), 'i') };
+        if (pincode) filter['address.pincode'] = { $regex: new RegExp(escapeRegex(pincode as string), 'i') };
 
         const pageNum = parseInt(page as string) || PAGINATION.DEFAULT_PAGE;
         const limitNum = Math.min(parseInt(limit as string) || PAGINATION.DEFAULT_LIMIT, PAGINATION.MAX_LIMIT);
@@ -53,7 +59,7 @@ export const listDoctors = async (req: Request, res: Response) => {
     }
 };
 
-/** GET /api/doctors/search — Full-text search across doctor names and specializations. */
+/** GET /api/doctors/search — Full-text search across doctor names, specialization, and address fields. */
 export const searchDoctors = async (req: Request, res: Response) => {
     try {
         const { q, page = '1', limit = String(PAGINATION.DEFAULT_LIMIT) } = req.query;
@@ -76,6 +82,10 @@ export const searchDoctors = async (req: Request, res: Response) => {
             isVerified: true,
             $or: [
                 { specialization: { $regex: regex } },
+                { 'address.city': { $regex: regex } },
+                { 'address.district': { $regex: regex } },
+                { 'address.pincode': { $regex: regex } },
+                { 'address.location': { $regex: regex } },
                 { userId: { $in: matchedUserIds } }
             ]
         };
@@ -147,7 +157,8 @@ export const registerDoctor = async (req: Request, res: Response) => {
             consultationFee,
             bio,
             photoUrl,
-            documents
+            documents,
+            address
         } = req.body;
 
     // Check if doctor profile already exists
@@ -174,6 +185,7 @@ export const registerDoctor = async (req: Request, res: Response) => {
                 bio,
                 photoUrl: finalPhotoUrl,
                 documents: documents || [],
+                address,
                 doctorId: doctorId ?? existingDoctor.doctorId,
                 isVerified: false,
                 rejectionReason: undefined
@@ -198,6 +210,7 @@ export const registerDoctor = async (req: Request, res: Response) => {
         bio,
         photoUrl: finalPhotoUrl,
         documents: documents || [],
+        address,
         isVerified: false // Admin needs to verify
     });
 
@@ -263,13 +276,14 @@ export const updateDoctorProfile = async (req: Request, res: Response) => {
             return res.status(403).json({ success: false, error: 'You can only update your own profile' });
         }
 
-        const { specialization, qualification, experience, consultationFee, bio } = req.body;
+        const { specialization, qualification, experience, consultationFee, bio, address } = req.body;
         const safeUpdate: Record<string, any> = {};
         if (specialization !== undefined) safeUpdate.specialization = specialization;
         if (qualification !== undefined) safeUpdate.qualification = qualification;
         if (experience !== undefined) safeUpdate.experience = experience;
         if (consultationFee !== undefined) safeUpdate.consultationFee = consultationFee;
         if (bio !== undefined) safeUpdate.bio = bio;
+        if (address !== undefined) safeUpdate.address = address;
 
         const updatedDoctor = await Doctor.findByIdAndUpdate(
             doctorId,

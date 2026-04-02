@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../navigation/app_router.dart';
+import '../providers/notification_provider.dart';
 
 /// Doctor Bottom Navigation Bar
-class DoctorBottomNav extends StatelessWidget {
+class DoctorBottomNav extends ConsumerWidget {
   final String currentRoute;
 
   const DoctorBottomNav({
@@ -15,17 +17,59 @@ class DoctorBottomNav extends StatelessWidget {
     return currentRoute == route;
   }
 
+  Widget _buildNotificationIcon(WidgetRef ref, ThemeData theme, bool isActive) {
+    final unreadCount = ref.watch(unreadCountProvider);
+    final isNotificationActive = _isActive(AppRoutes.notifications);
+    
+    return Stack(
+      children: [
+        Icon(
+          isNotificationActive ? Icons.notifications : Icons.notifications_outlined,
+          color: isNotificationActive
+              ? theme.primaryColor
+              : Colors.grey[600],
+        ),
+        if (unreadCount > 0)
+          Positioned(
+            right: 0,
+            top: 0,
+            child: Container(
+              padding: const EdgeInsets.all(1),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              constraints: const BoxConstraints(
+                minWidth: 18,
+                minHeight: 18,
+              ),
+              child: Text(
+                unreadCount > 99 ? '99+' : unreadCount.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   int _getCurrentIndex() {
     if (_isActive(AppRoutes.doctorDashboard)) return 0;
     if (_isActive(AppRoutes.doctorAppointments)) return 1;
     if (_isActive(AppRoutes.doctorPatients)) return 2;
     if (_isActive(AppRoutes.doctorEarnings)) return 3;
-    if (_isActive(AppRoutes.doctorProfile)) return 4;
+    if (_isActive(AppRoutes.notifications)) return 4;
+    if (_isActive(AppRoutes.doctorProfile)) return 5;
     return 0;
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return BottomNavigationBar(
@@ -87,6 +131,10 @@ class DoctorBottomNav extends StatelessWidget {
           label: 'Earnings',
         ),
         BottomNavigationBarItem(
+          icon: _buildNotificationIcon(ref, theme, _isActive(AppRoutes.notifications)),
+          label: 'Notifications',
+        ),
+        BottomNavigationBarItem(
           icon: Icon(
             Icons.person_outline,
             color: _isActive(AppRoutes.doctorProfile)
@@ -116,10 +164,19 @@ class DoctorBottomNav extends StatelessWidget {
             route = AppRoutes.doctorEarnings;
             break;
           case 4:
+            route = AppRoutes.notifications;
+            break;
+          case 5:
             route = AppRoutes.doctorProfile;
             break;
         }
-        context.go(route);
+        if (route == AppRoutes.notifications) {
+          context.go(
+            '${AppRoutes.notifications}?from=${Uri.encodeComponent(currentRoute)}',
+          );
+        } else {
+          context.go(route);
+        }
       },
     );
   }

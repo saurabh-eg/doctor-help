@@ -1,18 +1,24 @@
 import { Menu, Bell, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAdminNotifications } from '../../contexts/AdminNotificationsContext';
 
 interface HeaderProps {
     onMenuClick: () => void;
 }
 
 export default function Header({ onMenuClick }: HeaderProps) {
+    const navigate = useNavigate();
     const { user } = useAuth();
+    const { unreadCount, isRealtimeConnected } = useAdminNotifications();
 
     return (
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
             {/* Left side */}
             <div className="flex items-center gap-4">
-                <button 
+                <button
+                    type="button"
+                    aria-label="Open navigation menu"
                     onClick={onMenuClick}
                     className="lg:hidden p-2 hover:bg-slate-100 rounded-lg"
                 >
@@ -26,9 +32,19 @@ export default function Header({ onMenuClick }: HeaderProps) {
             {/* Right side */}
             <div className="flex items-center gap-4">
                 {/* Notifications */}
-                <button className="relative p-2 hover:bg-slate-100 rounded-lg">
+                <button
+                    type="button"
+                    aria-label="Open notifications"
+                    className="relative p-2 hover:bg-slate-100 rounded-lg"
+                    title={isRealtimeConnected ? 'Realtime notifications connected' : 'Realtime notifications reconnecting'}
+                    onClick={() => navigate('/notifications')}
+                >
                     <Bell size={20} className="text-slate-600" />
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                    {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] leading-[18px] rounded-full text-center font-semibold">
+                            {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
+                    )}
                 </button>
 
                 {/* User menu */}

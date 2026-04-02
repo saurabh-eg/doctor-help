@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { User } from '../../models';
 import { AuthenticatedRequest } from '../../middleware/auth';
+import { Counter } from '../../models/counter.model';
 
 // Resolve :id path param, supporting `me` to map to the authenticated user
 const resolveUserId = (req: AuthenticatedRequest) => {
@@ -14,6 +15,35 @@ const resolveUserId = (req: AuthenticatedRequest) => {
 const isOwnerOrAdmin = (req: AuthenticatedRequest, targetId: string): boolean => {
     if (!req.user) return false;
     return req.user.userId === targetId || req.user.role === 'admin';
+};
+
+const ensureOnboardingUser = async (req: AuthenticatedRequest) => {
+    const phone = req.user?.phone;
+    if (!phone) {
+        return null;
+    }
+
+    let user = await User.findOne({ phone });
+    if (!user) {
+        const counter = await Counter.findByIdAndUpdate(
+            'user',
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true }
+        );
+
+        user = await User.create({
+            phone,
+            role: 'patient',
+            isPhoneVerified: true,
+            isProfileComplete: false,
+            userId: counter.seq,
+        });
+    } else if (!user.isPhoneVerified) {
+        user.isPhoneVerified = true;
+        await user.save();
+    }
+
+    return user;
 };
 
 /** GET /api/users/:id — Get a user profile (owner or admin, supports 'me' alias). */
@@ -90,6 +120,35 @@ export const completeProfile = async (req: Request, res: Response) => {
     try {
         const { name, email } = req.body;
         const authReq = req as AuthenticatedRequest;
+
+        if (req.params.id === 'me' && !authReq.user?.userId) {
+            const onboardingUser = await ensureOnboardingUser(authReq);
+            if (!onboardingUser) {
+                return res.status(401).json({ success: false, error: 'Unauthorized' });
+            }
+
+            onboardingUser.name = name;
+            onboardingUser.email = email;
+            onboardingUser.isProfileComplete = true;
+            await onboardingUser.save();
+
+            return res.json({
+                success: true,
+                message: 'Profile completed successfully',
+                data: {
+                    _id: onboardingUser._id,
+                    userId: onboardingUser.userId,
+                    phone: onboardingUser.phone,
+                    name: onboardingUser.name,
+                    email: onboardingUser.email,
+                    role: onboardingUser.role,
+                    avatar: onboardingUser.avatar,
+                    isPhoneVerified: onboardingUser.isPhoneVerified,
+                    isProfileComplete: onboardingUser.isProfileComplete
+                }
+            });
+        }
+
         const id = resolveUserId(authReq);
         if (!id) {
             return res.status(401).json({ success: false, error: 'Unauthorized' });
@@ -141,6 +200,24 @@ export const completeProfile = async (req: Request, res: Response) => {
 export const setRole = async (req: Request, res: Response) => {
     try {
         const authReq = req as AuthenticatedRequest;
+
+        if (req.params.id === 'me' && !authReq.user?.userId) {
+            const onboardingUser = await ensureOnboardingUser(authReq);
+            if (!onboardingUser) {
+                return res.status(401).json({ success: false, error: 'Unauthorized' });
+            }
+
+            const newRole = req.body.role;
+            onboardingUser.role = newRole;
+            await onboardingUser.save();
+
+            return res.json({
+                success: true,
+                message: `Role set to ${newRole}`,
+                data: { role: onboardingUser.role }
+            });
+        }
+
         const id = resolveUserId(authReq);
         if (!id) {
             return res.status(401).json({ success: false, error: 'Unauthorized' });

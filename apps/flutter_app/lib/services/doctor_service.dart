@@ -63,8 +63,9 @@ class DoctorService {
     String query, {
     int limit = 10,
   }) {
+    final encodedQuery = Uri.encodeQueryComponent(query);
     return _apiService.get(
-      '${ApiEndpoints.searchDoctors}?q=$query&limit=$limit',
+      '${ApiEndpoints.searchDoctors}?q=$encodedQuery&limit=$limit',
       fromJson: (json) {
         // Handle the wrapper format from API service
         final list = json['data'] as List? ?? [];
@@ -105,6 +106,10 @@ class DoctorService {
     required String qualification,
     required int experience,
     required double consultationFee,
+    required String city,
+    required String district,
+    required String pincode,
+    required String location,
     String? licenseNumber,
     String? bio,
     String? photoUrl,
@@ -118,6 +123,12 @@ class DoctorService {
         'qualification': qualification,
         'experience': experience,
         'consultationFee': consultationFee,
+        'address': {
+          'city': city,
+          'district': district,
+          'pincode': pincode,
+          'location': location,
+        },
         if (licenseNumber != null && licenseNumber.isNotEmpty)
           'licenseNumber': licenseNumber,
         if (bio != null && bio.isNotEmpty) 'bio': bio,

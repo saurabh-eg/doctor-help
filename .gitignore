@@ -12,11 +12,46 @@ dist
 dist-ssr
 *.local
 
-# Environment files
+# Environment files (strict - no .env files should be committed)
 .env
 .env.local
 .env.*.local
+.env.*
 !.env.example
+!**/.env.example
+
+# Firebase & Google Services (sensitive config files)
+google-services.json
+GoogleService-Info.plist
+**/google-services.json
+**/GoogleService-Info.plist
+
+# Sensitive native config files
+*.jks
+*.keystore
+*.p8
+*.p12
+*.pfx
+*.pem
+KeyStore.properties
+key.properties
+local.properties
+
+# IDE secrets
+.vscode/settings.json
+.idea/misc.xml
+.idea/gradle.xml
+
+# System & OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Markdown docs (except README files)
+*.md
+!README.md
+!**/README.md
 
 # Editor directories and files
 .vscode/*

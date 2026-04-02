@@ -16,6 +16,12 @@ export interface IDoctor extends Document {
     bio?: string;
     photoUrl?: string;
     documents?: string[];
+    address: {
+        city: string;
+        district: string;
+        pincode: string;
+        location: string;
+    };
     availableSlots: {
         day: number; // 0-6 (Sunday-Saturday)
         startTime: string; // HH:mm
@@ -41,6 +47,12 @@ const DoctorSchema = new Schema<IDoctor>({
     bio: { type: String },
     photoUrl: { type: String },
     documents: [{ type: String }],
+    address: {
+        city: { type: String, required: true, trim: true },
+        district: { type: String, required: true, trim: true },
+        pincode: { type: String, required: true, trim: true },
+        location: { type: String, required: true, trim: true },
+    },
     availableSlots: [{
         day: { type: Number, required: true },
         startTime: { type: String, required: true },
@@ -54,5 +66,6 @@ DoctorSchema.index({ isVerified: 1, rating: -1 });
 DoctorSchema.index({ userId: 1 });
 DoctorSchema.index({ isVerified: 1, createdAt: -1 }); // Admin panel pending verifications
 DoctorSchema.index({ specialization: 'text' }); // Text search
+DoctorSchema.index({ 'address.city': 1, 'address.district': 1, 'address.pincode': 1 });
 
 export const Doctor = mongoose.model<IDoctor>('Doctor', DoctorSchema);

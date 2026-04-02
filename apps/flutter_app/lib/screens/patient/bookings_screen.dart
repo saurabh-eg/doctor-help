@@ -1,11 +1,24 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/appointment.dart';
+import '../../models/lab.dart';
 import '../../providers/providers.dart';
 import '../../navigation/app_router.dart';
 import '../../config/constants.dart';
 import '../../widgets/patient_bottom_nav.dart';
+
+class _PatientBookingsData {
+  final List<Appointment> appointments;
+  final List<LabOrder> labOrders;
+
+  const _PatientBookingsData({
+    required this.appointments,
+    required this.labOrders,
+  });
+}
 
 class PatientBookingsScreen extends ConsumerStatefulWidget {
   const PatientBookingsScreen({super.key});
@@ -18,6 +31,8 @@ class PatientBookingsScreen extends ConsumerStatefulWidget {
 class _PatientBookingsScreenState extends ConsumerState<PatientBookingsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  int _reloadToken = 0;
+  final Set<String> _cancellingAppointmentIds = <String>{};
 
   @override
   void initState() {
@@ -56,18 +71,39 @@ class _PatientBookingsScreenState extends ConsumerState<PatientBookingsScreen>
     );
 
     if (confirmed == true) {
+      if (_cancellingAppointmentIds.contains(appointmentId)) {
+        return;
+      }
+
+      setState(() {
+        _cancellingAppointmentIds.add(appointmentId);
+      });
+
       try {
         final appointmentService = ref.read(appointmentServiceProvider);
-        await appointmentService.cancelAppointment(appointmentId);
+        final response =
+            await appointmentService.cancelAppointment(appointmentId);
 
-        if (mounted) {
+        if (!mounted) return;
+
+        if (response.success) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Appointment cancelled successfully'),
               backgroundColor: Colors.green,
             ),
           );
-          setState(() {}); // Refresh the list
+
+          setState(() {
+            _reloadToken++;
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response.error ?? 'Failed to cancel appointment'),
+              backgroundColor: Colors.red,
+            ),
+          );
         }
       } catch (e) {
         if (mounted) {
@@ -77,6 +113,12 @@ class _PatientBookingsScreenState extends ConsumerState<PatientBookingsScreen>
               backgroundColor: Colors.red,
             ),
           );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _cancellingAppointmentIds.remove(appointmentId);
+          });
         }
       }
     }
@@ -104,15 +146,21 @@ class _PatientBookingsScreenState extends ConsumerState<PatientBookingsScreen>
         children: [
           // Upcoming Appointments
           _AppointmentsList(
+            key: ValueKey('upcoming-$_reloadToken'),
             patientId: patientId,
             isUpcoming: true,
             onCancel: _cancelAppointment,
+            cancellingAppointmentIds: _cancellingAppointmentIds,
+            reloadToken: _reloadToken,
           ),
           // Past Appointments
           _AppointmentsList(
+            key: ValueKey('past-$_reloadToken'),
             patientId: patientId,
             isUpcoming: false,
             onCancel: null,
+            cancellingAppointmentIds: _cancellingAppointmentIds,
+            reloadToken: _reloadToken,
           ),
         ],
       ),
@@ -126,11 +174,16 @@ class _AppointmentsList extends ConsumerStatefulWidget {
   final String patientId;
   final bool isUpcoming;
   final Function(String)? onCancel;
+  final Set<String> cancellingAppointmentIds;
+  final int reloadToken;
 
   const _AppointmentsList({
+    super.key,
     required this.patientId,
     required this.isUpcoming,
     this.onCancel,
+    this.cancellingAppointmentIds = const <String>{},
+    this.reloadToken = 0,
   });
 
   @override
@@ -138,7 +191,7 @@ class _AppointmentsList extends ConsumerStatefulWidget {
 }
 
 class _AppointmentsListState extends ConsumerState<_AppointmentsList> {
-  late Future _appointmentsFuture;
+  late Future<_PatientBookingsData> _bookingsFuture;
 
   @override
   void initState() {
@@ -146,12 +199,106 @@ class _AppointmentsListState extends ConsumerState<_AppointmentsList> {
     _loadAppointments();
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   void _loadAppointments() {
-    _appointmentsFuture =
-        ref.read(appointmentServiceProvider).getPatientAppointments(
-              widget.patientId,
-              upcoming: widget.isUpcoming,
-            );
+    _bookingsFuture = _fetchBookings();
+  }
+
+  @override
+  void didUpdateWidget(covariant _AppointmentsList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.reloadToken != widget.reloadToken) {
+      _retry();
+    }
+  }
+
+  Future<_PatientBookingsData> _fetchBookings() async {
+    final appointmentService = ref.read(appointmentServiceProvider);
+    final labService = ref.read(labServiceProvider);
+
+    final appointmentsResponse =
+        await appointmentService.getPatientAppointments(
+      widget.patientId,
+      upcoming: widget.isUpcoming,
+    );
+
+    if (!appointmentsResponse.success) {
+      throw Exception(
+        appointmentsResponse.error ?? 'Failed to load doctor appointments',
+      );
+    }
+
+    final appointments = appointmentsResponse.data ?? <Appointment>[];
+
+    List<LabOrder> allLabOrders = <LabOrder>[];
+    try {
+      allLabOrders = await labService.getMyLabOrders();
+    } catch (_) {
+      allLabOrders = <LabOrder>[];
+    }
+
+    final now = DateTime.now();
+
+    DateTime? labOrderScheduledAt(LabOrder order) {
+      final date = order.slotDate;
+      if (date == null) return null;
+
+      final raw = order.slotTime.trim();
+      final match = RegExp(r'^(\d{1,2}):(\d{2})(?:\s*([AaPp][Mm]))?$')
+          .firstMatch(raw);
+
+      if (match == null) {
+        // Fallback to end of day if slot format is unexpected.
+        return DateTime(date.year, date.month, date.day, 23, 59, 59);
+      }
+
+      var hour = int.tryParse(match.group(1) ?? '') ?? 0;
+      final minute = int.tryParse(match.group(2) ?? '') ?? 0;
+      final period = match.group(3)?.toUpperCase();
+
+      if (period != null) {
+        if (hour == 12) {
+          hour = period == 'AM' ? 0 : 12;
+        } else if (period == 'PM') {
+          hour += 12;
+        }
+      }
+
+      hour = hour.clamp(0, 23);
+      final safeMinute = minute.clamp(0, 59);
+
+      return DateTime(date.year, date.month, date.day, hour, safeMinute);
+    }
+
+    bool isLabUpcoming(LabOrder order) {
+      final status = order.status.toLowerCase();
+      if (status == 'cancelled' ||
+          status == 'completed' ||
+          status == 'report_ready') {
+        return false;
+      }
+      final scheduledAt = labOrderScheduledAt(order);
+      if (scheduledAt == null) {
+        return true;
+      }
+
+      // Consider the order upcoming until the scheduled slot time has passed.
+      return !scheduledAt.isBefore(now);
+    }
+
+    final filteredLabOrders = allLabOrders.where((order) {
+      final upcoming = isLabUpcoming(order);
+      return widget.isUpcoming ? upcoming : !upcoming;
+    }).toList();
+
+    return _PatientBookingsData(
+      appointments: appointments,
+      labOrders: filteredLabOrders,
+    );
   }
 
   void _retry() {
@@ -165,7 +312,7 @@ class _AppointmentsListState extends ConsumerState<_AppointmentsList> {
     final theme = Theme.of(context);
 
     return FutureBuilder(
-      future: _appointmentsFuture,
+      future: _bookingsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -196,15 +343,35 @@ class _AppointmentsListState extends ConsumerState<_AppointmentsList> {
           );
         }
 
-        final response = snapshot.data;
-        final appointments = response?.data ?? [];
+        final bookings = snapshot.data;
+        final appointments = bookings?.appointments ?? <Appointment>[];
+        final labOrders = bookings?.labOrders ?? <LabOrder>[];
 
         // Split into upcoming vs past using date + start time
         DateTime appointmentDateTime(Appointment apt) {
           final base = apt.date;
-          final parts = apt.timeSlot.start.split(':');
-          final hour = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 0 : 0;
-          final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
+          final raw = apt.timeSlot.start.trim();
+          final match = RegExp(r'^(\d{1,2}):(\d{2})(?:\s*([AaPp][Mm]))?$')
+              .firstMatch(raw);
+
+          var hour = 0;
+          var minute = 0;
+          if (match != null) {
+            hour = int.tryParse(match.group(1) ?? '') ?? 0;
+            minute = int.tryParse(match.group(2) ?? '') ?? 0;
+            final period = match.group(3)?.toUpperCase();
+
+            if (period != null) {
+              if (hour == 12) {
+                hour = period == 'AM' ? 0 : 12;
+              } else if (period == 'PM') {
+                hour += 12;
+              }
+            }
+          }
+
+          hour = hour.clamp(0, 23);
+          minute = minute.clamp(0, 59);
           return DateTime(base.year, base.month, base.day, hour, minute);
         }
 
@@ -212,18 +379,21 @@ class _AppointmentsListState extends ConsumerState<_AppointmentsList> {
         final filteredAppointments = appointments.where((apt) {
           final dt = appointmentDateTime(apt);
           final isUpcomingAppointment = dt.isAfter(now);
-          final isCancelled = apt.status.toLowerCase() == 'cancelled';
+          final status = apt.status.toLowerCase();
+          final isActiveStatus =
+              status == 'pending' || status == 'confirmed' || status == 'in-progress';
+          final isCancelled = status == 'cancelled';
 
           if (widget.isUpcoming) {
-            // Upcoming: future + not cancelled
-            return isUpcomingAppointment && !isCancelled;
+            // Upcoming: future + active status
+            return isUpcomingAppointment && isActiveStatus;
           } else {
             // Past tab: include anything not upcoming, including cancelled
             return !isUpcomingAppointment || isCancelled;
           }
         }).toList();
 
-        if (filteredAppointments.isEmpty) {
+        if (filteredAppointments.isEmpty && labOrders.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -246,9 +416,19 @@ class _AppointmentsListState extends ConsumerState<_AppointmentsList> {
                 ),
                 const SizedBox(height: UIConstants.spacingSmall),
                 if (widget.isUpcoming)
-                  TextButton(
-                    onPressed: () => context.go(AppRoutes.patientHome),
-                    child: const Text('Book an Appointment'),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: UIConstants.spacingMedium,
+                    children: [
+                      TextButton(
+                        onPressed: () => context.go(AppRoutes.patientHome),
+                        child: const Text('Book Doctor Appointment'),
+                      ),
+                      TextButton(
+                        onPressed: () => context.push(AppRoutes.patientLabs),
+                        child: const Text('Book Lab Test'),
+                      ),
+                    ],
                   ),
               ],
             ),
@@ -259,19 +439,46 @@ class _AppointmentsListState extends ConsumerState<_AppointmentsList> {
           onRefresh: () async {
             _retry();
           },
-          child: ListView.separated(
+          child: ListView(
             padding: const EdgeInsets.all(UIConstants.spacingLarge),
-            itemCount: filteredAppointments.length,
-            separatorBuilder: (_, __) =>
+            children: [
+              if (filteredAppointments.isNotEmpty) ...[
+                Text(
+                  'Doctor Appointments',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: UIConstants.spacingMedium),
-            itemBuilder: (context, index) {
-              final appointment = filteredAppointments[index];
-              return _AppointmentCard(
-                appointment: appointment,
-                isUpcoming: widget.isUpcoming,
-                onCancel: widget.onCancel,
-              );
-            },
+                ...filteredAppointments.map((appointment) => Padding(
+                      padding: const EdgeInsets.only(
+                          bottom: UIConstants.spacingMedium),
+                      child: _AppointmentCard(
+                        appointment: appointment,
+                        isUpcoming: widget.isUpcoming,
+                        onCancel: widget.onCancel,
+                        isCancelling: widget.cancellingAppointmentIds
+                            .contains(appointment.id),
+                      ),
+                    )),
+              ],
+              if (labOrders.isNotEmpty) ...[
+                if (filteredAppointments.isNotEmpty)
+                  const SizedBox(height: UIConstants.spacingSmall),
+                Text(
+                  'Lab Test Bookings',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: UIConstants.spacingMedium),
+                ...labOrders.map((order) => Padding(
+                      padding: const EdgeInsets.only(
+                          bottom: UIConstants.spacingMedium),
+                      child: _LabOrderCard(key: ValueKey(order.id), order: order),
+                    )),
+              ],
+            ],
           ),
         );
       },
@@ -279,15 +486,394 @@ class _AppointmentsListState extends ConsumerState<_AppointmentsList> {
   }
 }
 
+class _LabOrderCard extends ConsumerStatefulWidget {
+  final LabOrder order;
+  static const List<String> _previewTimelineStatuses = [
+    'created',
+    'confirmed',
+    'sample_collected',
+    'processing',
+    'report_ready',
+    'completed',
+  ];
+
+  const _LabOrderCard({super.key, required this.order});
+
+  @override
+  ConsumerState<_LabOrderCard> createState() => _LabOrderCardState();
+}
+
+class _LabOrderCardState extends ConsumerState<_LabOrderCard> {
+  static const Duration _statusPollInterval = Duration(seconds: 15);
+  late LabOrder _currentOrder;
+  Timer? _pollTimer;
+  bool _isPolling = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentOrder = widget.order;
+    _startPolling();
+  }
+
+  @override
+  void didUpdateWidget(covariant _LabOrderCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.order.id != widget.order.id) {
+      _currentOrder = widget.order;
+      _stopPolling();
+      _startPolling();
+    }
+  }
+
+  @override
+  void dispose() {
+    _stopPolling();
+    super.dispose();
+  }
+
+  void _startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(_statusPollInterval, (_) {
+      _refreshOrderStatus();
+    });
+  }
+
+  void _stopPolling() {
+    _pollTimer?.cancel();
+  }
+
+  Future<void> _refreshOrderStatus() async {
+    if (_isPolling || !mounted) return;
+    _isPolling = true;
+
+    try {
+      final labService = ref.read(labServiceProvider);
+      // Fetch fresh order details
+      final ordersResponse = await labService.getMyLabOrders();
+      
+      if (ordersResponse.isNotEmpty && mounted) {
+        // Find this specific order in the fresh list
+        final updatedOrder =
+            ordersResponse.firstWhere(
+              (o) => o.id == _currentOrder.id,
+              orElse: () => _currentOrder,
+            );
+
+        // Only rebuild if status actually changed
+        if (updatedOrder.status != _currentOrder.status) {
+          setState(() {
+            _currentOrder = updatedOrder;
+          });
+        }
+      }
+    } catch (e) {
+      // Silent fail - don't disrupt user experience
+    } finally {
+      _isPolling = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final order = _currentOrder;
+    final theme = Theme.of(context);
+    final statusColor = _getStatusColor(order.status);
+    final currentStatus = order.status.toLowerCase();
+    final currentIndex = _statusIndex(currentStatus);
+    final isCancelled = currentStatus == 'cancelled';
+
+    final dateText = order.slotDate == null
+        ? 'Date N/A'
+        : '${order.slotDate!.day.toString().padLeft(2, '0')}/'
+            '${order.slotDate!.month.toString().padLeft(2, '0')}/'
+            '${order.slotDate!.year}';
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(UIConstants.radiusMedium),
+      onTap: () => context.push('${AppRoutes.labOrderDetails}?id=${order.id}'),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(UIConstants.radiusMedium),
+          border: Border.all(color: Colors.grey[200]!),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: UIConstants.spacingMedium,
+                vertical: UIConstants.spacingSmall,
+              ),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.1),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(UIConstants.radiusMedium),
+                  topRight: Radius.circular(UIConstants.radiusMedium),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.science_outlined, size: 16, color: statusColor),
+                  const SizedBox(width: 6),
+                  Text(
+                    _statusLabel(order.status).toUpperCase(),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: statusColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    'ID: ${order.id.substring(0, 8)}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(UIConstants.spacingMedium),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: theme.primaryColor.withOpacity(0.1),
+                          borderRadius:
+                              BorderRadius.circular(UIConstants.radiusMedium),
+                        ),
+                        child: Icon(
+                          Icons.biotech_outlined,
+                          color: theme.primaryColor,
+                        ),
+                      ),
+                      const SizedBox(width: UIConstants.spacingMedium),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Lab Order',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '$dateText • ${order.slotTime}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        '₹${order.amount.toStringAsFixed(0)}',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: theme.primaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: UIConstants.spacingMedium),
+                  if (isCancelled)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: UIConstants.spacingSmall,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.08),
+                        borderRadius:
+                            BorderRadius.circular(UIConstants.radiusSmall),
+                        border: Border.all(color: Colors.red.withOpacity(0.2)),
+                      ),
+                      child: Text(
+                        'Timeline: Cancelled',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.red[700],
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    )
+                  else
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Progress',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children:
+                              _LabOrderCard._previewTimelineStatuses.asMap().entries.map(
+                            (entry) {
+                              final index = entry.key;
+                              final completed =
+                                  currentIndex >= 0 && index <= currentIndex;
+
+                              return Expanded(
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 10,
+                                      height: 10,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: completed
+                                            ? theme.primaryColor
+                                            : Colors.grey[300],
+                                      ),
+                                    ),
+                                    if (index <
+                                        _LabOrderCard._previewTimelineStatuses.length - 1)
+                                      Expanded(
+                                        child: Container(
+                                          margin: const EdgeInsets.symmetric(
+                                              horizontal: 4),
+                                          height: 2,
+                                          color: completed
+                                              ? theme.primaryColor
+                                              : Colors.grey[300],
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ).toList(),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Current: ${_statusLabel(order.status)}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.primaryColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  if (order.preparationInstructions.isNotEmpty) ...[
+                    const SizedBox(height: UIConstants.spacingMedium),
+                    Text(
+                      'Preparation',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    ...order.preparationInstructions.take(2).map(
+                          (line) => Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('• '),
+                                Expanded(
+                                  child: Text(
+                                    line,
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'created':
+      case 'payment_pending':
+        return Colors.orange;
+      case 'confirmed':
+      case 'collector_assigned':
+      case 'collector_on_the_way':
+      case 'sample_collected':
+      case 'processing':
+        return Colors.blue;
+      case 'report_ready':
+      case 'completed':
+        return Colors.green;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _statusLabel(String status) {
+    switch (status.toLowerCase()) {
+      case 'created':
+        return 'Created';
+      case 'payment_pending':
+        return 'Payment Pending';
+      case 'confirmed':
+        return 'Confirmed';
+      case 'collector_assigned':
+        return 'Collector Assigned';
+      case 'collector_on_the_way':
+        return 'Collector On The Way';
+      case 'sample_collected':
+        return 'Sample Collected';
+      case 'processing':
+        return 'Processing';
+      case 'report_ready':
+        return 'Report Ready';
+      case 'completed':
+        return 'Completed';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return status;
+    }
+  }
+
+  int _statusIndex(String status) {
+    return _LabOrderCard._previewTimelineStatuses.indexOf(status.toLowerCase());
+  }
+}
+
 class _AppointmentCard extends StatelessWidget {
   final Appointment appointment;
   final bool isUpcoming;
   final Function(String)? onCancel;
+  final bool isCancelling;
 
   const _AppointmentCard({
     required this.appointment,
     required this.isUpcoming,
     this.onCancel,
+    this.isCancelling = false,
   });
 
   Color _getStatusColor(String status) {
@@ -320,27 +906,72 @@ class _AppointmentCard extends StatelessWidget {
     }
   }
 
+  Color _getPaymentStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'paid':
+        return Colors.green;
+      case 'failed':
+        return Colors.red;
+      case 'refunded':
+        return Colors.deepPurple;
+      default:
+        return Colors.orange;
+    }
+  }
+
+  String _getPaymentStatusLabel(String status) {
+    switch (status.toLowerCase()) {
+      case 'paid':
+        return 'PAID';
+      case 'failed':
+        return 'FAILED';
+      case 'refunded':
+        return 'REFUNDED';
+      default:
+        return 'PENDING';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final statusColor = _getStatusColor(appointment.status);
     final statusIcon = _getStatusIcon(appointment.status);
+    final paymentColor = _getPaymentStatusColor(appointment.paymentStatus);
+    final paymentLabel = _getPaymentStatusLabel(appointment.paymentStatus);
+    final canRetryPayment =
+      isUpcoming &&
+      appointment.status.toLowerCase() != 'cancelled' &&
+      (appointment.paymentStatus.toLowerCase() == 'pending' ||
+        appointment.paymentStatus.toLowerCase() == 'failed') &&
+      appointment.amount > 0;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(UIConstants.radiusMedium),
-        border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
+    return InkWell(
+      borderRadius: BorderRadius.circular(UIConstants.radiusMedium),
+      onTap: () {
+        context.push(
+          AppRoutes.patientAppointmentDetails,
+          extra: {
+            'appointment': appointment,
+            'isUpcoming': isUpcoming,
+          },
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(UIConstants.radiusMedium),
+          border: Border.all(color: Colors.grey[200]!),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
           // Status Banner
           Container(
             padding: const EdgeInsets.symmetric(
@@ -441,6 +1072,47 @@ class _AppointmentCard extends StatelessWidget {
                   label: 'Time',
                   value: appointment.timeSlot.start,
                 ),
+                const SizedBox(height: UIConstants.spacingSmall),
+                _DetailRow(
+                  icon: Icons.currency_rupee,
+                  label: 'Fee',
+                  value: '₹${appointment.amount.toStringAsFixed(0)}',
+                ),
+                const SizedBox(height: UIConstants.spacingSmall),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.receipt_long_outlined,
+                      size: 18,
+                      color: Colors.grey[600],
+                    ),
+                    const SizedBox(width: UIConstants.spacingSmall),
+                    Text(
+                      'Payment: ',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: paymentColor.withOpacity(0.12),
+                        borderRadius:
+                            BorderRadius.circular(UIConstants.radiusRound),
+                      ),
+                      child: Text(
+                        paymentLabel,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: paymentColor,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 if (appointment.symptoms != null) ...[
                   const SizedBox(height: UIConstants.spacingSmall),
                   _DetailRow(
@@ -456,65 +1128,51 @@ class _AppointmentCard extends StatelessWidget {
                   Padding(
                     padding:
                         const EdgeInsets.only(top: UIConstants.spacingMedium),
-                    child: Row(
+                    child: Column(
                       children: [
-                        Expanded(
+                        SizedBox(
+                          width: double.infinity,
                           child: OutlinedButton.icon(
-                            onPressed: onCancel != null
+                          onPressed: !isCancelling && onCancel != null
                                 ? () => onCancel!(appointment.id)
                                 : null,
-                            icon: const Icon(Icons.cancel_outlined, size: 18),
-                            label: const Text('Cancel'),
+                          icon: isCancelling
+                            ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child:
+                                CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.cancel_outlined, size: 18),
+                          label: Text(isCancelling ? 'Cancelling...' : 'Cancel'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: Colors.red,
                               side: const BorderSide(color: Colors.red),
                             ),
                           ),
                         ),
-                        const SizedBox(width: UIConstants.spacingSmall),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                  title: const Text('Appointment Details'),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                          'Doctor: ${appointment.doctorId.userId?.name ?? 'Doctor'}'),
-                                      const SizedBox(height: 6),
-                                      Text('Type: ${appointment.type}'),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                          'Date: ${_formatDate(appointment.date)}'),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                          'Time: ${appointment.timeSlot.start}'),
-                                      if (appointment.symptoms != null) ...[
-                                        const SizedBox(height: 6),
-                                        Text('Reason: ${appointment.symptoms}')
-                                      ],
-                                      const SizedBox(height: 6),
-                                      Text('Status: ${appointment.status}'),
-                                    ],
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(ctx),
-                                      child: const Text('Close'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.info_outline, size: 18),
-                            label: const Text('Details'),
+                        if (canRetryPayment) ...[
+                          const SizedBox(height: UIConstants.spacingSmall),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                final doctorName =
+                                    appointment.doctorId.userId?.name ??
+                                        'Doctor';
+                                context.push(
+                                  '${AppRoutes.patientPayment}?appointmentId=${appointment.id}&amount=${appointment.amount}&doctorName=${Uri.encodeComponent(doctorName)}',
+                                );
+                              },
+                              icon: const Icon(Icons.payment_outlined, size: 18),
+                              label: const Text('Retry Payment'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.orange[800],
+                                side: BorderSide(color: Colors.orange[700]!),
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
@@ -547,7 +1205,8 @@ class _AppointmentCard extends StatelessWidget {
               ],
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

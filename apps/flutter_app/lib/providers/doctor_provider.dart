@@ -151,15 +151,15 @@ class DoctorStateNotifier extends StateNotifier<DoctorState> {
         }
 
         final pendingCount = appointments
-                .where((a) => a.status == AppConstants.appointmentPending)
-                .length;
+            .where((a) => a.status == AppConstants.appointmentPending)
+            .length;
 
         final upcomingCount = appointments
-                .where((a) =>
-                    a.status == AppConstants.appointmentPending ||
-                    a.status == AppConstants.appointmentConfirmed ||
-                    a.status == AppConstants.appointmentInProgress)
-                .length;
+            .where((a) =>
+                a.status == AppConstants.appointmentPending ||
+                a.status == AppConstants.appointmentConfirmed ||
+                a.status == AppConstants.appointmentInProgress)
+            .length;
 
         final completed = appointments
             .where((a) => a.status == AppConstants.appointmentCompleted)
@@ -272,6 +272,10 @@ class DoctorStateNotifier extends StateNotifier<DoctorState> {
 final doctorProvider =
     StateNotifierProvider.autoDispose<DoctorStateNotifier, DoctorState>(
   (ref) {
+    // Keep this provider alive across tab navigation while retaining
+    // autoDispose provider type compatibility during hot reload.
+    ref.keepAlive();
+
     final currentUser = ref.watch(currentUserProvider);
     final doctorService = ref.watch(doctorServiceProvider);
     final appointmentService = ref.watch(appointmentServiceProvider);

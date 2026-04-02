@@ -4,6 +4,7 @@ class AppConstants {
   static const String rolePatient = 'patient';
   static const String roleDoctor = 'doctor';
   static const String roleAdmin = 'admin';
+  static const String roleLab = 'lab';
 
   // Appointment Status
   static const String appointmentPending = 'pending';
@@ -55,6 +56,9 @@ class AppConstants {
   static const String storageKeyToken = 'auth_token';
   static const String storageKeyUser = 'auth_user';
   static const String storageKeyRefreshToken = 'refresh_token';
+
+  // Support Contact
+  static const String supportPhoneNumber = '+918603342657';
 }
 
 /// UI Constants

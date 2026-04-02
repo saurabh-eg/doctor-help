@@ -24,7 +24,13 @@ const registerDoctorSchema = z.object({
         licenseNumber: z.string().min(1).optional(),
         bio: z.string().optional(),
         photoUrl: z.string().url().optional(),
-        documents: z.array(z.string()).optional()
+        documents: z.array(z.string()).optional(),
+        address: z.object({
+            city: z.string().min(1),
+            district: z.string().min(1),
+            pincode: z.string().min(1),
+            location: z.string().min(1)
+        })
     })
 });
 
@@ -44,7 +50,13 @@ const updateDoctorProfileSchema = z.object({
         qualification: z.string().optional(),
         experience: z.number().min(0).optional(),
         consultationFee: z.number().min(0).optional(),
-        bio: z.string().optional()
+        bio: z.string().optional(),
+        address: z.object({
+            city: z.string().min(1).optional(),
+            district: z.string().min(1).optional(),
+            pincode: z.string().min(1).optional(),
+            location: z.string().min(1).optional()
+        }).optional()
     })
 });
 

@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const FAST2SMS_BULK_V2_URL = 'https://www.fast2sms.com/dev/bulkV2';
+const FAST2SMS_TIMEOUT_MS = Number(process.env.FAST2SMS_TIMEOUT_MS || 15000);
 
 const normalizeMobile = (value: string): string => value.replace(/\D/g, '');
 
@@ -42,7 +43,8 @@ export const sendOTP = async (mobile: string, otp: string): Promise<boolean> => 
                 route: 'dlt',
                 sender_id: senderId,
                 message: templateId,
-                variables_values: otpString,
+                variables_values: `${otpString}|`,
+                flash: 0,
                 numbers: normalizedMobile,
             };
         } else {
@@ -61,16 +63,23 @@ export const sendOTP = async (mobile: string, otp: string): Promise<boolean> => 
 
         console.info(`Fast2SMS [${useDLT ? 'DLT' : 'Quick'}] sending to ${normalizedMobile}`);
 
-        const response = await axios.post(
-            FAST2SMS_BULK_V2_URL,
-            payload,
-            {
-                headers: {
-                    authorization: apiKey,
-                    'Content-Type': 'application/json',
-                },
+        const requestConfig = {
+            params: {
+                authorization: apiKey,
+                ...payload,
+            },
+            timeout: FAST2SMS_TIMEOUT_MS,
+        };
+
+        // Retry once for transient network or timeout failures.
+        const response = await axios.get(FAST2SMS_BULK_V2_URL, requestConfig).catch(async (firstError: any) => {
+            const shouldRetry = !firstError?.response || firstError?.code === 'ECONNABORTED';
+            if (!shouldRetry) {
+                throw firstError;
             }
-        );
+            console.warn('Fast2SMS first attempt failed, retrying once:', firstError?.code || firstError?.message);
+            return axios.get(FAST2SMS_BULK_V2_URL, requestConfig);
+        });
 
         const isSuccess = response.status >= 200 && response.status < 300 && response.data?.return === true;
         if (!isSuccess) {
@@ -81,7 +90,13 @@ export const sendOTP = async (mobile: string, otp: string): Promise<boolean> => 
 
         return isSuccess;
     } catch (error: any) {
-        console.error('Fast2SMS send OTP error:', error.response?.data || error.message);
+        const diagnostics = {
+            code: error?.code,
+            message: error?.message,
+            status: error?.response?.status,
+            data: error?.response?.data,
+        };
+        console.error('Fast2SMS send OTP error:', diagnostics);
         return false;
     }
 };

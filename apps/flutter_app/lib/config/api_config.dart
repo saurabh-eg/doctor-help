@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 class ApiConfig {
   // Base URL - Change based on environment
   // Development: Use 10.0.2.2 for Android emulator (maps to host localhost)
-  // Production: Render.com deployment
-  static const String baseUrl = 'https://doctor-help-api.onrender.com/api';
+  // Example: https://abc123.ngrok.io/api
+  static const String baseUrl = 'http://10.0.2.2:3001/api';
 
   // API Timeouts
   static const Duration timeout = Duration(seconds: 30);
@@ -72,11 +72,16 @@ class ApiEndpoints {
   static const String getPatientAppointments =
       '/appointments/patient/:patientId';
   static const String getDoctorAppointments = '/appointments/doctor/:doctorId';
+  static const String getAppointment = '/appointments/:id';
   static const String updateAppointmentStatus = '/appointments/:id/status';
   static const String updateAppointmentTimeSlot =
       '/appointments/:id/reschedule';
   // Cancel appointment (POST)
   static const String cancelAppointment = '/appointments/:id/cancel';
+
+  // Payments
+  static const String initiatePayment = '/payments/initiate';
+  static const String getPaymentStatus = '/payments/:paymentId';
 
   // Admin
   static const String getDashboardStats = '/admin/dashboard';
@@ -88,4 +93,50 @@ class ApiEndpoints {
   static const String createReview = '/reviews';
   static const String getDoctorReviews = '/reviews/doctor/:doctorId';
   static const String checkReviewExists = '/reviews/check/:appointmentId';
+
+  // Labs and diagnostics
+  static const String listLabs = '/labs';
+  static const String compareLabTests = '/labs/compare/tests/:testName';
+  static const String getLabCatalog = '/labs/:id/catalog';
+  static const String createLabOrder = '/lab-orders';
+  static const String getMyLabOrders = '/lab-orders/my';
+  static const String getLabOrderById = '/lab-orders/:id';
+  static const String cancelLabOrder = '/lab-orders/:id/cancel';
+  static const String uploadLabPrescription = '/lab-orders/upload-prescription';
+
+  // Lab self-registration
+  static const String createLabRegistrationRequest =
+      '/lab-registrations/request';
+  static const String uploadLabRegistrationDocument =
+      '/lab-registrations/upload-document';
+
+  // Lab provider module
+  static const String getLabProviderProfile = '/lab-provider/profile';
+  static const String updateLabProviderProfile = '/lab-provider/profile';
+  static const String getLabProviderDashboard = '/lab-provider/dashboard';
+  static const String getLabProviderCatalog = '/lab-provider/catalog';
+  static const String createLabProviderTest = '/lab-provider/catalog/tests';
+  static const String updateLabProviderTest = '/lab-provider/catalog/tests/:id';
+  static const String createLabProviderPackage =
+      '/lab-provider/catalog/packages';
+  static const String updateLabProviderPackage =
+      '/lab-provider/catalog/packages/:id';
+  static const String getLabProviderOrders = '/lab-provider/orders';
+  static const String getLabProviderOrderById = '/lab-provider/orders/:id';
+  static const String updateLabProviderOrderStatus =
+      '/lab-provider/orders/:id/status';
+  static const String assignLabProviderOrderCollector =
+      '/lab-provider/orders/:id/collector';
+  static const String escalateLabProviderOrder =
+      '/lab-provider/orders/:id/escalate';
+  static const String uploadLabProviderOrderReport =
+      '/lab-provider/orders/:id/report';
+
+  // Notifications realtime stream (SSE)
+  static const String notificationsStream = '/notifications/stream';
+  static const String notificationsPreferences = '/notifications/preferences';
+  static const String notificationsRegisterDevice =
+      '/notifications/devices/register';
+  static const String notificationsUnregisterDevice =
+      '/notifications/devices/unregister';
 }

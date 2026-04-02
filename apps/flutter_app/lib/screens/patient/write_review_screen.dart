@@ -175,8 +175,7 @@ class _WriteReviewScreenState extends ConsumerState<WriteReviewScreen> {
               decoration: InputDecoration(
                 hintText: 'Share your experience...',
                 border: OutlineInputBorder(
-                  borderRadius:
-                      BorderRadius.circular(UIConstants.radiusMedium),
+                  borderRadius: BorderRadius.circular(UIConstants.radiusMedium),
                 ),
                 filled: true,
                 fillColor: Colors.grey[50],

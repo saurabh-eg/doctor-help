@@ -6,8 +6,12 @@ import {
     DashboardPage, 
     UsersPage, 
     DoctorsPage, 
+    LabsPage,
     VerificationsPage, 
-    AppointmentsPage 
+    AppointmentsPage,
+    LabOrdersPage,
+    PaymentDemoPage,
+    NotificationsPage
 } from './pages';
 import { PageLoader } from './components/ui';
 
@@ -65,8 +69,12 @@ export default function App() {
                 <Route index element={<DashboardPage />} />
                 <Route path="users" element={<UsersPage />} />
                 <Route path="doctors" element={<DoctorsPage />} />
+                <Route path="labs" element={<LabsPage />} />
                 <Route path="verifications" element={<VerificationsPage />} />
                 <Route path="appointments" element={<AppointmentsPage />} />
+                <Route path="lab-orders" element={<LabOrdersPage />} />
+                <Route path="payments-demo" element={<PaymentDemoPage />} />
+                <Route path="notifications" element={<NotificationsPage />} />
             </Route>
 
             {/* Catch all - redirect to dashboard */}

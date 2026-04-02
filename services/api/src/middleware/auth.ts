@@ -4,10 +4,11 @@ import { getJwtSecret } from '../utils/jwt';
 
 export interface AuthenticatedRequest extends Request {
     user?: {
-        userId: string;
+        userId?: string;
         phone: string;
-        role: 'patient' | 'doctor' | 'admin';
+        role: 'patient' | 'doctor' | 'admin' | 'lab';
         numericUserId?: number;
+        onboarding?: boolean;
     };
 }
 

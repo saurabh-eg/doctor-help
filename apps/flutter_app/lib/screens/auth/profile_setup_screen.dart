@@ -41,10 +41,16 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
     if (success) {
       final authState = ref.read(authStateProvider);
-      if (authState.user?.role == AppConstants.rolePatient) {
+      final role = (authState.user?.role ?? '').trim().toLowerCase();
+
+      if (role == AppConstants.rolePatient) {
         context.go(AppRoutes.patientHome);
-      } else if (authState.user?.role == AppConstants.roleDoctor) {
+      } else if (role == AppConstants.roleDoctor) {
         context.go(AppRoutes.doctorDashboard);
+      } else if (role == AppConstants.roleLab) {
+        context.go(AppRoutes.labDashboard);
+      } else {
+        context.go(AppRoutes.patientHome);
       }
     } else {
       final error = ref.read(authStateProvider).error;

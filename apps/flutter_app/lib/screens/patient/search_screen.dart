@@ -90,6 +90,15 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
               padding: const EdgeInsets.all(UIConstants.spacingLarge),
               child: Column(
                 children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => context.push(AppRoutes.patientLabs),
+                      icon: const Icon(Icons.biotech_outlined),
+                      label: const Text('Need lab tests? Compare labs here'),
+                    ),
+                  ),
+                  const SizedBox(height: UIConstants.spacingLarge),
                   // Search Bar
                   TextField(
                     controller: _searchController,
@@ -103,7 +112,7 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
                       });
                     },
                     decoration: InputDecoration(
-                      hintText: 'Search by name, specialization...',
+                      hintText: 'Search by name, specialization, city, pincode...',
                       prefixIcon: const Icon(Icons.search),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
@@ -225,8 +234,10 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
 
                   List<Doctor> doctors = snapshot.data ?? [];
 
-                  // Apply client-side search by name or specialization
-                  if (_searchController.text.isNotEmpty) {
+                    // For 2+ chars, backend search already applies matching logic.
+                    // Keep local filtering only for single-character input while listing.
+                    if (_searchController.text.isNotEmpty &&
+                      _searchController.text.trim().length < 2) {
                     final query = _searchController.text.toLowerCase();
                     doctors = doctors
                         .where((d) =>

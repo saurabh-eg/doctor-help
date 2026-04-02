@@ -124,6 +124,19 @@ class _PatientHomeScreenState extends ConsumerState<PatientHomeScreen> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: UIConstants.spacingMedium),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () => context.push(AppRoutes.patientLabs),
+                          icon: const Icon(Icons.biotech_outlined),
+                          label: const Text('Book Lab Tests & Packages'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: Colors.white70),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),

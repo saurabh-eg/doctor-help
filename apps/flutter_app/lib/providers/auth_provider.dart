@@ -61,6 +61,15 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
       try {
         final response = await _authService.getMe();
         if (response.success && response.data != null) {
+          // Keep JWT claims (especially role) aligned with server state.
+          // This prevents stale-role tokens from failing authorize() checks.
+          final refresh = await _authService.refreshToken();
+          if (refresh.success &&
+              refresh.data != null &&
+              refresh.data!.token.isNotEmpty) {
+            await _apiService.setToken(refresh.data!.token);
+          }
+
           state = state.copyWith(
             user: response.data,
             isAuthenticated: true,

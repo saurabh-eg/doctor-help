@@ -92,6 +92,14 @@ class AppointmentService {
     );
   }
 
+  /// Get appointment by ID
+  Future<ApiResponse<Appointment>> getAppointment(String appointmentId) {
+    return _apiService.get(
+      ApiEndpoints.getAppointment.replaceFirst(':id', appointmentId),
+      fromJson: (json) => Appointment.fromJson(json),
+    );
+  }
+
   /// Update appointment status
   Future<ApiResponse<Appointment>> updateStatus(
     String appointmentId,

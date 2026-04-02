@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../providers/providers.dart';
 import '../../navigation/app_router.dart';
 import '../../config/constants.dart';
@@ -213,6 +214,35 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
       if (mounted) {
         context.go(AppRoutes.login);
       }
+    }
+  }
+
+  Future<void> _callSupport() async {
+    const phoneNumber = AppConstants.supportPhoneNumber;
+    final uri = Uri(scheme: 'tel', path: phoneNumber);
+
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Could not launch phone call. Number: 8603342657',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error making phone call: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -450,21 +480,15 @@ class _PatientProfileScreenState extends ConsumerState<PatientProfileScreen> {
                 title: 'Settings',
                 subtitle: 'Manage your preferences',
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Settings coming soon')),
-                  );
+                  context.push(AppRoutes.notificationPreferences);
                 },
               ),
               const SizedBox(height: UIConstants.spacingSmall),
               _AccountOption(
                 icon: Icons.help_outline,
                 title: 'Help & Support',
-                subtitle: 'Get help with your account',
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Help coming soon')),
-                  );
-                },
+                subtitle: 'Call us: ${AppConstants.supportPhoneNumber}',
+                onTap: _callSupport,
               ),
               const SizedBox(height: UIConstants.spacing2XLarge),
 

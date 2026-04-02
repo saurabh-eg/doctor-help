@@ -35,6 +35,10 @@ class _DoctorVerificationScreenState
   late TextEditingController _bioController;
   late TextEditingController _licenseNumberController;
   late TextEditingController _documentNameController;
+  late TextEditingController _cityController;
+  late TextEditingController _districtController;
+  late TextEditingController _pincodeController;
+  late TextEditingController _locationController;
 
   String _selectedSpecialization = 'General Physician';
   final List<Map<String, dynamic>> _uploadedDocuments =
@@ -70,6 +74,10 @@ class _DoctorVerificationScreenState
     _bioController = TextEditingController();
     _licenseNumberController = TextEditingController();
     _documentNameController = TextEditingController();
+    _cityController = TextEditingController();
+    _districtController = TextEditingController();
+    _pincodeController = TextEditingController();
+    _locationController = TextEditingController();
   }
 
   @override
@@ -82,6 +90,10 @@ class _DoctorVerificationScreenState
     _bioController.dispose();
     _licenseNumberController.dispose();
     _documentNameController.dispose();
+    _cityController.dispose();
+    _districtController.dispose();
+    _pincodeController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 
@@ -306,6 +318,10 @@ class _DoctorVerificationScreenState
         qualification: _qualificationsController.text.trim(),
         experience: experience,
         consultationFee: fee,
+        city: _cityController.text.trim(),
+        district: _districtController.text.trim(),
+        pincode: _pincodeController.text.trim(),
+        location: _locationController.text.trim(),
         licenseNumber: _licenseNumberController.text.trim().isEmpty
             ? null
             : _licenseNumberController.text.trim(),
@@ -538,6 +554,66 @@ class _DoctorVerificationScreenState
                         }
                         if (double.tryParse(value) == null) {
                           return 'Please enter a valid amount';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: UIConstants.spacingMedium),
+
+                    AppTextField(
+                      label: 'City',
+                      hintText: 'e.g., Jaipur',
+                      controller: _cityController,
+                      prefixIcon: const Icon(Icons.location_city),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'City is required';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: UIConstants.spacingMedium),
+
+                    AppTextField(
+                      label: 'District',
+                      hintText: 'e.g., Jaipur',
+                      controller: _districtController,
+                      prefixIcon: const Icon(Icons.map_outlined),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'District is required';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: UIConstants.spacingMedium),
+
+                    AppTextField(
+                      label: 'Pincode',
+                      hintText: 'e.g., 302001',
+                      controller: _pincodeController,
+                      keyboardType: TextInputType.number,
+                      prefixIcon: const Icon(Icons.pin_drop_outlined),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Pincode is required';
+                        }
+                        if (!RegExp(r'^\d{6}$').hasMatch(value.trim())) {
+                          return 'Enter a valid 6-digit pincode';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: UIConstants.spacingMedium),
+
+                    AppTextField(
+                      label: 'Clinic/Hospital Location',
+                      hintText: 'Area, street, or landmark',
+                      controller: _locationController,
+                      prefixIcon: const Icon(Icons.place_outlined),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Location is required';
                         }
                         return null;
                       },

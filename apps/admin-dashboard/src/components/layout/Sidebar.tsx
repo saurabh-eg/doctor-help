@@ -3,7 +3,11 @@ import {
     LayoutDashboard, 
     Users, 
     Stethoscope, 
+    Building2,
     Calendar, 
+    FlaskConical,
+    Bell,
+    IndianRupee,
     BarChart3,
     Settings,
     LogOut,
@@ -11,6 +15,7 @@ import {
     X
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAdminNotifications } from '../../contexts/AdminNotificationsContext';
 import clsx from 'clsx';
 
 interface SidebarProps {
@@ -22,14 +27,19 @@ const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/users', icon: Users, label: 'Users' },
     { to: '/doctors', icon: Stethoscope, label: 'Doctors' },
+    { to: '/labs', icon: Building2, label: 'Labs' },
     { to: '/verifications', icon: ShieldCheck, label: 'Verifications' },
     { to: '/appointments', icon: Calendar, label: 'Appointments' },
+    { to: '/lab-orders', icon: FlaskConical, label: 'Lab Orders' },
+    { to: '/notifications', icon: Bell, label: 'Notifications' },
+    { to: '/payments-demo', icon: IndianRupee, label: 'Payments Demo' },
     { to: '/analytics', icon: BarChart3, label: 'Analytics' },
     { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const { logout } = useAuth();
+    const { unreadCount } = useAdminNotifications();
 
     return (
         <>
@@ -55,7 +65,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <span className="font-bold text-slate-900">Admin</span>
                     </div>
                     <button 
+                        type="button"
                         onClick={onClose}
+                        aria-label="Close sidebar"
+                        title="Close sidebar"
                         className="lg:hidden p-1 hover:bg-slate-100 rounded"
                     >
                         <X size={20} className="text-slate-500" />
@@ -78,6 +91,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         >
                             <item.icon size={20} />
                             {item.label}
+                            {item.to === '/notifications' && unreadCount > 0 && (
+                                <span className="ml-auto inline-flex min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[11px] font-semibold text-white">
+                                    {unreadCount > 99 ? '99+' : unreadCount}
+                                </span>
+                            )}
                         </NavLink>
                     ))}
                 </nav>

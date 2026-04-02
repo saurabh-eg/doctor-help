@@ -452,6 +452,10 @@ class _DoctorProfileScreenState extends ConsumerState<DoctorProfileScreen> {
     final doctorState = ref.watch(doctorProvider);
     final doctorProfile = doctorState.profile;
     final theme = Theme.of(context);
+    final isDoctorVerified = doctorProfile?.isVerified == true;
+    final isVerificationStatusLoading = doctorProfile == null;
+    final showPendingVerificationNotice =
+        doctorProfile != null && doctorProfile.isVerified == false;
 
     // Update professional controllers when doctor profile loads
     if (doctorProfile != null && _qualificationsController.text.isEmpty) {
@@ -676,25 +680,31 @@ class _DoctorProfileScreenState extends ConsumerState<DoctorProfileScreen> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: (doctorProfile?.isVerified ?? false)
-                                ? Colors.green.withOpacity(0.1)
-                                : Colors.orange.withOpacity(0.1),
+                            color: isVerificationStatusLoading
+                                ? Colors.grey.withOpacity(0.12)
+                                : isDoctorVerified
+                                    ? Colors.green.withOpacity(0.1)
+                                    : Colors.orange.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            (doctorProfile?.isVerified ?? false)
-                                ? 'Verified Doctor'
-                                : 'Pending Verification',
+                            isVerificationStatusLoading
+                                ? 'Checking Verification...'
+                                : isDoctorVerified
+                                    ? 'Verified Doctor'
+                                    : 'Pending Verification',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: (doctorProfile?.isVerified ?? false)
-                                  ? Colors.green
-                                  : Colors.orange,
+                              color: isVerificationStatusLoading
+                                  ? Colors.grey[700]
+                                  : isDoctorVerified
+                                      ? Colors.green
+                                      : Colors.orange,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
                         // Show verification pending notice
-                        if (!(doctorProfile?.isVerified ?? false)) ...[
+                        if (showPendingVerificationNotice) ...[
                           const SizedBox(height: UIConstants.spacingMedium),
                           Container(
                             padding:
@@ -850,7 +860,7 @@ class _DoctorProfileScreenState extends ConsumerState<DoctorProfileScreen> {
                   const SizedBox(height: UIConstants.spacingSmall),
                   _AccountOption(
                     icon: Icons.notifications,
-                    label: 'Notification Settings',
+                    label: 'Notification Preferences',
                     onTap: () =>
                         context.push(AppRoutes.doctorNotificationSettings),
                   ),

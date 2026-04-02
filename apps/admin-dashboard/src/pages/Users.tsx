@@ -24,6 +24,7 @@ import {
 const ROLE_BADGES: Record<string, { bg: string; text: string }> = {
     admin: { bg: 'bg-purple-100', text: 'text-purple-700' },
     doctor: { bg: 'bg-blue-100', text: 'text-blue-700' },
+    lab: { bg: 'bg-amber-100', text: 'text-amber-700' },
     patient: { bg: 'bg-slate-100', text: 'text-slate-700' },
 };
 
@@ -140,6 +141,7 @@ export default function UsersPage() {
                                 <option value="all">All Roles</option>
                                 <option value="patient">Patients</option>
                                 <option value="doctor">Doctors</option>
+                                <option value="lab">Labs</option>
                                 <option value="admin">Admins</option>
                             </select>
                         </div>
